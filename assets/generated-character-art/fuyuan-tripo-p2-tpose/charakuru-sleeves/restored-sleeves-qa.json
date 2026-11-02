@@ -1,0 +1,1262 @@
+{
+  "source": "work/rig-f7700b6c/weighted.blend#Backup_Body",
+  "tipsMM": {
+    "darkL": 7.15521636746652e-05,
+    "darkR": 0.00011327234252082115,
+    "liningL": 0.00010109136638902783,
+    "liningR": 7.176107555759107e-05
+  },
+  "elbowsM": {
+    "L": [
+      0.3563888669013977,
+      0.017042314633727074,
+      1.4580495357513428
+    ],
+    "R": [
+      -0.3495718538761139,
+      0.01704230159521103,
+      1.45805025100708
+    ]
+  },
+  "springs": 15,
+  "weightsUvMaterialsOtherMeshesSHA256": "fdd0ac28ac4113b3b275fb704f0a2b70cc569a032eea45660ce7bbae6c42015f",
+  "identicalOutsideMask": true,
+  "shoulderMaxMM": 0.00031318190546604854,
+  "underarmEdges": 2119,
+  "underarmMaxEdgeLengthDiffMM": 0.00029921334931959365,
+  "changedVertices": 8379,
+  "chainShiftsMM": {
+    "InnerL": [
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ]
+    ],
+    "CuffL": [
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        2.455,
+        -24.93,
+        101.331
+      ]
+    ],
+    "InnerR": [
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ]
+    ],
+    "CuffR": [
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        -1.659,
+        -24.93,
+        101.331
+      ]
+    ]
+  },
+  "chainFit": "Preserve previous cloth controls within the restored outer/lining cross section (18 of 20). Align both remaining cuff terminals to the actual original dark tip. Non-deforming end bone lengths retained.",
+  "projectId": "4e5377ea-a0d9-46e8-8b1a-74859c9db6d7",
+  "revision": 42,
+  "artifacts": {
+    "blend": {
+      "path": "documents/source-blend/f828e8e3e340ab533f4ed3b279fd1aedffa4c52f35ad6203814c29a4b5bc8cd0.blend",
+      "local": "work/character.blend",
+      "sha256": "f828e8e3e340ab533f4ed3b279fd1aedffa4c52f35ad6203814c29a4b5bc8cd0"
+    },
+    "fbx": {
+      "path": "assets/8b3da212-ba04-4699-978e-4a54f4c9ffc3/Fu-Yuan-sleeves-restored.fbx",
+      "local": "work/sleeve-physics/Fu-Yuan-sleeves-restored.fbx",
+      "sha256": "a198137c310cba7ae1f5386887037856301e8587453e863b0fdaef59c2ab3b73"
+    },
+    "vrm": {
+      "path": "documents/vrm/bcb0ceaa0b4b27cb6128b94b0502d8e5f70b3cdd272f744186fef29a2888aa7c.vrm",
+      "local": "work/review.vrm",
+      "sha256": "bcb0ceaa0b4b27cb6128b94b0502d8e5f70b3cdd272f744186fef29a2888aa7c"
+    }
+  },
+  "sameEmbeddedTextureImages": 4,
+  "runtime": {
+    "file": "work/review.vrm",
+    "sha256": "bcb0ceaa0b4b27cb6128b94b0502d8e5f70b3cdd272f744186fef29a2888aa7c",
+    "springChains": [
+      "HairLeft",
+      "HairRear",
+      "HairRight",
+      "SashTail",
+      "Pendant",
+      "SkirtFrontL",
+      "SkirtSideL",
+      "SkirtRearL",
+      "SkirtFrontR",
+      "SkirtSideR",
+      "SkirtRearR",
+      "SleeveInnerL",
+      "SleeveCuffL",
+      "SleeveInnerR",
+      "SleeveCuffR"
+    ],
+    "protocol": "Charakuru PreviewAvatar, actual exported geometry/skin/spring settings. Units in mm. Both forearms flex around world vertical axis toward toes over 18 frames at 60 Hz, then hold. Tip samples within 90 mm of restored outer/lining landmark on their own surface. Each edge report uses resting length >=1 mm on same connected garment island, |x|>0.245 m and height 0.56–1.62 m. Extreme: length >2x rest AND increase >20 mm. VRM UV split vertices can duplicate some seam edges. Walk uses bundled elyth_base_walk_v1.vrma, 60 Hz, 120 frames.",
+    "flexionDegrees": {
+      "left": 65,
+      "right": 65
+    },
+    "offAt65": {
+      "left_outer": {
+        "edges": 7325,
+        "p99AddedMM": 5.15,
+        "maxAddedMM": 15.005,
+        "p99Ratio": 1.448,
+        "extreme": 0
+      },
+      "left_lining": {
+        "edges": 2585,
+        "p99AddedMM": 0,
+        "maxAddedMM": 0,
+        "p99Ratio": 1,
+        "extreme": 0
+      },
+      "right_outer": {
+        "edges": 7321,
+        "p99AddedMM": 5.32,
+        "maxAddedMM": 18.238,
+        "p99Ratio": 1.443,
+        "extreme": 0
+      },
+      "right_lining": {
+        "edges": 2585,
+        "p99AddedMM": 0,
+        "maxAddedMM": 0,
+        "p99Ratio": 1,
+        "extreme": 0
+      }
+    },
+    "onAt65": {
+      "left_outer": {
+        "edges": 7325,
+        "p99AddedMM": 15.055,
+        "maxAddedMM": 28.446,
+        "p99Ratio": 1.679,
+        "extreme": 0
+      },
+      "left_lining": {
+        "edges": 2585,
+        "p99AddedMM": 9.261,
+        "maxAddedMM": 17.052,
+        "p99Ratio": 1.434,
+        "extreme": 0
+      },
+      "right_outer": {
+        "edges": 7321,
+        "p99AddedMM": 15.997,
+        "maxAddedMM": 28.97,
+        "p99Ratio": 1.677,
+        "extreme": 1
+      },
+      "right_lining": {
+        "edges": 2585,
+        "p99AddedMM": 14.661,
+        "maxAddedMM": 28.254,
+        "p99Ratio": 1.531,
+        "extreme": 12
+      }
+    },
+    "onSettlingAtFrame60": {
+      "left_outer": {
+        "edges": 7325,
+        "p99AddedMM": 5.15,
+        "maxAddedMM": 15.016,
+        "p99Ratio": 1.449,
+        "extreme": 0
+      },
+      "left_lining": {
+        "edges": 2585,
+        "p99AddedMM": 1.283,
+        "maxAddedMM": 1.624,
+        "p99Ratio": 1.048,
+        "extreme": 0
+      },
+      "right_outer": {
+        "edges": 7321,
+        "p99AddedMM": 5.32,
+        "maxAddedMM": 18.238,
+        "p99Ratio": 1.443,
+        "extreme": 0
+      },
+      "right_lining": {
+        "edges": 2585,
+        "p99AddedMM": 1.33,
+        "maxAddedMM": 2.24,
+        "p99Ratio": 1.049,
+        "extreme": 0
+      }
+    },
+    "onMinusOffAt18": {
+      "left_outerTip": {
+        "count": 111,
+        "medianMM": 323.236,
+        "p95MM": 375.069,
+        "maxMM": 376.863
+      },
+      "left_liningTip": {
+        "count": 93,
+        "medianMM": 319.921,
+        "p95MM": 336.685,
+        "maxMM": 337.534
+      },
+      "left_seam": {
+        "count": 41,
+        "medianMM": 0,
+        "p95MM": 0,
+        "maxMM": 0
+      },
+      "right_outerTip": {
+        "count": 114,
+        "medianMM": 317.538,
+        "p95MM": 382.659,
+        "maxMM": 384.305
+      },
+      "right_liningTip": {
+        "count": 93,
+        "medianMM": 326.464,
+        "p95MM": 343.586,
+        "maxMM": 344.456
+      },
+      "right_seam": {
+        "count": 41,
+        "medianMM": 0,
+        "p95MM": 0,
+        "maxMM": 0
+      },
+      "left_wrist": {
+        "count": 1,
+        "medianMM": 0,
+        "p95MM": 0,
+        "maxMM": 0
+      },
+      "right_wrist": {
+        "count": 1,
+        "medianMM": 0,
+        "p95MM": 0,
+        "maxMM": 0
+      }
+    },
+    "onFrom18to30": {
+      "left_outerTip": {
+        "count": 111,
+        "medianMM": 160.514,
+        "p95MM": 181.033,
+        "maxMM": 187.921
+      },
+      "left_liningTip": {
+        "count": 93,
+        "medianMM": 191.276,
+        "p95MM": 193.853,
+        "maxMM": 194.944
+      },
+      "left_seam": {
+        "count": 41,
+        "medianMM": 0,
+        "p95MM": 0,
+        "maxMM": 0
+      },
+      "right_outerTip": {
+        "count": 114,
+        "medianMM": 163.164,
+        "p95MM": 184.83,
+        "maxMM": 191.824
+      },
+      "right_liningTip": {
+        "count": 93,
+        "medianMM": 195.047,
+        "p95MM": 197.804,
+        "maxMM": 198.916
+      },
+      "right_seam": {
+        "count": 41,
+        "medianMM": 0,
+        "p95MM": 0,
+        "maxMM": 0
+      },
+      "left_wrist": {
+        "count": 1,
+        "medianMM": 0,
+        "p95MM": 0,
+        "maxMM": 0
+      },
+      "right_wrist": {
+        "count": 1,
+        "medianMM": 0,
+        "p95MM": 0,
+        "maxMM": 0
+      }
+    },
+    "offFrom18to30": {
+      "left_outerTip": {
+        "count": 111,
+        "medianMM": 0,
+        "p95MM": 0,
+        "maxMM": 0
+      },
+      "left_liningTip": {
+        "count": 93,
+        "medianMM": 0,
+        "p95MM": 0,
+        "maxMM": 0
+      },
+      "left_seam": {
+        "count": 41,
+        "medianMM": 0,
+        "p95MM": 0,
+        "maxMM": 0
+      },
+      "right_outerTip": {
+        "count": 114,
+        "medianMM": 0,
+        "p95MM": 0,
+        "maxMM": 0
+      },
+      "right_liningTip": {
+        "count": 93,
+        "medianMM": 0,
+        "p95MM": 0,
+        "maxMM": 0
+      },
+      "right_seam": {
+        "count": 41,
+        "medianMM": 0,
+        "p95MM": 0,
+        "maxMM": 0
+      },
+      "left_wrist": {
+        "count": 1,
+        "medianMM": 0,
+        "p95MM": 0,
+        "maxMM": 0
+      },
+      "right_wrist": {
+        "count": 1,
+        "medianMM": 0,
+        "p95MM": 0,
+        "maxMM": 0
+      }
+    },
+    "onFrom30to60": {
+      "left_outerTip": {
+        "count": 111,
+        "medianMM": 157.881,
+        "p95MM": 205.434,
+        "maxMM": 207.77
+      },
+      "left_liningTip": {
+        "count": 93,
+        "medianMM": 133.834,
+        "p95MM": 156.731,
+        "maxMM": 157.336
+      },
+      "left_seam": {
+        "count": 41,
+        "medianMM": 0,
+        "p95MM": 0,
+        "maxMM": 0
+      },
+      "right_outerTip": {
+        "count": 114,
+        "medianMM": 161.206,
+        "p95MM": 209.594,
+        "maxMM": 211.852
+      },
+      "right_liningTip": {
+        "count": 93,
+        "medianMM": 136.651,
+        "p95MM": 160.038,
+        "maxMM": 160.657
+      },
+      "right_seam": {
+        "count": 41,
+        "medianMM": 0,
+        "p95MM": 0,
+        "maxMM": 0
+      },
+      "left_wrist": {
+        "count": 1,
+        "medianMM": 0,
+        "p95MM": 0,
+        "maxMM": 0
+      },
+      "right_wrist": {
+        "count": 1,
+        "medianMM": 0,
+        "p95MM": 0,
+        "maxMM": 0
+      }
+    },
+    "walk": [
+      {
+        "frame": 20,
+        "strain": {
+          "left_outer": {
+            "edges": 7325,
+            "p99AddedMM": 17.727,
+            "maxAddedMM": 45.216,
+            "p99Ratio": 1.527,
+            "extreme": 6
+          },
+          "left_lining": {
+            "edges": 2585,
+            "p99AddedMM": 9.382,
+            "maxAddedMM": 20.861,
+            "p99Ratio": 1.412,
+            "extreme": 1
+          },
+          "right_outer": {
+            "edges": 7321,
+            "p99AddedMM": 23.077,
+            "maxAddedMM": 79.773,
+            "p99Ratio": 1.774,
+            "extreme": 37
+          },
+          "right_lining": {
+            "edges": 2585,
+            "p99AddedMM": 42.196,
+            "maxAddedMM": 72.276,
+            "p99Ratio": 2.402,
+            "extreme": 42
+          }
+        }
+      },
+      {
+        "frame": 30,
+        "strain": {
+          "left_outer": {
+            "edges": 7325,
+            "p99AddedMM": 11.238,
+            "maxAddedMM": 18.54,
+            "p99Ratio": 1.385,
+            "extreme": 0
+          },
+          "left_lining": {
+            "edges": 2585,
+            "p99AddedMM": 9.678,
+            "maxAddedMM": 15.166,
+            "p99Ratio": 1.431,
+            "extreme": 0
+          },
+          "right_outer": {
+            "edges": 7321,
+            "p99AddedMM": 20.385,
+            "maxAddedMM": 65.702,
+            "p99Ratio": 1.775,
+            "extreme": 32
+          },
+          "right_lining": {
+            "edges": 2585,
+            "p99AddedMM": 25.675,
+            "maxAddedMM": 56.756,
+            "p99Ratio": 1.858,
+            "extreme": 20
+          }
+        }
+      },
+      {
+        "frame": 40,
+        "strain": {
+          "left_outer": {
+            "edges": 7325,
+            "p99AddedMM": 11.161,
+            "maxAddedMM": 26,
+            "p99Ratio": 1.455,
+            "extreme": 0
+          },
+          "left_lining": {
+            "edges": 2585,
+            "p99AddedMM": 12.835,
+            "maxAddedMM": 20.566,
+            "p99Ratio": 1.353,
+            "extreme": 2
+          },
+          "right_outer": {
+            "edges": 7321,
+            "p99AddedMM": 16.615,
+            "maxAddedMM": 49.641,
+            "p99Ratio": 1.676,
+            "extreme": 13
+          },
+          "right_lining": {
+            "edges": 2585,
+            "p99AddedMM": 18.331,
+            "maxAddedMM": 45.373,
+            "p99Ratio": 1.608,
+            "extreme": 17
+          }
+        }
+      },
+      {
+        "frame": 50,
+        "strain": {
+          "left_outer": {
+            "edges": 7325,
+            "p99AddedMM": 17.969,
+            "maxAddedMM": 53.271,
+            "p99Ratio": 1.752,
+            "extreme": 3
+          },
+          "left_lining": {
+            "edges": 2585,
+            "p99AddedMM": 19.921,
+            "maxAddedMM": 45.852,
+            "p99Ratio": 1.592,
+            "extreme": 16
+          },
+          "right_outer": {
+            "edges": 7321,
+            "p99AddedMM": 11.657,
+            "maxAddedMM": 27.714,
+            "p99Ratio": 1.443,
+            "extreme": 0
+          },
+          "right_lining": {
+            "edges": 2585,
+            "p99AddedMM": 9.369,
+            "maxAddedMM": 25.566,
+            "p99Ratio": 1.33,
+            "extreme": 14
+          }
+        }
+      },
+      {
+        "frame": 60,
+        "strain": {
+          "left_outer": {
+            "edges": 7325,
+            "p99AddedMM": 17.984,
+            "maxAddedMM": 54.954,
+            "p99Ratio": 1.786,
+            "extreme": 1
+          },
+          "left_lining": {
+            "edges": 2585,
+            "p99AddedMM": 16.982,
+            "maxAddedMM": 36.884,
+            "p99Ratio": 1.577,
+            "extreme": 16
+          },
+          "right_outer": {
+            "edges": 7321,
+            "p99AddedMM": 7.553,
+            "maxAddedMM": 18.264,
+            "p99Ratio": 1.32,
+            "extreme": 0
+          },
+          "right_lining": {
+            "edges": 2585,
+            "p99AddedMM": 5.318,
+            "maxAddedMM": 10.678,
+            "p99Ratio": 1.19,
+            "extreme": 0
+          }
+        }
+      },
+      {
+        "frame": 70,
+        "strain": {
+          "left_outer": {
+            "edges": 7325,
+            "p99AddedMM": 13.273,
+            "maxAddedMM": 45.49,
+            "p99Ratio": 1.533,
+            "extreme": 0
+          },
+          "left_lining": {
+            "edges": 2585,
+            "p99AddedMM": 13.708,
+            "maxAddedMM": 30.531,
+            "p99Ratio": 1.43,
+            "extreme": 14
+          },
+          "right_outer": {
+            "edges": 7321,
+            "p99AddedMM": 10.162,
+            "maxAddedMM": 23.617,
+            "p99Ratio": 1.392,
+            "extreme": 0
+          },
+          "right_lining": {
+            "edges": 2585,
+            "p99AddedMM": 9.796,
+            "maxAddedMM": 20.551,
+            "p99Ratio": 1.275,
+            "extreme": 1
+          }
+        }
+      },
+      {
+        "frame": 80,
+        "strain": {
+          "left_outer": {
+            "edges": 7325,
+            "p99AddedMM": 13.297,
+            "maxAddedMM": 38.447,
+            "p99Ratio": 1.535,
+            "extreme": 0
+          },
+          "left_lining": {
+            "edges": 2585,
+            "p99AddedMM": 11.642,
+            "maxAddedMM": 28.64,
+            "p99Ratio": 1.366,
+            "extreme": 12
+          },
+          "right_outer": {
+            "edges": 7321,
+            "p99AddedMM": 14.841,
+            "maxAddedMM": 37.506,
+            "p99Ratio": 1.553,
+            "extreme": 0
+          },
+          "right_lining": {
+            "edges": 2585,
+            "p99AddedMM": 16.256,
+            "maxAddedMM": 32.765,
+            "p99Ratio": 1.501,
+            "extreme": 15
+          }
+        }
+      },
+      {
+        "frame": 90,
+        "strain": {
+          "left_outer": {
+            "edges": 7325,
+            "p99AddedMM": 9.163,
+            "maxAddedMM": 22.306,
+            "p99Ratio": 1.347,
+            "extreme": 0
+          },
+          "left_lining": {
+            "edges": 2585,
+            "p99AddedMM": 5.222,
+            "maxAddedMM": 12.785,
+            "p99Ratio": 1.196,
+            "extreme": 0
+          },
+          "right_outer": {
+            "edges": 7321,
+            "p99AddedMM": 23.35,
+            "maxAddedMM": 80.877,
+            "p99Ratio": 1.963,
+            "extreme": 58
+          },
+          "right_lining": {
+            "edges": 2585,
+            "p99AddedMM": 32.949,
+            "maxAddedMM": 69.189,
+            "p99Ratio": 2.117,
+            "extreme": 32
+          }
+        }
+      },
+      {
+        "frame": 100,
+        "strain": {
+          "left_outer": {
+            "edges": 7325,
+            "p99AddedMM": 8.136,
+            "maxAddedMM": 17.777,
+            "p99Ratio": 1.337,
+            "extreme": 0
+          },
+          "left_lining": {
+            "edges": 2585,
+            "p99AddedMM": 6.016,
+            "maxAddedMM": 12.518,
+            "p99Ratio": 1.187,
+            "extreme": 0
+          },
+          "right_outer": {
+            "edges": 7321,
+            "p99AddedMM": 18.751,
+            "maxAddedMM": 61.026,
+            "p99Ratio": 1.76,
+            "extreme": 20
+          },
+          "right_lining": {
+            "edges": 2585,
+            "p99AddedMM": 21.52,
+            "maxAddedMM": 50.714,
+            "p99Ratio": 1.654,
+            "extreme": 18
+          }
+        }
+      },
+      {
+        "frame": 110,
+        "strain": {
+          "left_outer": {
+            "edges": 7325,
+            "p99AddedMM": 9.479,
+            "maxAddedMM": 20.411,
+            "p99Ratio": 1.378,
+            "extreme": 0
+          },
+          "left_lining": {
+            "edges": 2585,
+            "p99AddedMM": 10.062,
+            "maxAddedMM": 16.624,
+            "p99Ratio": 1.272,
+            "extreme": 0
+          },
+          "right_outer": {
+            "edges": 7321,
+            "p99AddedMM": 15.729,
+            "maxAddedMM": 52.513,
+            "p99Ratio": 1.621,
+            "extreme": 17
+          },
+          "right_lining": {
+            "edges": 2585,
+            "p99AddedMM": 16.775,
+            "maxAddedMM": 44.197,
+            "p99Ratio": 1.547,
+            "extreme": 17
+          }
+        }
+      },
+      {
+        "frame": 120,
+        "strain": {
+          "left_outer": {
+            "edges": 7325,
+            "p99AddedMM": 12.953,
+            "maxAddedMM": 30.614,
+            "p99Ratio": 1.517,
+            "extreme": 0
+          },
+          "left_lining": {
+            "edges": 2585,
+            "p99AddedMM": 15.112,
+            "maxAddedMM": 24.789,
+            "p99Ratio": 1.418,
+            "extreme": 12
+          },
+          "right_outer": {
+            "edges": 7321,
+            "p99AddedMM": 15.885,
+            "maxAddedMM": 47.372,
+            "p99Ratio": 1.634,
+            "extreme": 9
+          },
+          "right_lining": {
+            "edges": 2585,
+            "p99AddedMM": 16.51,
+            "maxAddedMM": 42.113,
+            "p99Ratio": 1.537,
+            "extreme": 17
+          }
+        }
+      }
+    ]
+  },
+  "matchedWalk": {
+    "name": "Exact indices matched for candidate and previous export; region mask and edge selection fixed to current VRM, true resting edge lengths measured separately. UV, triangle indices and weights verified identical.",
+    "baseSHA": "37522e373498395f0c29483b6243b73b5f7b26f8a49e71049ccb302745851c81",
+    "candidateSHA": "bcb0ceaa0b4b27cb6128b94b0502d8e5f70b3cdd272f744186fef29a2888aa7c",
+    "old": {
+      "left_outer": {
+        "peakSevereCount": 15,
+        "peakAddedMM": 59.537,
+        "peakP99AddedMM": 20.204,
+        "peakP99Ratio": 1.794
+      },
+      "left_lining": {
+        "peakSevereCount": 0,
+        "peakAddedMM": 34.183,
+        "peakP99AddedMM": 20.021,
+        "peakP99Ratio": 1.561
+      },
+      "right_outer": {
+        "peakSevereCount": 14,
+        "peakAddedMM": 62.111,
+        "peakP99AddedMM": 21.998,
+        "peakP99Ratio": 1.79
+      },
+      "right_lining": {
+        "peakSevereCount": 0,
+        "peakAddedMM": 46.906,
+        "peakP99AddedMM": 23.918,
+        "peakP99Ratio": 1.654
+      }
+    },
+    "current": {
+      "left_outer": {
+        "peakSevereCount": 6,
+        "peakAddedMM": 54.954,
+        "peakP99AddedMM": 17.984,
+        "peakP99Ratio": 1.786
+      },
+      "left_lining": {
+        "peakSevereCount": 16,
+        "peakAddedMM": 45.852,
+        "peakP99AddedMM": 19.921,
+        "peakP99Ratio": 1.592
+      },
+      "right_outer": {
+        "peakSevereCount": 58,
+        "peakAddedMM": 80.877,
+        "peakP99AddedMM": 23.35,
+        "peakP99Ratio": 1.963
+      },
+      "right_lining": {
+        "peakSevereCount": 42,
+        "peakAddedMM": 72.276,
+        "peakP99AddedMM": 42.196,
+        "peakP99Ratio": 2.402
+      }
+    },
+    "oldWalk": [
+      {
+        "frame": 20,
+        "strain": {
+          "left_outer": {
+            "edges": 7325,
+            "p99AddedMM": 16.161,
+            "maxAddedMM": 44.056,
+            "p99Ratio": 1.381,
+            "extreme": 0
+          },
+          "left_lining": {
+            "edges": 2585,
+            "p99AddedMM": 7.316,
+            "maxAddedMM": 18.434,
+            "p99Ratio": 1.269,
+            "extreme": 0
+          },
+          "right_outer": {
+            "edges": 7321,
+            "p99AddedMM": 20.3,
+            "maxAddedMM": 44.761,
+            "p99Ratio": 1.506,
+            "extreme": 0
+          },
+          "right_lining": {
+            "edges": 2585,
+            "p99AddedMM": 18.379,
+            "maxAddedMM": 27.224,
+            "p99Ratio": 1.515,
+            "extreme": 0
+          }
+        }
+      },
+      {
+        "frame": 30,
+        "strain": {
+          "left_outer": {
+            "edges": 7325,
+            "p99AddedMM": 9.307,
+            "maxAddedMM": 17.812,
+            "p99Ratio": 1.304,
+            "extreme": 0
+          },
+          "left_lining": {
+            "edges": 2585,
+            "p99AddedMM": 7.887,
+            "maxAddedMM": 13.604,
+            "p99Ratio": 1.206,
+            "extreme": 0
+          },
+          "right_outer": {
+            "edges": 7321,
+            "p99AddedMM": 19.701,
+            "maxAddedMM": 59.241,
+            "p99Ratio": 1.563,
+            "extreme": 0
+          },
+          "right_lining": {
+            "edges": 2585,
+            "p99AddedMM": 18.266,
+            "maxAddedMM": 35.409,
+            "p99Ratio": 1.485,
+            "extreme": 0
+          }
+        }
+      },
+      {
+        "frame": 40,
+        "strain": {
+          "left_outer": {
+            "edges": 7325,
+            "p99AddedMM": 10.393,
+            "maxAddedMM": 22.726,
+            "p99Ratio": 1.357,
+            "extreme": 0
+          },
+          "left_lining": {
+            "edges": 2585,
+            "p99AddedMM": 12.439,
+            "maxAddedMM": 17.604,
+            "p99Ratio": 1.307,
+            "extreme": 0
+          },
+          "right_outer": {
+            "edges": 7321,
+            "p99AddedMM": 17.13,
+            "maxAddedMM": 51.915,
+            "p99Ratio": 1.497,
+            "extreme": 0
+          },
+          "right_lining": {
+            "edges": 2585,
+            "p99AddedMM": 15.38,
+            "maxAddedMM": 28.487,
+            "p99Ratio": 1.378,
+            "extreme": 0
+          }
+        }
+      },
+      {
+        "frame": 50,
+        "strain": {
+          "left_outer": {
+            "edges": 7325,
+            "p99AddedMM": 18.086,
+            "maxAddedMM": 47.907,
+            "p99Ratio": 1.65,
+            "extreme": 0
+          },
+          "left_lining": {
+            "edges": 2585,
+            "p99AddedMM": 20.021,
+            "maxAddedMM": 34.183,
+            "p99Ratio": 1.561,
+            "extreme": 0
+          },
+          "right_outer": {
+            "edges": 7321,
+            "p99AddedMM": 9.415,
+            "maxAddedMM": 29.202,
+            "p99Ratio": 1.301,
+            "extreme": 0
+          },
+          "right_lining": {
+            "edges": 2585,
+            "p99AddedMM": 7.66,
+            "maxAddedMM": 14.656,
+            "p99Ratio": 1.195,
+            "extreme": 0
+          }
+        }
+      },
+      {
+        "frame": 60,
+        "strain": {
+          "left_outer": {
+            "edges": 7325,
+            "p99AddedMM": 20.204,
+            "maxAddedMM": 59.537,
+            "p99Ratio": 1.794,
+            "extreme": 15
+          },
+          "left_lining": {
+            "edges": 2585,
+            "p99AddedMM": 18.192,
+            "maxAddedMM": 28.565,
+            "p99Ratio": 1.515,
+            "extreme": 0
+          },
+          "right_outer": {
+            "edges": 7321,
+            "p99AddedMM": 6.178,
+            "maxAddedMM": 11.923,
+            "p99Ratio": 1.272,
+            "extreme": 0
+          },
+          "right_lining": {
+            "edges": 2585,
+            "p99AddedMM": 4.479,
+            "maxAddedMM": 7.335,
+            "p99Ratio": 1.155,
+            "extreme": 0
+          }
+        }
+      },
+      {
+        "frame": 70,
+        "strain": {
+          "left_outer": {
+            "edges": 7325,
+            "p99AddedMM": 13.653,
+            "maxAddedMM": 49.852,
+            "p99Ratio": 1.47,
+            "extreme": 0
+          },
+          "left_lining": {
+            "edges": 2585,
+            "p99AddedMM": 14.061,
+            "maxAddedMM": 23.339,
+            "p99Ratio": 1.373,
+            "extreme": 0
+          },
+          "right_outer": {
+            "edges": 7321,
+            "p99AddedMM": 8.043,
+            "maxAddedMM": 16.571,
+            "p99Ratio": 1.31,
+            "extreme": 0
+          },
+          "right_lining": {
+            "edges": 2585,
+            "p99AddedMM": 8.477,
+            "maxAddedMM": 11.778,
+            "p99Ratio": 1.19,
+            "extreme": 0
+          }
+        }
+      },
+      {
+        "frame": 80,
+        "strain": {
+          "left_outer": {
+            "edges": 7325,
+            "p99AddedMM": 11.493,
+            "maxAddedMM": 41.115,
+            "p99Ratio": 1.367,
+            "extreme": 0
+          },
+          "left_lining": {
+            "edges": 2585,
+            "p99AddedMM": 12.408,
+            "maxAddedMM": 20.726,
+            "p99Ratio": 1.322,
+            "extreme": 0
+          },
+          "right_outer": {
+            "edges": 7321,
+            "p99AddedMM": 12.162,
+            "maxAddedMM": 30.606,
+            "p99Ratio": 1.41,
+            "extreme": 0
+          },
+          "right_lining": {
+            "edges": 2585,
+            "p99AddedMM": 14.541,
+            "maxAddedMM": 23.297,
+            "p99Ratio": 1.357,
+            "extreme": 0
+          }
+        }
+      },
+      {
+        "frame": 90,
+        "strain": {
+          "left_outer": {
+            "edges": 7325,
+            "p99AddedMM": 6.998,
+            "maxAddedMM": 25.678,
+            "p99Ratio": 1.254,
+            "extreme": 0
+          },
+          "left_lining": {
+            "edges": 2585,
+            "p99AddedMM": 5.533,
+            "maxAddedMM": 9.537,
+            "p99Ratio": 1.145,
+            "extreme": 0
+          },
+          "right_outer": {
+            "edges": 7321,
+            "p99AddedMM": 21.998,
+            "maxAddedMM": 62.111,
+            "p99Ratio": 1.79,
+            "extreme": 14
+          },
+          "right_lining": {
+            "edges": 2585,
+            "p99AddedMM": 23.918,
+            "maxAddedMM": 46.906,
+            "p99Ratio": 1.654,
+            "extreme": 0
+          }
+        }
+      },
+      {
+        "frame": 100,
+        "strain": {
+          "left_outer": {
+            "edges": 7325,
+            "p99AddedMM": 6.327,
+            "maxAddedMM": 14.732,
+            "p99Ratio": 1.288,
+            "extreme": 0
+          },
+          "left_lining": {
+            "edges": 2585,
+            "p99AddedMM": 5.52,
+            "maxAddedMM": 11.075,
+            "p99Ratio": 1.171,
+            "extreme": 0
+          },
+          "right_outer": {
+            "edges": 7321,
+            "p99AddedMM": 20.613,
+            "maxAddedMM": 57.203,
+            "p99Ratio": 1.671,
+            "extreme": 3
+          },
+          "right_lining": {
+            "edges": 2585,
+            "p99AddedMM": 17.943,
+            "maxAddedMM": 34.808,
+            "p99Ratio": 1.48,
+            "extreme": 0
+          }
+        }
+      },
+      {
+        "frame": 110,
+        "strain": {
+          "left_outer": {
+            "edges": 7325,
+            "p99AddedMM": 8.154,
+            "maxAddedMM": 18.957,
+            "p99Ratio": 1.31,
+            "extreme": 0
+          },
+          "left_lining": {
+            "edges": 2585,
+            "p99AddedMM": 8.661,
+            "maxAddedMM": 14.989,
+            "p99Ratio": 1.206,
+            "extreme": 0
+          },
+          "right_outer": {
+            "edges": 7321,
+            "p99AddedMM": 14.327,
+            "maxAddedMM": 47.498,
+            "p99Ratio": 1.431,
+            "extreme": 0
+          },
+          "right_lining": {
+            "edges": 2585,
+            "p99AddedMM": 15.065,
+            "maxAddedMM": 29.22,
+            "p99Ratio": 1.375,
+            "extreme": 0
+          }
+        }
+      },
+      {
+        "frame": 120,
+        "strain": {
+          "left_outer": {
+            "edges": 7325,
+            "p99AddedMM": 11.693,
+            "maxAddedMM": 26.864,
+            "p99Ratio": 1.395,
+            "extreme": 0
+          },
+          "left_lining": {
+            "edges": 2585,
+            "p99AddedMM": 14.317,
+            "maxAddedMM": 19.494,
+            "p99Ratio": 1.362,
+            "extreme": 0
+          },
+          "right_outer": {
+            "edges": 7321,
+            "p99AddedMM": 12.709,
+            "maxAddedMM": 40.209,
+            "p99Ratio": 1.363,
+            "extreme": 0
+          },
+          "right_lining": {
+            "edges": 2585,
+            "p99AddedMM": 13.298,
+            "maxAddedMM": 26.005,
+            "p99Ratio": 1.334,
+            "extreme": 0
+          }
+        }
+      }
+    ]
+  }
+}
