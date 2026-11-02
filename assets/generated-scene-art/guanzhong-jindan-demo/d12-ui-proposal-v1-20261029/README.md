@@ -2,7 +2,7 @@
 
 版本：2026-10-29 / V1，原提交 `78a734f8`。原提交时视觉与交互均待用户验收；未获准制作。
 
-2026-11-01 当前审阅入口为 [V3 统一 HUD 与连续分镜](v3-20261030/README.md)。V1 保留建角、合法装配、选择后确认、挑战与保存等约定。下文左右面板和“常用／金丹”分页属于旧稿。V2 保留各道路作用及反制的场景表现。五项资源已分工，须待用户审阅新版整体视觉后启动。[开发计划](../../../../开发计划.md)
+2026-11-02 用户已确认 V3。建角、合法装配、选择后确认、挑战与保存沿用本页约定，战斗 HUD、同屏操作与双分辨率布局以 V3 为准，能力的场景表现沿用 V2。后续依次制作五个资源包。[V3 制作方案](v3-20261030/README.md#制作顺序与交付) · [开发计划](../../../../开发计划.md)
 
 本轮只产出方案、浏览器分镜和视觉稿，不修改 Unity 源码、场景、Prefab、数据或存档。整体 D12 保持未完成。所有图片顶部标有“方案原型，非 Unity 实机”。
 
@@ -134,7 +134,7 @@
 | 普通术法左键立即执行，金丹冻结报价后确认 | [CombatCommandInput.LateUpdate](../../../../src/Assets/Scripts/Modules/Features/CombatPresentation/CombatCommandInput.cs)、上述 Presenter.Preview/Confirm | 接共用预览、确认和取消语义，不复制命令内核 |
 | 金丹预设只允许空间／阳的贯石击，其他为空 | [JindanDemoCatalogValidator](../../../../src/Assets/Scripts/Modules/Content/JindanDemoCatalogValidator.cs)、[预设CSV](../../../../src/Assets/DataConfig/JindanDemoPresets.csv) | 区分“原始合法预设能力来源”与“真实玩家普通术法装配”，明确修改原有限制，不能直接塞CSV绕校验 |
 
-正式 UI 沿 `CombatHudPresenter / CombatHudView / CombatActionBarView / CombatActionPreviewView / CombatLogView` 与既有 Builder 实施；建角沿 `CharacterCreationController/View → StartMenuSceneInstaller`。获准后同步修改现行演武规则中固定人物／分段重载的原条款，按任务风险补存档与核心规则独立检查。不新建平行 Demo、战斗管理器或自动化流程。
+正式 UI 沿 `CombatHudPresenter / CombatHudView / CombatActionBarView / CombatActionPreviewView / CombatLogView` 与既有 Builder 实施；建角沿 `CharacterCreationController/View → StartMenuSceneInstaller`。固定人物验收档与自建角色试玩的适用范围已写入演武规则。集成时按任务风险核验存档与核心规则。[演武规则 §9.1、§9.3](../../../../docs/基础设定/金丹基础效果装配与冲突规则.txt)
 
 ## 来源与证据边界
 
@@ -150,9 +150,9 @@
 
 正式制作之后才验：双分辨率完整操作、身份与存读档、三段两条路线、实际费用及显隐、敌方行动、清理、旧存档／悬赏／AP=0／G2／G3。原型中的 HP、状态、落点、截图角色位置是示例；不作伤害、可达性或平衡结论。
 
-需要用户明确验收两项：
+以下为 V1 送审时的两项内容。
 
 1. **视觉 V1**：青黑浅金、左右紧凑信息、底部行动和费用区、双分辨率布局。
 2. **交互 V1**：同一自建角色、合法构筑＋明确基础术法、所有行动先预览后确认、按能力配置同伴、挑战外保存、退出／重试路径。
 
-收到两项通过后，在开发计划记录获准版本再制作。只通过一项或提出修改，均留在方案修订阶段；本文件的提交不代表获准。
+2026-11-02 定稿时，V1 的建角与挑战流程继续作为依据，正式战斗界面的布局和交互以 V3 为准。[V3 制作方案](v3-20261030/README.md#制作顺序与交付)
