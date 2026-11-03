@@ -1,0 +1,4 @@
+interface:
+  display_name: "天章角色三维制作与拆件"
+  short_description: "从一致四视图、Tripo 生成到网格拆件、贴图回收与动作验收"
+  default_prompt: "使用 $tianzhang-character-3d，依据已确认角色原画制作一致四视图，并按需要完成 Tripo 模型生成、部件拆分和质量验证。"
