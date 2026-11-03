@@ -1,0 +1,146 @@
+{
+  "date": "2026-11-03",
+  "unity_version": "6000.3.18f1",
+  "source_model": "D:\\天章游戏开发\\assets\\source\\characters\\paper-puppet-skill-trial-20261103\\export\\fuyuan-rigid-puppet.fbx",
+  "source_model_sha256": "4bd43605a292962c46bf35a1f10d53fe790b21a67758c26896e24279e6cba09a",
+  "project": "D:\\Temp\\TianZhang-Unity\\FuyuanPaperPuppet20261103",
+  "runtime_owner": "Assets/PaperPuppet.unity -> PaperPuppetPlayer.modelPrefab -> Assets/Model/model.fbx -> Animator Generic / walk, cast, attack",
+  "modifications": [
+    "Copied the exact source FBX without mesh or animation edits.",
+    "Extracted the FBX embedded basecolor JPEG, imported at 4096x4096, and remapped tripo_mat_aa5cdbc9 mainTexture. Retained source material color and shader parameters.",
+    "Added import statistics and observational hips position samples. No change to playback pose, timing, framing, light or capture mechanism."
+  ],
+  "build_result": "PUPPET_BUILD_OK; Unity batchmode returned code 0.",
+  "capture_result": "completed.txt frames=894; 18 segments, 3 actions x 6 facings; actual visible Player screen capture.",
+  "capture_resolution": [
+    1120,
+    800
+  ],
+  "capture_fps": 30,
+  "capture_frame_count": 894,
+  "unique_png_sha256": 892,
+  "initial_capture_failure": "WindowStyle Hidden: MainWindowHandle=0 and CaptureScreenshotAsTexture returned null. The owned failed player process was stopped. The identical build completed capture in the normal interactive window; no RenderTexture fallback was added.",
+  "hips_probe": {
+    "found": true,
+    "parent": "root",
+    "apply_root_motion": false,
+    "ranges": {
+      "walk": {
+        "sample_count": 41,
+        "local_position_min": {
+          "x": 0.0,
+          "y": 0.9600000381469727,
+          "z": 0.0
+        },
+        "local_position_max": {
+          "x": 0.0,
+          "y": 0.9640000462532043,
+          "z": 0.0
+        },
+        "model_root_local_position_min": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "model_root_local_position_max": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      },
+      "cast": {
+        "sample_count": 61,
+        "local_position_min": {
+          "x": 0.0,
+          "y": 0.9640000462532043,
+          "z": 0.0
+        },
+        "local_position_max": {
+          "x": 0.0,
+          "y": 0.9640000462532043,
+          "z": 0.0
+        },
+        "model_root_local_position_min": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "model_root_local_position_max": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      },
+      "attack": {
+        "sample_count": 47,
+        "local_position_min": {
+          "x": 0.0,
+          "y": 0.9640000462532043,
+          "z": 0.0
+        },
+        "local_position_max": {
+          "x": 0.0,
+          "y": 0.9640000462532043,
+          "z": 0.0
+        },
+        "model_root_local_position_min": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "model_root_local_position_max": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      }
+    }
+  },
+  "preview_selection": {
+    "facing": 3,
+    "camera": "existing oblique camera",
+    "segments": [
+      {
+        "clip": "walk",
+        "source_first_frame": 123,
+        "source_frame_count": 41,
+        "repeats": 2
+      },
+      {
+        "clip": "cast",
+        "source_first_frame": 429,
+        "source_frame_count": 61,
+        "repeats": 2
+      },
+      {
+        "clip": "attack",
+        "source_first_frame": 753,
+        "source_frame_count": 47,
+        "repeats": 2
+      }
+    ],
+    "note": "Existing actual frames selected and repeated; no pose or image reconstruction. UI and Unity trial watermark retained."
+  },
+  "observed_limitations": [
+    "Shoulder and elbow gaps remain visibly wide.",
+    "Dark knee geometry visibly emerges through robe panels, e.g. walk-d3-f010.png.",
+    "Small dark fragments are visible near sleeves.",
+    "The motion AABB lower bound is -0.103145m; current code transforms the eight corners of each baked local mesh AABB. This is a conservative bounding-box minimum, not a measured minimum of actual world-space vertices, so it is not sufficient proof of ground penetration.",
+    "Only the existing oblique camera was automatically captured at six facings. Front and side interactive camera modes were not separately captured."
+  ],
+  "source_hash_unchanged": true,
+  "nonrequested_project_systems_touched": false,
+  "references_loaded": [
+    "unity-agent-workflows/SKILL.md",
+    "runtime-owner-proof.md",
+    "asset-source-lock.md",
+    "visible-object-identity.md",
+    "ui-and-visual-assets.md",
+    "unity-validation.md",
+    "serialized-persistence.md",
+    "ai-workflows.md"
+  ],
+  "project_maps": "Independent temporary project uses existing README and two exact source files; no root gameplay map applies.",
+  "material_api_reference": "https://docs.unity3d.com/6000.0/Documentation/ScriptReference/ModelImporter.ExtractTextures.html",
+  "final_import_check": "Final BuildPaperPuppet.cs compiled in Unity and Inspect completed with return code 0; 4K material binding and import statistics persisted."
+}

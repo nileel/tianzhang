@@ -1,0 +1,44 @@
+{
+  "six-directions.mp4": {
+    "frames": 894,
+    "seconds": 29.8,
+    "metadata": {
+      "ffmpeg_version": "7.1-essentials_build-www.gyan.dev built with gcc 14.2.0 (Rev1, Built by MSYS2 project)",
+      "codec": "h264",
+      "pix_fmt": "yuv420p(progressive)",
+      "fps": 30.0,
+      "source_size": [
+        1120,
+        800
+      ],
+      "size": [
+        1120,
+        800
+      ],
+      "rotate": 0,
+      "duration": 29.8
+    },
+    "bytes": 1838616
+  },
+  "three-actions-preview.mp4": {
+    "frames": 298,
+    "seconds": 9.93,
+    "metadata": {
+      "ffmpeg_version": "7.1-essentials_build-www.gyan.dev built with gcc 14.2.0 (Rev1, Built by MSYS2 project)",
+      "codec": "h264",
+      "pix_fmt": "yuv420p(progressive)",
+      "fps": 30.0,
+      "source_size": [
+        1120,
+        800
+      ],
+      "size": [
+        1120,
+        800
+      ],
+      "rotate": 0,
+      "duration": 9.93
+    },
+    "bytes": 586614
+  }
+}

@@ -1,0 +1,202 @@
+{
+  "mesh_objects": 30,
+  "bones": 22,
+  "weights": [
+    {
+      "object": "Puppet_forearm_R",
+      "bad_rigid_weights": 0,
+      "vertices": 2130,
+      "bone": "forearm_R"
+    },
+    {
+      "object": "Puppet_chest",
+      "bad_rigid_weights": 0,
+      "vertices": 4262,
+      "bone": "chest"
+    },
+    {
+      "object": "Puppet_upperarm_R",
+      "bad_rigid_weights": 0,
+      "vertices": 941,
+      "bone": "upperarm_R"
+    },
+    {
+      "object": "Puppet_hand_R",
+      "bad_rigid_weights": 0,
+      "vertices": 590,
+      "bone": "hand_R"
+    },
+    {
+      "object": "Puppet_head",
+      "bad_rigid_weights": 0,
+      "vertices": 5901,
+      "bone": "head"
+    },
+    {
+      "object": "Puppet_hand_L",
+      "bad_rigid_weights": 0,
+      "vertices": 589,
+      "bone": "hand_L"
+    },
+    {
+      "object": "Puppet_forearm_L",
+      "bad_rigid_weights": 0,
+      "vertices": 2408,
+      "bone": "forearm_L"
+    },
+    {
+      "object": "Puppet_upperarm_L",
+      "bad_rigid_weights": 0,
+      "vertices": 996,
+      "bone": "upperarm_L"
+    },
+    {
+      "object": "Puppet_robe_0",
+      "bad_rigid_weights": 0,
+      "vertices": 1842,
+      "bone": "robe_0"
+    },
+    {
+      "object": "Puppet_robe_1",
+      "bad_rigid_weights": 0,
+      "vertices": 1713,
+      "bone": "robe_1"
+    },
+    {
+      "object": "Puppet_foot_L",
+      "bad_rigid_weights": 0,
+      "vertices": 1475,
+      "bone": "foot_L"
+    },
+    {
+      "object": "Puppet_robe_2",
+      "bad_rigid_weights": 0,
+      "vertices": 2922,
+      "bone": "robe_2"
+    },
+    {
+      "object": "Puppet_foot_R",
+      "bad_rigid_weights": 0,
+      "vertices": 1401,
+      "bone": "foot_R"
+    },
+    {
+      "object": "Puppet_robe_5",
+      "bad_rigid_weights": 0,
+      "vertices": 1731,
+      "bone": "robe_5"
+    },
+    {
+      "object": "Puppet_robe_4",
+      "bad_rigid_weights": 0,
+      "vertices": 2982,
+      "bone": "robe_4"
+    },
+    {
+      "object": "Puppet_robe_3",
+      "bad_rigid_weights": 0,
+      "vertices": 529,
+      "bone": "robe_3"
+    },
+    {
+      "object": "Internal_upperarm_L",
+      "bad_rigid_weights": 0,
+      "vertices": 16,
+      "bone": "upperarm_L"
+    },
+    {
+      "object": "Internal_forearm_L",
+      "bad_rigid_weights": 0,
+      "vertices": 16,
+      "bone": "forearm_L"
+    },
+    {
+      "object": "Internal_thigh_L",
+      "bad_rigid_weights": 0,
+      "vertices": 16,
+      "bone": "thigh_L"
+    },
+    {
+      "object": "Internal_shin_L",
+      "bad_rigid_weights": 0,
+      "vertices": 16,
+      "bone": "shin_L"
+    },
+    {
+      "object": "Internal_upperarm_R",
+      "bad_rigid_weights": 0,
+      "vertices": 16,
+      "bone": "upperarm_R"
+    },
+    {
+      "object": "Internal_forearm_R",
+      "bad_rigid_weights": 0,
+      "vertices": 16,
+      "bone": "forearm_R"
+    },
+    {
+      "object": "Internal_thigh_R",
+      "bad_rigid_weights": 0,
+      "vertices": 16,
+      "bone": "thigh_R"
+    },
+    {
+      "object": "Internal_shin_R",
+      "bad_rigid_weights": 0,
+      "vertices": 16,
+      "bone": "shin_R"
+    },
+    {
+      "object": "Puppet_robe_0_overlap",
+      "bad_rigid_weights": 0,
+      "vertices": 1571,
+      "bone": "robe_0"
+    },
+    {
+      "object": "Puppet_robe_1_overlap",
+      "bad_rigid_weights": 0,
+      "vertices": 2089,
+      "bone": "robe_1"
+    },
+    {
+      "object": "Puppet_robe_2_overlap",
+      "bad_rigid_weights": 0,
+      "vertices": 935,
+      "bone": "robe_2"
+    },
+    {
+      "object": "Puppet_robe_3_overlap",
+      "bad_rigid_weights": 0,
+      "vertices": 1292,
+      "bone": "robe_3"
+    },
+    {
+      "object": "Puppet_robe_4_overlap",
+      "bad_rigid_weights": 0,
+      "vertices": 956,
+      "bone": "robe_4"
+    },
+    {
+      "object": "Puppet_robe_5_overlap",
+      "bad_rigid_weights": 0,
+      "vertices": 2297,
+      "bone": "robe_5"
+    }
+  ],
+  "actions": {
+    "attack": [
+      1.0,
+      46.0
+    ],
+    "cast": [
+      1.0,
+      61.0
+    ],
+    "walk": [
+      1.0,
+      41.0
+    ]
+  },
+  "export_sha256": "4bd43605a292962c46bf35a1f10d53fe790b21a67758c26896e24279e6cba09a",
+  "export_bytes": 6681452
+}

@@ -1,0 +1,218 @@
+{
+  "source": "9cf92743-4b3f-40bb-a4b0-987de9f87376",
+  "mesh_objects": 30,
+  "bones": 22,
+  "physics": false,
+  "parts": [
+    {
+      "object": "Puppet_forearm_R",
+      "bone": "forearm_R",
+      "vertices": 2130,
+      "source": "9cf92743 corrected Tripo surface",
+      "texture_group": "existing_painted_4k"
+    },
+    {
+      "object": "Puppet_chest",
+      "bone": "chest",
+      "vertices": 4262,
+      "source": "9cf92743 corrected Tripo surface",
+      "texture_group": "existing_painted_4k"
+    },
+    {
+      "object": "Puppet_upperarm_R",
+      "bone": "upperarm_R",
+      "vertices": 941,
+      "source": "9cf92743 corrected Tripo surface",
+      "texture_group": "existing_painted_4k"
+    },
+    {
+      "object": "Puppet_hand_R",
+      "bone": "hand_R",
+      "vertices": 590,
+      "source": "9cf92743 corrected Tripo surface",
+      "texture_group": "existing_painted_4k"
+    },
+    {
+      "object": "Puppet_head",
+      "bone": "head",
+      "vertices": 5901,
+      "source": "9cf92743 corrected Tripo surface",
+      "texture_group": "existing_painted_4k"
+    },
+    {
+      "object": "Puppet_hand_L",
+      "bone": "hand_L",
+      "vertices": 589,
+      "source": "9cf92743 corrected Tripo surface",
+      "texture_group": "existing_painted_4k"
+    },
+    {
+      "object": "Puppet_forearm_L",
+      "bone": "forearm_L",
+      "vertices": 2408,
+      "source": "9cf92743 corrected Tripo surface",
+      "texture_group": "existing_painted_4k"
+    },
+    {
+      "object": "Puppet_upperarm_L",
+      "bone": "upperarm_L",
+      "vertices": 996,
+      "source": "9cf92743 corrected Tripo surface",
+      "texture_group": "existing_painted_4k"
+    },
+    {
+      "object": "Puppet_robe_0",
+      "bone": "robe_0",
+      "vertices": 1842,
+      "source": "9cf92743 corrected Tripo surface",
+      "texture_group": "existing_painted_4k"
+    },
+    {
+      "object": "Puppet_robe_1",
+      "bone": "robe_1",
+      "vertices": 1713,
+      "source": "9cf92743 corrected Tripo surface",
+      "texture_group": "existing_painted_4k"
+    },
+    {
+      "object": "Puppet_foot_L",
+      "bone": "foot_L",
+      "vertices": 1475,
+      "source": "9cf92743 corrected Tripo surface",
+      "texture_group": "existing_painted_4k"
+    },
+    {
+      "object": "Puppet_robe_2",
+      "bone": "robe_2",
+      "vertices": 2922,
+      "source": "9cf92743 corrected Tripo surface",
+      "texture_group": "existing_painted_4k"
+    },
+    {
+      "object": "Puppet_foot_R",
+      "bone": "foot_R",
+      "vertices": 1401,
+      "source": "9cf92743 corrected Tripo surface",
+      "texture_group": "existing_painted_4k"
+    },
+    {
+      "object": "Puppet_robe_5",
+      "bone": "robe_5",
+      "vertices": 1731,
+      "source": "9cf92743 corrected Tripo surface",
+      "texture_group": "existing_painted_4k"
+    },
+    {
+      "object": "Puppet_robe_4",
+      "bone": "robe_4",
+      "vertices": 2982,
+      "source": "9cf92743 corrected Tripo surface",
+      "texture_group": "existing_painted_4k"
+    },
+    {
+      "object": "Puppet_robe_3",
+      "bone": "robe_3",
+      "vertices": 529,
+      "source": "9cf92743 corrected Tripo surface",
+      "texture_group": "existing_painted_4k"
+    },
+    {
+      "object": "Internal_upperarm_L",
+      "bone": "upperarm_L",
+      "vertices": 16,
+      "source": "approved hidden joint support",
+      "texture_group": "hidden_ink_material"
+    },
+    {
+      "object": "Internal_forearm_L",
+      "bone": "forearm_L",
+      "vertices": 16,
+      "source": "approved hidden joint support",
+      "texture_group": "hidden_ink_material"
+    },
+    {
+      "object": "Internal_thigh_L",
+      "bone": "thigh_L",
+      "vertices": 16,
+      "source": "approved hidden joint support",
+      "texture_group": "hidden_ink_material"
+    },
+    {
+      "object": "Internal_shin_L",
+      "bone": "shin_L",
+      "vertices": 16,
+      "source": "approved hidden joint support",
+      "texture_group": "hidden_ink_material"
+    },
+    {
+      "object": "Internal_upperarm_R",
+      "bone": "upperarm_R",
+      "vertices": 16,
+      "source": "approved hidden joint support",
+      "texture_group": "hidden_ink_material"
+    },
+    {
+      "object": "Internal_forearm_R",
+      "bone": "forearm_R",
+      "vertices": 16,
+      "source": "approved hidden joint support",
+      "texture_group": "hidden_ink_material"
+    },
+    {
+      "object": "Internal_thigh_R",
+      "bone": "thigh_R",
+      "vertices": 16,
+      "source": "approved hidden joint support",
+      "texture_group": "hidden_ink_material"
+    },
+    {
+      "object": "Internal_shin_R",
+      "bone": "shin_R",
+      "vertices": 16,
+      "source": "approved hidden joint support",
+      "texture_group": "hidden_ink_material"
+    },
+    {
+      "object": "Puppet_robe_0_overlap",
+      "bone": "robe_0",
+      "vertices": 1571,
+      "source": "approved lap edges copied from neighboring corrected Tripo faces",
+      "texture_group": "existing_painted_4k"
+    },
+    {
+      "object": "Puppet_robe_1_overlap",
+      "bone": "robe_1",
+      "vertices": 2089,
+      "source": "approved lap edges copied from neighboring corrected Tripo faces",
+      "texture_group": "existing_painted_4k"
+    },
+    {
+      "object": "Puppet_robe_2_overlap",
+      "bone": "robe_2",
+      "vertices": 935,
+      "source": "approved lap edges copied from neighboring corrected Tripo faces",
+      "texture_group": "existing_painted_4k"
+    },
+    {
+      "object": "Puppet_robe_3_overlap",
+      "bone": "robe_3",
+      "vertices": 1292,
+      "source": "approved lap edges copied from neighboring corrected Tripo faces",
+      "texture_group": "existing_painted_4k"
+    },
+    {
+      "object": "Puppet_robe_4_overlap",
+      "bone": "robe_4",
+      "vertices": 956,
+      "source": "approved lap edges copied from neighboring corrected Tripo faces",
+      "texture_group": "existing_painted_4k"
+    },
+    {
+      "object": "Puppet_robe_5_overlap",
+      "bone": "robe_5",
+      "vertices": 2297,
+      "source": "approved lap edges copied from neighboring corrected Tripo faces",
+      "texture_group": "existing_painted_4k"
+    }
+  ]
+}

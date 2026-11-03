@@ -1,0 +1,42 @@
+[
+  {
+    "path": "D:/天章游戏开发/assets/source/characters/paper-puppet-skill-trial-20261103/raw/fuyuan-skill-9cf92743-corrected-4k.zip",
+    "bytes": 3193495,
+    "sha256": "d593c39a278c908e7c6344c1b2cab5ba9c72213165a6ac061041b48f00a509f8"
+  },
+  {
+    "path": "D:/天章游戏开发/assets/source/characters/paper-puppet-skill-trial-20261103/working/fuyuan-skill-corrected-source.blend",
+    "bytes": 2979279,
+    "sha256": "7f7057016f819b78f9f621c3f2d883f85e507e98ead9ad80ce5706b04c8b2a39"
+  },
+  {
+    "path": "D:/天章游戏开发/assets/source/characters/paper-puppet-skill-trial-20261103/working/fuyuan-rigid-puppet.blend",
+    "bytes": 3729127,
+    "sha256": "b7b037e42888858e0aa7494a7ccfa0a029a357bf6aca1e3a33da1237e298b669"
+  },
+  {
+    "path": "D:/天章游戏开发/assets/source/characters/paper-puppet-skill-trial-20261103/export/fuyuan-rigid-puppet.fbx",
+    "bytes": 6681452,
+    "sha256": "4bd43605a292962c46bf35a1f10d53fe790b21a67758c26896e24279e6cba09a"
+  },
+  {
+    "path": "D:/天章游戏开发/assets/generated-character-art/fuyuan-paper-puppet-skill-trial-20261103/front.png",
+    "bytes": 1347442,
+    "sha256": "d317fa9434a1239b039a1ce1a8feff8320ac19a3a3d30c0d5a78e5bb0f1009a1"
+  },
+  {
+    "path": "D:/天章游戏开发/assets/generated-character-art/fuyuan-paper-puppet-skill-trial-20261103/back.png",
+    "bytes": 1309229,
+    "sha256": "f2e4d17a3754bdc1af8b543773a0b00a73dc9769e1e80e4855d25a4b76ec2f8f"
+  },
+  {
+    "path": "D:/天章游戏开发/assets/generated-character-art/fuyuan-paper-puppet-skill-trial-20261103/left.png",
+    "bytes": 682949,
+    "sha256": "d67833e4a7f9c403f4cd804160cbca6b268f326b092b514c59b9640c28ec426a"
+  },
+  {
+    "path": "D:/天章游戏开发/assets/generated-character-art/fuyuan-paper-puppet-skill-trial-20261103/right.png",
+    "bytes": 699160,
+    "sha256": "d8cf6ff07b869b079218e131713197489df13c12e8aab4da1ba5692cb2200140"
+  }
+]

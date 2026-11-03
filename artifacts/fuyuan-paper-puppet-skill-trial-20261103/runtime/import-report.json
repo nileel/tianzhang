@@ -1,0 +1,58 @@
+{
+    "model": "Assets/Model/model.fbx",
+    "renderers": 30,
+    "skinnedRenderers": 30,
+    "meshCount": 30,
+    "vertices": 115904,
+    "triangles": 144432,
+    "clips": [
+        {
+            "name": "FuYuan_Puppet_Rig|walk",
+            "seconds": 1.3333333730697632,
+            "fps": 30.0,
+            "curves": 230
+        },
+        {
+            "name": "FuYuan_Puppet_Rig|cast",
+            "seconds": 2.0,
+            "fps": 30.0,
+            "curves": 230
+        },
+        {
+            "name": "FuYuan_Puppet_Rig|attack",
+            "seconds": 1.5000001192092896,
+            "fps": 30.0,
+            "curves": 230
+        }
+    ],
+    "materials": [
+        {
+            "name": "Puppet_Ink_Inner",
+            "shader": "Standard",
+            "path": "Assets/Model/model.fbx",
+            "texture": "",
+            "color": {
+                "r": 0.03799999877810478,
+                "g": 0.0430000014603138,
+                "b": 0.04800000041723251,
+                "a": 1.0
+            },
+            "width": 0,
+            "height": 0
+        },
+        {
+            "name": "tripo_mat_aa5cdbc9",
+            "shader": "Standard",
+            "path": "Assets/Model/Materials/tripo_mat_aa5cdbc9.mat",
+            "texture": "Assets/Model/Textures/fuyuan-skill-9cf92743-corrected-4k_basecolor.jpg",
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "width": 4096,
+            "height": 4096
+        }
+    ]
+}

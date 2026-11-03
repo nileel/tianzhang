@@ -1,0 +1,548 @@
+{
+  "raw_import_max_surface_error_m": 0.010000467300415039,
+  "raw_import_issue": "Blender importer set hips.use_connect=True, suppressing valid animated hips translation. Only imported verification rig disconnected; FBX unchanged.",
+  "corrected_import_max_surface_error_m": 7.030442930044956e-07,
+  "samples": 90,
+  "records": [
+    {
+      "action": "walk",
+      "frame": 11,
+      "object": "Puppet_forearm_R",
+      "max_nearest_distance_m": 2.995096224367444e-07
+    },
+    {
+      "action": "walk",
+      "frame": 11,
+      "object": "Puppet_chest",
+      "max_nearest_distance_m": 1.3075715799004684e-07
+    },
+    {
+      "action": "walk",
+      "frame": 11,
+      "object": "Puppet_upperarm_R",
+      "max_nearest_distance_m": 2.5474014364590403e-07
+    },
+    {
+      "action": "walk",
+      "frame": 11,
+      "object": "Puppet_hand_R",
+      "max_nearest_distance_m": 5.513429641723633e-07
+    },
+    {
+      "action": "walk",
+      "frame": 11,
+      "object": "Puppet_head",
+      "max_nearest_distance_m": 3.637836982761655e-07
+    },
+    {
+      "action": "walk",
+      "frame": 11,
+      "object": "Puppet_hand_L",
+      "max_nearest_distance_m": 5.364418029785156e-07
+    },
+    {
+      "action": "walk",
+      "frame": 11,
+      "object": "Puppet_forearm_L",
+      "max_nearest_distance_m": 4.054238615935901e-07
+    },
+    {
+      "action": "walk",
+      "frame": 11,
+      "object": "Puppet_upperarm_L",
+      "max_nearest_distance_m": 2.6749555104288447e-07
+    },
+    {
+      "action": "walk",
+      "frame": 11,
+      "object": "Puppet_robe_0",
+      "max_nearest_distance_m": 6.861919814582507e-07
+    },
+    {
+      "action": "walk",
+      "frame": 11,
+      "object": "Puppet_robe_1",
+      "max_nearest_distance_m": 5.217534635448828e-07
+    },
+    {
+      "action": "walk",
+      "frame": 11,
+      "object": "Puppet_foot_L",
+      "max_nearest_distance_m": 2.4705337864361354e-07
+    },
+    {
+      "action": "walk",
+      "frame": 11,
+      "object": "Puppet_robe_2",
+      "max_nearest_distance_m": 4.480271513784828e-07
+    },
+    {
+      "action": "walk",
+      "frame": 11,
+      "object": "Puppet_foot_R",
+      "max_nearest_distance_m": 4.0434417769574793e-07
+    },
+    {
+      "action": "walk",
+      "frame": 11,
+      "object": "Puppet_robe_5",
+      "max_nearest_distance_m": 5.990192448734888e-07
+    },
+    {
+      "action": "walk",
+      "frame": 11,
+      "object": "Puppet_robe_4",
+      "max_nearest_distance_m": 6.181737148835964e-07
+    },
+    {
+      "action": "walk",
+      "frame": 11,
+      "object": "Puppet_robe_3",
+      "max_nearest_distance_m": 6.665667910965567e-07
+    },
+    {
+      "action": "walk",
+      "frame": 11,
+      "object": "Internal_upperarm_L",
+      "max_nearest_distance_m": 2.546584028095822e-07
+    },
+    {
+      "action": "walk",
+      "frame": 11,
+      "object": "Internal_forearm_L",
+      "max_nearest_distance_m": 3.588674815091508e-07
+    },
+    {
+      "action": "walk",
+      "frame": 11,
+      "object": "Internal_thigh_L",
+      "max_nearest_distance_m": 1.2065571297625866e-07
+    },
+    {
+      "action": "walk",
+      "frame": 11,
+      "object": "Internal_shin_L",
+      "max_nearest_distance_m": 2.7161428306499147e-07
+    },
+    {
+      "action": "walk",
+      "frame": 11,
+      "object": "Internal_upperarm_R",
+      "max_nearest_distance_m": 1.6361617838356324e-07
+    },
+    {
+      "action": "walk",
+      "frame": 11,
+      "object": "Internal_forearm_R",
+      "max_nearest_distance_m": 2.154235829721074e-07
+    },
+    {
+      "action": "walk",
+      "frame": 11,
+      "object": "Internal_thigh_R",
+      "max_nearest_distance_m": 1.2105761015845928e-07
+    },
+    {
+      "action": "walk",
+      "frame": 11,
+      "object": "Internal_shin_R",
+      "max_nearest_distance_m": 1.2733686105548259e-07
+    },
+    {
+      "action": "walk",
+      "frame": 11,
+      "object": "Puppet_robe_0_overlap",
+      "max_nearest_distance_m": 6.707591637677979e-07
+    },
+    {
+      "action": "walk",
+      "frame": 11,
+      "object": "Puppet_robe_1_overlap",
+      "max_nearest_distance_m": 4.926969268126413e-07
+    },
+    {
+      "action": "walk",
+      "frame": 11,
+      "object": "Puppet_robe_2_overlap",
+      "max_nearest_distance_m": 4.7145164216999547e-07
+    },
+    {
+      "action": "walk",
+      "frame": 11,
+      "object": "Puppet_robe_3_overlap",
+      "max_nearest_distance_m": 6.69392250074452e-07
+    },
+    {
+      "action": "walk",
+      "frame": 11,
+      "object": "Puppet_robe_4_overlap",
+      "max_nearest_distance_m": 5.92309447711159e-07
+    },
+    {
+      "action": "walk",
+      "frame": 11,
+      "object": "Puppet_robe_5_overlap",
+      "max_nearest_distance_m": 5.911837206440396e-07
+    },
+    {
+      "action": "cast",
+      "frame": 31,
+      "object": "Puppet_forearm_R",
+      "max_nearest_distance_m": 5.364418029785156e-07
+    },
+    {
+      "action": "cast",
+      "frame": 31,
+      "object": "Puppet_chest",
+      "max_nearest_distance_m": 2.4439722778879513e-07
+    },
+    {
+      "action": "cast",
+      "frame": 31,
+      "object": "Puppet_upperarm_R",
+      "max_nearest_distance_m": 4.009492329259956e-07
+    },
+    {
+      "action": "cast",
+      "frame": 31,
+      "object": "Puppet_hand_R",
+      "max_nearest_distance_m": 5.462856051963172e-07
+    },
+    {
+      "action": "cast",
+      "frame": 31,
+      "object": "Puppet_head",
+      "max_nearest_distance_m": 3.6164107086733566e-07
+    },
+    {
+      "action": "cast",
+      "frame": 31,
+      "object": "Puppet_hand_L",
+      "max_nearest_distance_m": 5.462856051963172e-07
+    },
+    {
+      "action": "cast",
+      "frame": 31,
+      "object": "Puppet_forearm_L",
+      "max_nearest_distance_m": 5.364418029785156e-07
+    },
+    {
+      "action": "cast",
+      "frame": 31,
+      "object": "Puppet_upperarm_L",
+      "max_nearest_distance_m": 3.758668469799886e-07
+    },
+    {
+      "action": "cast",
+      "frame": 31,
+      "object": "Puppet_robe_0",
+      "max_nearest_distance_m": 7.015523806330748e-07
+    },
+    {
+      "action": "cast",
+      "frame": 31,
+      "object": "Puppet_robe_1",
+      "max_nearest_distance_m": 4.798544068762567e-07
+    },
+    {
+      "action": "cast",
+      "frame": 31,
+      "object": "Puppet_foot_L",
+      "max_nearest_distance_m": 1.313444641937167e-07
+    },
+    {
+      "action": "cast",
+      "frame": 31,
+      "object": "Puppet_robe_2",
+      "max_nearest_distance_m": 3.545098650192813e-07
+    },
+    {
+      "action": "cast",
+      "frame": 31,
+      "object": "Puppet_foot_R",
+      "max_nearest_distance_m": 1.296063913969192e-07
+    },
+    {
+      "action": "cast",
+      "frame": 31,
+      "object": "Puppet_robe_5",
+      "max_nearest_distance_m": 4.810098630514403e-07
+    },
+    {
+      "action": "cast",
+      "frame": 31,
+      "object": "Puppet_robe_4",
+      "max_nearest_distance_m": 3.220168309781002e-07
+    },
+    {
+      "action": "cast",
+      "frame": 31,
+      "object": "Puppet_robe_3",
+      "max_nearest_distance_m": 6.978136184443429e-07
+    },
+    {
+      "action": "cast",
+      "frame": 31,
+      "object": "Internal_upperarm_L",
+      "max_nearest_distance_m": 2.8778922001038154e-07
+    },
+    {
+      "action": "cast",
+      "frame": 31,
+      "object": "Internal_forearm_L",
+      "max_nearest_distance_m": 5.405651677392598e-07
+    },
+    {
+      "action": "cast",
+      "frame": 31,
+      "object": "Internal_thigh_L",
+      "max_nearest_distance_m": 1.4310961660157773e-07
+    },
+    {
+      "action": "cast",
+      "frame": 31,
+      "object": "Internal_shin_L",
+      "max_nearest_distance_m": 3.1096692509891e-07
+    },
+    {
+      "action": "cast",
+      "frame": 31,
+      "object": "Internal_upperarm_R",
+      "max_nearest_distance_m": 3.129243850708008e-07
+    },
+    {
+      "action": "cast",
+      "frame": 31,
+      "object": "Internal_forearm_R",
+      "max_nearest_distance_m": 5.0046611477228e-07
+    },
+    {
+      "action": "cast",
+      "frame": 31,
+      "object": "Internal_thigh_R",
+      "max_nearest_distance_m": 1.42586671358913e-07
+    },
+    {
+      "action": "cast",
+      "frame": 31,
+      "object": "Internal_shin_R",
+      "max_nearest_distance_m": 2.4970563572424e-07
+    },
+    {
+      "action": "cast",
+      "frame": 31,
+      "object": "Puppet_robe_0_overlap",
+      "max_nearest_distance_m": 6.838723720647977e-07
+    },
+    {
+      "action": "cast",
+      "frame": 31,
+      "object": "Puppet_robe_1_overlap",
+      "max_nearest_distance_m": 4.794493406734546e-07
+    },
+    {
+      "action": "cast",
+      "frame": 31,
+      "object": "Puppet_robe_2_overlap",
+      "max_nearest_distance_m": 3.437778843817796e-07
+    },
+    {
+      "action": "cast",
+      "frame": 31,
+      "object": "Puppet_robe_3_overlap",
+      "max_nearest_distance_m": 7.030442930044956e-07
+    },
+    {
+      "action": "cast",
+      "frame": 31,
+      "object": "Puppet_robe_4_overlap",
+      "max_nearest_distance_m": 3.3194822890436626e-07
+    },
+    {
+      "action": "cast",
+      "frame": 31,
+      "object": "Puppet_robe_5_overlap",
+      "max_nearest_distance_m": 4.798544068762567e-07
+    },
+    {
+      "action": "attack",
+      "frame": 21,
+      "object": "Puppet_forearm_R",
+      "max_nearest_distance_m": 4.460403317807504e-07
+    },
+    {
+      "action": "attack",
+      "frame": 21,
+      "object": "Puppet_chest",
+      "max_nearest_distance_m": 3.6538241943162575e-07
+    },
+    {
+      "action": "attack",
+      "frame": 21,
+      "object": "Puppet_upperarm_R",
+      "max_nearest_distance_m": 4.31104780318492e-07
+    },
+    {
+      "action": "attack",
+      "frame": 21,
+      "object": "Puppet_hand_R",
+      "max_nearest_distance_m": 4.214684850012418e-07
+    },
+    {
+      "action": "attack",
+      "frame": 21,
+      "object": "Puppet_head",
+      "max_nearest_distance_m": 3.595628754737845e-07
+    },
+    {
+      "action": "attack",
+      "frame": 21,
+      "object": "Puppet_hand_L",
+      "max_nearest_distance_m": 5.364418029785156e-07
+    },
+    {
+      "action": "attack",
+      "frame": 21,
+      "object": "Puppet_forearm_L",
+      "max_nearest_distance_m": 6.481577088379709e-07
+    },
+    {
+      "action": "attack",
+      "frame": 21,
+      "object": "Puppet_upperarm_L",
+      "max_nearest_distance_m": 4.0046438698482234e-07
+    },
+    {
+      "action": "attack",
+      "frame": 21,
+      "object": "Puppet_robe_0",
+      "max_nearest_distance_m": 5.990221438878507e-07
+    },
+    {
+      "action": "attack",
+      "frame": 21,
+      "object": "Puppet_robe_1",
+      "max_nearest_distance_m": 4.798544068762567e-07
+    },
+    {
+      "action": "attack",
+      "frame": 21,
+      "object": "Puppet_foot_L",
+      "max_nearest_distance_m": 1.313444641937167e-07
+    },
+    {
+      "action": "attack",
+      "frame": 21,
+      "object": "Puppet_robe_2",
+      "max_nearest_distance_m": 3.071953074140765e-07
+    },
+    {
+      "action": "attack",
+      "frame": 21,
+      "object": "Puppet_foot_R",
+      "max_nearest_distance_m": 1.296063913969192e-07
+    },
+    {
+      "action": "attack",
+      "frame": 21,
+      "object": "Puppet_robe_5",
+      "max_nearest_distance_m": 4.810098630514403e-07
+    },
+    {
+      "action": "attack",
+      "frame": 21,
+      "object": "Puppet_robe_4",
+      "max_nearest_distance_m": 2.908590488459595e-07
+    },
+    {
+      "action": "attack",
+      "frame": 21,
+      "object": "Puppet_robe_3",
+      "max_nearest_distance_m": 5.964770366517769e-07
+    },
+    {
+      "action": "attack",
+      "frame": 21,
+      "object": "Internal_upperarm_L",
+      "max_nearest_distance_m": 4.023313522338867e-07
+    },
+    {
+      "action": "attack",
+      "frame": 21,
+      "object": "Internal_forearm_L",
+      "max_nearest_distance_m": 5.031211003370117e-07
+    },
+    {
+      "action": "attack",
+      "frame": 21,
+      "object": "Internal_thigh_L",
+      "max_nearest_distance_m": 1.4310961660157773e-07
+    },
+    {
+      "action": "attack",
+      "frame": 21,
+      "object": "Internal_shin_L",
+      "max_nearest_distance_m": 3.1096692509891e-07
+    },
+    {
+      "action": "attack",
+      "frame": 21,
+      "object": "Internal_upperarm_R",
+      "max_nearest_distance_m": 4.099850912098191e-07
+    },
+    {
+      "action": "attack",
+      "frame": 21,
+      "object": "Internal_forearm_R",
+      "max_nearest_distance_m": 2.6987152068613796e-07
+    },
+    {
+      "action": "attack",
+      "frame": 21,
+      "object": "Internal_thigh_R",
+      "max_nearest_distance_m": 1.42586671358913e-07
+    },
+    {
+      "action": "attack",
+      "frame": 21,
+      "object": "Internal_shin_R",
+      "max_nearest_distance_m": 2.4970563572424e-07
+    },
+    {
+      "action": "attack",
+      "frame": 21,
+      "object": "Puppet_robe_0_overlap",
+      "max_nearest_distance_m": 4.807789650840277e-07
+    },
+    {
+      "action": "attack",
+      "frame": 21,
+      "object": "Puppet_robe_1_overlap",
+      "max_nearest_distance_m": 4.794493406734546e-07
+    },
+    {
+      "action": "attack",
+      "frame": 21,
+      "object": "Puppet_robe_2_overlap",
+      "max_nearest_distance_m": 3.115910942597111e-07
+    },
+    {
+      "action": "attack",
+      "frame": 21,
+      "object": "Puppet_robe_3_overlap",
+      "max_nearest_distance_m": 5.969770313640765e-07
+    },
+    {
+      "action": "attack",
+      "frame": 21,
+      "object": "Puppet_robe_4_overlap",
+      "max_nearest_distance_m": 2.958734341973468e-07
+    },
+    {
+      "action": "attack",
+      "frame": 21,
+      "object": "Puppet_robe_5_overlap",
+      "max_nearest_distance_m": 4.798544068762567e-07
+    }
+  ]
+}
