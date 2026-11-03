@@ -1,0 +1,127 @@
+{
+    "fps": 30,
+    "width": 1120,
+    "height": 800,
+    "frameCount": 1086,
+    "model": "model",
+    "boundsMin": {
+        "x": -0.4765789806842804,
+        "y": -0.08387613296508789,
+        "z": -0.3051767349243164
+    },
+    "boundsMax": {
+        "x": 0.6063780784606934,
+        "y": 1.7838562726974488,
+        "z": 0.6887271404266357
+    },
+    "segments": [
+        {
+            "clip": "walk",
+            "facing": 0,
+            "firstFrame": 0,
+            "frameCount": 48
+        },
+        {
+            "clip": "walk",
+            "facing": 1,
+            "firstFrame": 48,
+            "frameCount": 48
+        },
+        {
+            "clip": "walk",
+            "facing": 2,
+            "firstFrame": 96,
+            "frameCount": 48
+        },
+        {
+            "clip": "walk",
+            "facing": 3,
+            "firstFrame": 144,
+            "frameCount": 48
+        },
+        {
+            "clip": "walk",
+            "facing": 4,
+            "firstFrame": 192,
+            "frameCount": 48
+        },
+        {
+            "clip": "walk",
+            "facing": 5,
+            "firstFrame": 240,
+            "frameCount": 48
+        },
+        {
+            "clip": "cast",
+            "facing": 0,
+            "firstFrame": 288,
+            "frameCount": 72
+        },
+        {
+            "clip": "cast",
+            "facing": 1,
+            "firstFrame": 360,
+            "frameCount": 72
+        },
+        {
+            "clip": "cast",
+            "facing": 2,
+            "firstFrame": 432,
+            "frameCount": 72
+        },
+        {
+            "clip": "cast",
+            "facing": 3,
+            "firstFrame": 504,
+            "frameCount": 72
+        },
+        {
+            "clip": "cast",
+            "facing": 4,
+            "firstFrame": 576,
+            "frameCount": 72
+        },
+        {
+            "clip": "cast",
+            "facing": 5,
+            "firstFrame": 648,
+            "frameCount": 72
+        },
+        {
+            "clip": "attack",
+            "facing": 0,
+            "firstFrame": 720,
+            "frameCount": 61
+        },
+        {
+            "clip": "attack",
+            "facing": 1,
+            "firstFrame": 781,
+            "frameCount": 61
+        },
+        {
+            "clip": "attack",
+            "facing": 2,
+            "firstFrame": 842,
+            "frameCount": 61
+        },
+        {
+            "clip": "attack",
+            "facing": 3,
+            "firstFrame": 903,
+            "frameCount": 61
+        },
+        {
+            "clip": "attack",
+            "facing": 4,
+            "firstFrame": 964,
+            "frameCount": 61
+        },
+        {
+            "clip": "attack",
+            "facing": 5,
+            "firstFrame": 1025,
+            "frameCount": 61
+        }
+    ]
+}

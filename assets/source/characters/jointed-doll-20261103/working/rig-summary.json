@@ -1,0 +1,62 @@
+{
+  "meshes": [
+    {
+      "name": "Body",
+      "verts": 25279,
+      "faces": 25287,
+      "materials": [
+        "tripo_mat_70b22547"
+      ]
+    },
+    {
+      "name": "sleeve.L",
+      "verts": 2981,
+      "faces": 2979,
+      "materials": [
+        "tripo_mat_e5069dcb"
+      ]
+    },
+    {
+      "name": "sleeve.R",
+      "verts": 2981,
+      "faces": 2979,
+      "materials": [
+        "tripo_mat_e5069dcb"
+      ]
+    },
+    {
+      "name": "front_panel.L",
+      "verts": 3354,
+      "faces": 3352,
+      "materials": [
+        "tripo_mat_d34218e0"
+      ]
+    },
+    {
+      "name": "front_panel.R",
+      "verts": 3354,
+      "faces": 3352,
+      "materials": [
+        "tripo_mat_d34218e0"
+      ]
+    },
+    {
+      "name": "rear_panel.L",
+      "verts": 3304,
+      "faces": 3302,
+      "materials": [
+        "tripo_mat_bf35f67e"
+      ]
+    },
+    {
+      "name": "rear_panel.R",
+      "verts": 3304,
+      "faces": 3302,
+      "materials": [
+        "tripo_mat_bf35f67e"
+      ]
+    }
+  ],
+  "bones": 23,
+  "mode": "continuous body with localized joint weights; six rigid single-bone panels"
+}

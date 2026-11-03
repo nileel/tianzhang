@@ -1,0 +1,221 @@
+{
+  "front": {
+    "path": "D:\\天章游戏开发\\assets\\generated-character-art\\fuyuan-jointed-doll-production-20261103\\sleeve\\front.png",
+    "pixels": [
+      1024,
+      1536
+    ],
+    "mode": "RGBA",
+    "alpha_range": [
+      0,
+      254
+    ],
+    "alpha_nonzero_bbox": [
+      0,
+      48,
+      1008,
+      1497
+    ],
+    "alpha_128_bbox": [
+      175,
+      72,
+      831,
+      1463
+    ],
+    "opaque_width": 656,
+    "opaque_height": 1391,
+    "width_height_ratio": 0.4716031631919482,
+    "fully_transparent_pixels": 923472,
+    "semi_transparent_below_128_pixels": 9869,
+    "area_pixels": 1572864,
+    "sampled_row_widths": {
+      "150": {
+        "min_x": 448,
+        "max_x": 575,
+        "width_px": 128
+      },
+      "400": {
+        "min_x": 235,
+        "max_x": 790,
+        "width_px": 556
+      },
+      "768": {
+        "min_x": 175,
+        "max_x": 829,
+        "width_px": 655
+      },
+      "1200": {
+        "min_x": 176,
+        "max_x": 590,
+        "width_px": 415
+      }
+    },
+    "sha256": "facf4138513837814d7de88d8a9d3b295c95a66f183fd2c2466708370aca0320"
+  },
+  "back": {
+    "path": "D:\\天章游戏开发\\assets\\generated-character-art\\fuyuan-jointed-doll-production-20261103\\sleeve\\back.png",
+    "pixels": [
+      1024,
+      1536
+    ],
+    "mode": "RGBA",
+    "alpha_range": [
+      0,
+      254
+    ],
+    "alpha_nonzero_bbox": [
+      89,
+      39,
+      980,
+      1479
+    ],
+    "alpha_128_bbox": [
+      179,
+      73,
+      844,
+      1468
+    ],
+    "opaque_width": 665,
+    "opaque_height": 1395,
+    "width_height_ratio": 0.4767025089605735,
+    "fully_transparent_pixels": 915732,
+    "semi_transparent_below_128_pixels": 9361,
+    "area_pixels": 1572864,
+    "sampled_row_widths": {
+      "150": {
+        "min_x": 447,
+        "max_x": 575,
+        "width_px": 129
+      },
+      "400": {
+        "min_x": 237,
+        "max_x": 787,
+        "width_px": 551
+      },
+      "768": {
+        "min_x": 179,
+        "max_x": 843,
+        "width_px": 665
+      },
+      "1200": {
+        "min_x": 424,
+        "max_x": 843,
+        "width_px": 420
+      }
+    },
+    "sha256": "99d57140ba36f21b63eaf93cb4df99ecd50ac813c9981f6842c407c6a8c026d3"
+  },
+  "left": {
+    "path": "D:\\天章游戏开发\\assets\\generated-character-art\\fuyuan-jointed-doll-production-20261103\\sleeve\\left.png",
+    "pixels": [
+      1024,
+      1536
+    ],
+    "mode": "RGBA",
+    "alpha_range": [
+      0,
+      253
+    ],
+    "alpha_nonzero_bbox": [
+      41,
+      66,
+      952,
+      1498
+    ],
+    "alpha_128_bbox": [
+      490,
+      69,
+      524,
+      1465
+    ],
+    "opaque_width": 34,
+    "opaque_height": 1396,
+    "width_height_ratio": 0.024355300859598854,
+    "fully_transparent_pixels": 1530181,
+    "semi_transparent_below_128_pixels": 10644,
+    "area_pixels": 1572864,
+    "sampled_row_widths": {
+      "150": {
+        "min_x": 491,
+        "max_x": 523,
+        "width_px": 33
+      },
+      "400": {
+        "min_x": 500,
+        "max_x": 523,
+        "width_px": 24
+      },
+      "768": {
+        "min_x": 500,
+        "max_x": 523,
+        "width_px": 24
+      },
+      "1200": {
+        "min_x": 501,
+        "max_x": 522,
+        "width_px": 22
+      }
+    },
+    "sha256": "dbfb40f27769762b6e2b68e922c4480298d03c79071c4e6ca0e7a9a1ae2f43ea"
+  },
+  "right": {
+    "path": "D:\\天章游戏开发\\assets\\generated-character-art\\fuyuan-jointed-doll-production-20261103\\sleeve\\right.png",
+    "pixels": [
+      1024,
+      1536
+    ],
+    "mode": "RGBA",
+    "alpha_range": [
+      0,
+      253
+    ],
+    "alpha_nonzero_bbox": [
+      33,
+      23,
+      976,
+      1472
+    ],
+    "alpha_128_bbox": [
+      499,
+      69,
+      534,
+      1468
+    ],
+    "opaque_width": 35,
+    "opaque_height": 1399,
+    "width_height_ratio": 0.02501786990707648,
+    "fully_transparent_pixels": 1530885,
+    "semi_transparent_below_128_pixels": 8273,
+    "area_pixels": 1572864,
+    "sampled_row_widths": {
+      "150": {
+        "min_x": 499,
+        "max_x": 531,
+        "width_px": 33
+      },
+      "400": {
+        "min_x": 499,
+        "max_x": 522,
+        "width_px": 24
+      },
+      "768": {
+        "min_x": 499,
+        "max_x": 522,
+        "width_px": 24
+      },
+      "1200": {
+        "min_x": 499,
+        "max_x": 522,
+        "width_px": 24
+      }
+    },
+    "sha256": "5533dbf8856fb02bb1bf628f306d16549c7823af4895a81825661ed7fb9c07e1"
+  },
+  "comparison": {
+    "front_back_mirrored_mask_iou": 0.9717372291395111,
+    "front_width_if_height_0_48_m": 0.22636951833213514,
+    "back_width_if_height_0_48_m": 0.22881720430107527,
+    "left_midrow_thickness_if_height_0_48_m": 0.00825214899713467,
+    "right_midrow_thickness_if_height_0_48_m": 0.00823445318084346
+  }
+}

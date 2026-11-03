@@ -1,0 +1,87 @@
+{
+  "authorization": {
+    "scope": "Existing Tripo Studio credits for subsequent work; no per-operation confirmation required",
+    "userQuote": "点数直接用，后面都不用我授权",
+    "balanceLastVerified": 2635,
+    "priorAssetCumulativeSpent": 145,
+    "allowRecharge": false
+  },
+  "jobs": [
+    {
+      "unit": "body",
+      "id": "5642ad55-8650-4f06-9e00-c1b587900a83",
+      "quote": 55,
+      "actualDebit": 55,
+      "balanceBefore": 2635,
+      "balanceAfter": 2580,
+      "settings": {
+        "model": "H3.1",
+        "ultra": true,
+        "texture": "4K",
+        "quadTarget": 25000,
+        "pbr": false,
+        "delight": false
+      },
+      "status": "generated",
+      "uiFaces": 25287
+    },
+    {
+      "unit": "rear-panel",
+      "id": "f7fa1e29-b148-4ee7-bf64-a228989ae6e4",
+      "quote": 40,
+      "actualDebit": 40,
+      "balanceBefore": 2580,
+      "balanceAfter": 2540,
+      "settings": {
+        "model": "H3.1",
+        "ultra": false,
+        "texture": "4K",
+        "quadTarget": 3000,
+        "pbr": false,
+        "delight": false
+      },
+      "status": "generated",
+      "uiFaces": 3302
+    },
+    {
+      "unit": "front-panel",
+      "id": "db1fdc46-3d87-45e8-8d5c-576283126a17",
+      "quote": 40,
+      "actualDebit": 40,
+      "balanceBefore": 2540,
+      "balanceAfter": 2500,
+      "settings": {
+        "model": "H3.1",
+        "ultra": false,
+        "texture": "4K",
+        "quadTarget": 3000,
+        "pbr": false,
+        "delight": false
+      },
+      "status": "generated",
+      "uiFaces": 3352
+    },
+    {
+      "unit": "sleeve",
+      "id": "d1c3abe9-56e9-4009-af1a-60fa90e9302c",
+      "quote": 40,
+      "actualDebit": 40,
+      "balanceBefore": 2500,
+      "balanceAfter": 2460,
+      "settings": {
+        "model": "H3.1",
+        "ultra": false,
+        "texture": "4K",
+        "quadTarget": 3000,
+        "pbr": false,
+        "delight": false
+      },
+      "status": "generated",
+      "uiFaces": 2979
+    }
+  ],
+  "currentRoundSpent": 175,
+  "balanceAfter": 2460,
+  "priorExperimentsSpent": 145,
+  "cumulativeCharacterExperimentSpent": 320
+}

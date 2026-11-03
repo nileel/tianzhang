@@ -1,0 +1,76 @@
+{
+  "files": [
+    {
+      "unit": "body",
+      "path": "body/extracted/fuyuan-jointed-body-5642ad55-4k.fbm/fuyuan-jointed-body-5642ad55-4k_basecolor.jpg",
+      "bytes": 1530391,
+      "sha256": "520ab3be2918aee93ca5293c44f96e966700739267a9cca3fdca7abef34671e5"
+    },
+    {
+      "unit": "body",
+      "path": "body/extracted/fuyuan-jointed-body-5642ad55-4k.fbx",
+      "bytes": 1644912,
+      "sha256": "78d916edbc0ed4faa95eeee71ce53232700f4960654ed92b2071592c817697bf"
+    },
+    {
+      "unit": "body",
+      "path": "body/source.zip",
+      "bytes": 3116907,
+      "sha256": "cdab2eb11f1fc38366ab4feb59317c2f69d71ff044427083eab684e2ad14d57d"
+    },
+    {
+      "unit": "sleeve",
+      "path": "sleeve/extracted/fuyuan-jointed-sleeve-d1c3abe9-4k.fbm/fuyuan-jointed-sleeve-d1c3abe9-4k_basecolor.jpg",
+      "bytes": 1327458,
+      "sha256": "01e85b6b7fbff1b0471911019f3ebf63028f86dab913aa445b06bd1882d88706"
+    },
+    {
+      "unit": "sleeve",
+      "path": "sleeve/extracted/fuyuan-jointed-sleeve-d1c3abe9-4k.fbx",
+      "bytes": 180080,
+      "sha256": "ffa88f95f51321b1ad6712679d6661d999eb72418749c0ab708b478cd6fc3377"
+    },
+    {
+      "unit": "sleeve",
+      "path": "sleeve/source.zip",
+      "bytes": 1446614,
+      "sha256": "6b875e48d150ffe412dc1dc6751445b372a67e1d3398375f192e029e40aef2f0"
+    },
+    {
+      "unit": "front-panel",
+      "path": "front-panel/extracted/fuyuan-jointed-front-panel-db1fdc46-4k.fbm/fuyuan-jointed-front-panel-db1fdc46-4k_basecolor.jpg",
+      "bytes": 894102,
+      "sha256": "df3e9498d6bf165f6a2b571d4357579e5d2d450f5d17625597e8f40dd963ab86"
+    },
+    {
+      "unit": "front-panel",
+      "path": "front-panel/extracted/fuyuan-jointed-front-panel-db1fdc46-4k.fbx",
+      "bytes": 202624,
+      "sha256": "a74c5ae471a49de7d828659df888cc5e15efd12f38133c655b651a1363a26a0d"
+    },
+    {
+      "unit": "front-panel",
+      "path": "front-panel/source.zip",
+      "bytes": 1027295,
+      "sha256": "dd7e6c112451ce093d0676980a1f7973e3a170d206a5da3f93a6a581651e5d9b"
+    },
+    {
+      "unit": "rear-panel",
+      "path": "rear-panel/extracted/fuyuan-jointed-rear-panel-f7fa1e29-4k.fbm/fuyuan-jointed-rear-panel-f7fa1e29-4k_basecolor.jpg",
+      "bytes": 1191013,
+      "sha256": "1e874457344ef28ef6a094a85d0ffc5a5271f847a02f54ec2a2be4ee10488bb2"
+    },
+    {
+      "unit": "rear-panel",
+      "path": "rear-panel/extracted/fuyuan-jointed-rear-panel-f7fa1e29-4k.fbx",
+      "bytes": 208384,
+      "sha256": "64ef9d4b59abd1fc77fe8843ce2f4e6b5aaaa6db88a6f0e943c179cdfa932143"
+    },
+    {
+      "unit": "rear-panel",
+      "path": "rear-panel/source.zip",
+      "bytes": 1354443,
+      "sha256": "df2c682e1b8b6c14e00f5869c1b66dd3e793c09a5d5df7f3ee632b5463b24b23"
+    }
+  ]
+}

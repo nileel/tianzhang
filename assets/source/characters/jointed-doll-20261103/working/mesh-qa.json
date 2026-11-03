@@ -1,0 +1,65 @@
+[
+  {
+    "name": "Body",
+    "vertices": 25279,
+    "faces": 25287,
+    "boundaryEdges": 242,
+    "nonManifoldEdges": 281,
+    "maxWeights": 2,
+    "maxWeightSumError": 2.9802322387695312e-08
+  },
+  {
+    "name": "sleeve.L",
+    "vertices": 2981,
+    "faces": 2979,
+    "boundaryEdges": 0,
+    "nonManifoldEdges": 0,
+    "maxWeights": 1,
+    "maxWeightSumError": 0.0
+  },
+  {
+    "name": "sleeve.R",
+    "vertices": 2981,
+    "faces": 2979,
+    "boundaryEdges": 0,
+    "nonManifoldEdges": 0,
+    "maxWeights": 1,
+    "maxWeightSumError": 0.0
+  },
+  {
+    "name": "front_panel.L",
+    "vertices": 3354,
+    "faces": 3352,
+    "boundaryEdges": 0,
+    "nonManifoldEdges": 0,
+    "maxWeights": 1,
+    "maxWeightSumError": 0.0
+  },
+  {
+    "name": "front_panel.R",
+    "vertices": 3354,
+    "faces": 3352,
+    "boundaryEdges": 0,
+    "nonManifoldEdges": 0,
+    "maxWeights": 1,
+    "maxWeightSumError": 0.0
+  },
+  {
+    "name": "rear_panel.L",
+    "vertices": 3304,
+    "faces": 3302,
+    "boundaryEdges": 0,
+    "nonManifoldEdges": 0,
+    "maxWeights": 1,
+    "maxWeightSumError": 0.0
+  },
+  {
+    "name": "rear_panel.R",
+    "vertices": 3304,
+    "faces": 3302,
+    "boundaryEdges": 0,
+    "nonManifoldEdges": 0,
+    "maxWeights": 1,
+    "maxWeightSumError": 0.0
+  }
+]

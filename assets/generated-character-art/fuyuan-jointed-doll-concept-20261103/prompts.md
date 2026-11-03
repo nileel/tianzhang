@@ -8,7 +8,15 @@
 - 暂拟两片袖挂片、四片腰挂袍片。袖片根部属于前臂，腰片根部属于腰带；主体保留上臂、前臂、手、髋、大腿、小腿和鞋。头发与角色身份沿用用户参考。
 - 结构上可将肢体生成和衣片生成分开，避免上一轮整袍外壳缺少内部臂腿的问题。挂件仍需独立的完整背面、厚度、接口与活动间隙；独立生成不保证自动装配或不穿插。
 - 实际图像已核对：两只袖挂片、四片长袍挂片均画出；主体双臂双腿完整且分开。右栏保留宽袖长袍外形。图中铆点用于表达挂接关系，具体挂点数量、轴向与尺寸尚未定稿；此图不能作为已验收的工程装配图或直接代替建模四视图。
-- 后续只有用户确认此拆分思路后，才为主体及挂件分别制作一致四视图并检查三维生成报价。
+- 用户随后要求内层肢体与衣服统一配色，并说“那你开始做吧”。已生成 `jointed-doll-assembly-concept-v2-unified-color.png`，继续制作记录见 [独立四视图与生成](../fuyuan-jointed-doll-production-20261103/README.md)。
+
+## 内层肢体配色修订
+
+以下提示词以原示意图为输入，使用内置 image_gen 编辑；保存原版，修订版单独命名。前臂和裤腿采用炭黑旧金裂纹，保留关节及挂点。
+
+```text
+Use case: precise-object-edit. Edit the supplied Fu Yuan articulated-doll construction sheet with ONE narrowly scoped material/color correction. Preserve the entire three-column layout, all Chinese labels, exact character identity, face, hair, body proportions, poses, all joint and mounting shapes, two detached sleeve panels, four detached waist panels, accessories, garment silhouette, lighting and background. Change ONLY the plain gray forearm coverings and plain gray trousers (both thighs and both shins) on the left complete-body figure to match the upper tunic's charcoal INK-BLACK matte material and restrained ANTIQUE-GOLD branching crack pattern. Use somewhat thinner and sparser gold lines than the outer tunic, so these remain a quiet fitted inner layer. They should clearly belong to the same outfit, not bare gray wood or metal plates. Apply the SAME correction to any exposed corresponding forearm/trouser areas in the right assembled figure. Keep knees, elbows, wrists, ankles and small aged-brass pivot caps fully readable and unchanged; do not paint over brass or skin. Do not change the detachable clothing panels in the center. No added clothing shapes, no long skirt on the left body, no new accessories, no removal of complete arms or legs. Match the original image dimensions and crop exactly. This is only the approved inner-limb color and texture edit.
+```
 
 ## 实际提示词
 
