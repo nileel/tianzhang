@@ -1,0 +1,27 @@
+{
+  "sha256": "cab0301be4f788600d81715f4972d2ffcb00aef1525c5834ba8c0e52f84ced0d",
+  "meshNodes": [
+    "FU_Yuan_Working"
+  ],
+  "sourceVertexCount": 21603,
+  "exportVertexRecordsAfterUVNormalSplits": 38473,
+  "mappedSourceVertices": 21603,
+  "unmatchedRestPositions": 0,
+  "maxWeightDifference": 0.0,
+  "triangles": 41118,
+  "mat": "tripo_85868f1b_d4fa_4d32_981f_3682bb7e561b",
+  "images": 1,
+  "springJoints": [
+    [
+      "Sec_Sleeve_L_01",
+      "Sec_Sleeve_L_02",
+      "Sec_Sleeve_L_End"
+    ],
+    [
+      "Sec_Sleeve_R_01",
+      "Sec_Sleeve_R_02",
+      "Sec_Sleeve_R_End"
+    ]
+  ],
+  "exportSpace": "glTF XYZ = Blender X,Z,-Y; vertex match exactly in float32."
+}

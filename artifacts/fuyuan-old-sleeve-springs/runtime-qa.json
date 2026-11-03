@@ -1,0 +1,227 @@
+{
+  "player": "Unity 6000.3.18f1 | UniVRM 0.131.4 Windows x64, Vrm10FastSpringboneRuntimeStandalone.Process(1/60)",
+  "modelSHA256": "cab0301be4f788600d81715f4972d2ffcb00aef1525c5834ba8c0e52f84ced0d",
+  "motionSHA256": "bf9ce399d52ce02755b567c52a29a48b7e6aa5e373388225bc8cfb741b37d24e",
+  "comparison": "Same VRM and body motion, no control rig. Both at fixed 60 Hz. Spring ON alone advances solver, including 90 steps in starting pose prior to playback. No colliders. Net change = distance between the two world points exactly 12 steps apart. L and R are source bone name suffixes.",
+  "landmarks": {
+    "L_outer": {
+      "name": "L_outer",
+      "p": [
+        -0.6407181024551392,
+        0.16983383893966675,
+        0.6079140305519104
+      ],
+      "sourceVertex": 7318
+    },
+    "L_lining": {
+      "name": "L_lining",
+      "p": [
+        -0.6747679710388184,
+        0.05771856755018234,
+        0.6751831769943237
+      ],
+      "sourceVertex": 7340
+    },
+    "L_seam": {
+      "name": "L_seam",
+      "p": [
+        -0.2993893325328827,
+        0.015364031307399273,
+        1.3437224626541138
+      ],
+      "sourceVertex": 11510
+    },
+    "R_outer": {
+      "name": "R_outer",
+      "p": [
+        0.6415485739707947,
+        0.16983401775360107,
+        0.6079140305519104
+      ],
+      "sourceVertex": 18029
+    },
+    "R_lining": {
+      "name": "R_lining",
+      "p": [
+        0.6755984425544739,
+        0.05771874636411667,
+        0.6751831769943237
+      ],
+      "sourceVertex": 18443
+    },
+    "R_seam": {
+      "name": "R_seam",
+      "p": [
+        0.3002198338508606,
+        0.015364110469818115,
+        1.3437224626541138
+      ],
+      "sourceVertex": 20016
+    }
+  },
+  "offClothMaxErrorVsBlenderMM": {
+    "walk_0": 0.00035933645466385526,
+    "walk_30": 0.00034298096307926683,
+    "attack_0": 0.0004147736503893785,
+    "attack_44": 0.0003954433618733476,
+    "attack_58": 0.0003276895947924684,
+    "stop_18": 0.00046562753177879307,
+    "stop_30": 0.00046562753177879307
+  },
+  "stop": {
+    "off": {
+      "L_outer": {
+        "netMM": 0.0,
+        "deltaHeightMM": 0.0,
+        "pathMM": 0.0
+      },
+      "L_lining": {
+        "netMM": 0.0,
+        "deltaHeightMM": 0.0,
+        "pathMM": 0.0
+      },
+      "L_seam": {
+        "netMM": 0.0,
+        "deltaHeightMM": 0.0,
+        "pathMM": 0.0
+      },
+      "R_outer": {
+        "netMM": 0.0,
+        "deltaHeightMM": 0.0,
+        "pathMM": 0.0
+      },
+      "R_lining": {
+        "netMM": 0.0,
+        "deltaHeightMM": 0.0,
+        "pathMM": 0.0
+      },
+      "R_seam": {
+        "netMM": 0.0,
+        "deltaHeightMM": 0.0,
+        "pathMM": 0.0
+      }
+    },
+    "on": {
+      "L_outer": {
+        "netMM": 0.0,
+        "deltaHeightMM": 0.0,
+        "pathMM": 0.0
+      },
+      "L_lining": {
+        "netMM": 214.454,
+        "deltaHeightMM": 49.3851,
+        "pathMM": 216.5814
+      },
+      "L_seam": {
+        "netMM": 0.3775,
+        "deltaHeightMM": 0.0984,
+        "pathMM": 0.3814
+      },
+      "R_outer": {
+        "netMM": 0.0,
+        "deltaHeightMM": 0.0,
+        "pathMM": 0.0
+      },
+      "R_lining": {
+        "netMM": 214.777,
+        "deltaHeightMM": 49.3211,
+        "pathMM": 216.9182
+      },
+      "R_seam": {
+        "netMM": 0.3839,
+        "deltaHeightMM": 0.1225,
+        "pathMM": 0.3879
+      }
+    }
+  },
+  "weightFractions": {
+    "L_outer": {
+      "LeftUpperArm": 0.29921796917915344,
+      "LeftLowerArm": 0.3323817551136017,
+      "Sec_Hem_BL_01": 0.23973751068115234,
+      "Sec_Hem_BL_02": 0.12866276502609253
+    },
+    "L_lining": {
+      "LeftUpperArm": 0.07986369729042053,
+      "LeftLowerArm": 0.22013629972934723,
+      "Sec_Sleeve_L_01": 0.014649680815637112,
+      "Sec_Sleeve_L_02": 0.6853502988815308
+    },
+    "L_seam": {
+      "LeftShoulder": 0.0450267419219017,
+      "LeftUpperArm": 0.856595516204834,
+      "Sec_Sleeve_L_01": 0.0983777716755867
+    },
+    "R_outer": {
+      "RightUpperArm": 0.298557847738266,
+      "RightLowerArm": 0.33304187655448914,
+      "Sec_Hem_BR_01": 0.23973751068115234,
+      "Sec_Hem_BR_02": 0.12866276502609253
+    },
+    "R_lining": {
+      "RightUpperArm": 0.08017348498106003,
+      "RightLowerArm": 0.21982651948928833,
+      "Sec_Sleeve_R_01": 0.012324361130595207,
+      "Sec_Sleeve_R_02": 0.6876756548881531
+    },
+    "R_seam": {
+      "RightShoulder": 0.051633745431900024,
+      "RightUpperArm": 0.8479998707771301,
+      "Sec_Sleeve_R_01": 0.10036639124155045
+    }
+  },
+  "edges": {
+    "walk": {
+      "L": {
+        "peakOnRuntimeIndex": 47,
+        "blenderFrame": 24.5,
+        "peakOnGrowthMM": 364.639163,
+        "edgeRestLengthMM": 17.4795762,
+        "worstOffGrowthSameFrameMM": 280.709058,
+        "onEdgeRestPositionBlender": [
+          -0.6473622,
+          0.192256615,
+          0.623693168
+        ]
+      },
+      "R": {
+        "peakOnRuntimeIndex": 14,
+        "blenderFrame": 8.0,
+        "peakOnGrowthMM": 369.27765600000004,
+        "edgeRestLengthMM": 17.4597688,
+        "worstOffGrowthSameFrameMM": 286.162227,
+        "onEdgeRestPositionBlender": [
+          0.6473622,
+          0.1922568,
+          0.623693168
+        ]
+      }
+    },
+    "attack": {
+      "L": {
+        "peakOnRuntimeIndex": 78,
+        "blenderFrame": 40.0,
+        "peakOnGrowthMM": 465.1846,
+        "edgeRestLengthMM": 17.4795762,
+        "worstOffGrowthSameFrameMM": 299.74580000000003,
+        "onEdgeRestPositionBlender": [
+          -0.6473622,
+          0.192256615,
+          0.623693168
+        ]
+      },
+      "R": {
+        "peakOnRuntimeIndex": 17,
+        "blenderFrame": 9.5,
+        "peakOnGrowthMM": 453.41193699999997,
+        "edgeRestLengthMM": 17.4597688,
+        "worstOffGrowthSameFrameMM": 235.68381399999998,
+        "onEdgeRestPositionBlender": [
+          0.6473622,
+          0.1922568,
+          0.623693168
+        ]
+      }
+    }
+  }
+}
