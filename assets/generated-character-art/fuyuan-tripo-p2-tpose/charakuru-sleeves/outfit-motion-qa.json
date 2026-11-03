@@ -1,0 +1,317 @@
+{
+  "projectId": "4e5377ea-a0d9-46e8-8b1a-74859c9db6d7",
+  "revision": 44,
+  "filesInArchiveMatchWorkingCopies": {
+    "sourceBlend": {
+      "member": "documents/source-blend/844920cb6c6560f5785c73e5c575dc2c9e4c4d355734b6ab1a15e2089b3e8338.blend",
+      "sha256": "844920cb6c6560f5785c73e5c575dc2c9e4c4d355734b6ab1a15e2089b3e8338"
+    },
+    "updatedModel": {
+      "member": "assets/331f0587-aebb-4f93-8f51-e9e1c0ac6910/Fu-Yuan-outfit.fbx",
+      "sha256": "e187c64b9caa5d18351dde28e254ddfffcda518f28e8a7463aebe16b6274e40e"
+    },
+    "reviewVRM": {
+      "member": "documents/vrm/f929d28419546c0cf772657b5fbf97a8ec4f03cb76b0f43692b7af8e93a6d593.vrm",
+      "sha256": "f929d28419546c0cf772657b5fbf97a8ec4f03cb76b0f43692b7af8e93a6d593"
+    }
+  },
+  "referenceVRMSha256": "bcb0ceaa0b4b27cb6128b94b0502d8e5f70b3cdd272f744186fef29a2888aa7c",
+  "embeddedTexturePayloadsUnchanged": 4,
+  "blend": {
+    "hands": {
+      "handVertices": 3281,
+      "bones": 32,
+      "wristWorldPositions": {
+        "L": [
+          0.6961386799812317,
+          0.019366055727005005,
+          1.4221092462539673
+        ],
+        "R": [
+          -0.6631161570549011,
+          0.012519322335720062,
+          1.4208793640136719
+        ]
+      },
+      "maxHandTargetErrorMM": 0.00023047996238778875
+    },
+    "boots": {
+      "islands": [
+        10543,
+        10712
+      ],
+      "islandVertices": [
+        169,
+        169
+      ],
+      "modifiedShinVertices": 287
+    },
+    "sleeves": {
+      "paintedVertices": 6537,
+      "newCapsules": 4,
+      "newGroups": 2,
+      "sleeveSprings": [
+        "SleeveInnerL",
+        "SleeveCuffL",
+        "SleeveInnerR",
+        "SleeveCuffR"
+      ]
+    },
+    "integrity": {
+      "changedPositionIslands": {
+        "10543": 84,
+        "10712": 84,
+        "10881": 1641,
+        "13039": 1640
+      },
+      "sleeveShoulderLiningMaxPositionDeltaMM": 0.0,
+      "elbowsWorldM": {
+        "L": [
+          0.3563888669013977,
+          0.017042314633727074,
+          1.4580495357513428
+        ],
+        "R": [
+          -0.3495718538761139,
+          0.01704230159521103,
+          1.45805025100708
+        ]
+      },
+      "hairAndSkirtSpringsUnchanged": true,
+      "otherMeshesUvMaterialsUnchanged": true
+    }
+  },
+  "hand": {
+    "walkSampleFramesAt60Hz": [
+      10,
+      30,
+      60,
+      90,
+      120
+    ],
+    "intersectionUnit": "pairs of triangles from different digits",
+    "before": {
+      "left": {
+        "restCuffUpperClearance": {
+          "maxSkinAboveCloth": 10.67,
+          "medianSkinAboveCloth": 8.67,
+          "positiveSlices": 88,
+          "slices": 89
+        },
+        "digitIntersectionsInFrameOrder": [
+          150,
+          150,
+          150,
+          150,
+          150
+        ]
+      },
+      "right": {
+        "restCuffUpperClearance": {
+          "maxSkinAboveCloth": 1.33,
+          "medianSkinAboveCloth": -0.13,
+          "positiveSlices": 39,
+          "slices": 88
+        },
+        "digitIntersectionsInFrameOrder": [
+          114,
+          114,
+          114,
+          114,
+          114
+        ]
+      }
+    },
+    "registeredVRM": {
+      "left": {
+        "restCuffUpperClearance": {
+          "maxSkinAboveCloth": -7.44,
+          "medianSkinAboveCloth": -10.98,
+          "positiveSlices": 0,
+          "slices": 92
+        },
+        "digitIntersectionsInFrameOrder": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "right": {
+        "restCuffUpperClearance": {
+          "maxSkinAboveCloth": -7.48,
+          "medianSkinAboveCloth": -10.74,
+          "positiveSlices": 0,
+          "slices": 92
+        },
+        "digitIntersectionsInFrameOrder": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "fingerBoneCentersInsideTheirHand": {
+      "left": 15,
+      "right": 15
+    }
+  },
+  "boot": {
+    "sha256": "f929d28419546c0cf772657b5fbf97a8ec4f03cb76b0f43692b7af8e93a6d593",
+    "protocol": "Actual exported skinned mesh / Charakuru default walk at 60 Hz from frame 0 to 120 inclusive. Eight equally fixed sample views at 0/+35/+75/+120/180/-120/-75/-35 degrees, 8 degrees of downward pitch. Rendered 250 px/m for z-ordered labels. Shaft metric: originally taller than 0.24m, topmost shin triangle in front of projected front-half skirt by >3 mm. Collar and lower ankle remain intentionally outside. Rim check at 35 degrees, frames 52 and 109, 768 precise ray locations per frame.",
+    "base": {
+      "shaftOutside24": {
+        "peak": 1875,
+        "frame": 97,
+        "view": "-35"
+      },
+      "visibleUpperBoundaryVertices": {
+        "peak": 13,
+        "frame": 95,
+        "view": "0"
+      },
+      "upperOverAir": {
+        "peak": 1767,
+        "frame": 93,
+        "view": "75"
+      },
+      "peakIntrusionM": {
+        "peak": 0.225,
+        "frame": 96,
+        "view": "-75"
+      }
+    },
+    "final": {
+      "shaftOutside24": {
+        "peak": 0,
+        "frame": 120,
+        "view": "75"
+      },
+      "visibleUpperBoundaryVertices": {
+        "peak": 1,
+        "frame": 52,
+        "view": "35"
+      },
+      "upperOverAir": {
+        "peak": 0,
+        "frame": 120,
+        "view": "75"
+      },
+      "peakIntrusionM": {
+        "peak": 0,
+        "frame": 120,
+        "view": "75"
+      }
+    },
+    "shoeAndAnkle": {
+      "vertices": 5061,
+      "frames": 121,
+      "maxMotionDeltaMM": 0,
+      "maxUvDelta": 0,
+      "maxWeightDelta": 0
+    },
+    "rimDetail": {
+      "frame52": {
+        "view": 35,
+        "preciseSamples": 768,
+        "visibleSamples": 27,
+        "visibleArcMM": 8.265
+      },
+      "frame109": {
+        "view": 35,
+        "preciseSamples": 768,
+        "visibleSamples": 0,
+        "visibleArcMM": 0
+      }
+    }
+  },
+  "sleeves": {
+    "protocol": "Charakuru PreviewAvatar, actual exported geometry/skin/spring settings. Units in mm. Both forearms flex around world vertical axis toward toes over 18 frames at 60 Hz, then hold. Tip samples within 90 mm of restored outer/lining landmark on their own surface. Each edge report uses resting length >=1 mm on same connected garment island, |x|>0.245 m and height 0.56–1.62 m. Extreme: length >2x rest AND increase >20 mm. VRM UV split vertices can duplicate some seam edges. Walk uses bundled elyth_base_walk_v1.vrma, 60 Hz, 120 frames.",
+    "flexionDegrees": {
+      "left": 65,
+      "right": 65
+    },
+    "flexionStretch": {
+      "left_outer": {
+        "edges": 7325,
+        "p99AddedMM": 7.264,
+        "maxAddedMM": 16.073,
+        "p99Ratio": 1.44,
+        "extreme": 0
+      },
+      "left_lining": {
+        "edges": 2585,
+        "p99AddedMM": 3.341,
+        "maxAddedMM": 5.217,
+        "p99Ratio": 1.132,
+        "extreme": 0
+      },
+      "right_outer": {
+        "edges": 7321,
+        "p99AddedMM": 7.028,
+        "maxAddedMM": 18.39,
+        "p99Ratio": 1.449,
+        "extreme": 0
+      },
+      "right_lining": {
+        "edges": 2585,
+        "p99AddedMM": 3.328,
+        "maxAddedMM": 5.246,
+        "p99Ratio": 1.131,
+        "extreme": 0
+      }
+    },
+    "medianDisplacementDuringFirst0_2SecondsAfterStopMM": {
+      "left_outerTip": 111.385,
+      "left_liningTip": 116.423,
+      "left_seam": 0,
+      "right_outerTip": 109.477,
+      "right_liningTip": 119.136,
+      "right_seam": 0,
+      "left_wrist": 0,
+      "right_wrist": 0
+    },
+    "settledWalk": {
+      "testedFrames": "120 to 300 inclusive, every 4th frame at 60 Hz",
+      "sampleVertices": 4013,
+      "deepSamplesUnit": "vertex-frame observations more than 5 mm inside probed surface",
+      "before": {
+        "torso": {
+          "deepSamples": 3524,
+          "maxMM": 103.223,
+          "worstFrame": 132
+        },
+        "waist": {
+          "deepSamples": 3141,
+          "maxMM": 102.895,
+          "worstFrame": 156
+        },
+        "skirt": {
+          "deepSamples": 7019,
+          "maxMM": 99.701,
+          "worstFrame": 240
+        }
+      },
+      "registeredVRM": {
+        "torso": {
+          "deepSamples": 1353,
+          "maxMM": 42.105,
+          "worstFrame": 280
+        },
+        "waist": {
+          "deepSamples": 8,
+          "maxMM": 8.589,
+          "worstFrame": 160
+        },
+        "skirt": {
+          "deepSamples": 264,
+          "maxMM": 39.419,
+          "worstFrame": 204
+        }
+      }
+    }
+  }
+}
