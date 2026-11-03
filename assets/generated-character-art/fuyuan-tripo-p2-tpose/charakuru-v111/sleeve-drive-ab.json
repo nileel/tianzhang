@@ -1,0 +1,85 @@
+{
+  "blender": "5.2.0",
+  "originalFbxStopTest": {
+    "protocol": "Fresh Blender 5.2 FBX import with use_anim=True. Object coordinates converted to evaluated world positions. All arms are in pose mode. Overlap of the four sleeve influences uses their summed vertex weight >0.001; sample direct test uses left root influence >0.001. Frame 1 vs 18 rest, then +45deg around parent local Euler Z at frame 18, held to 30; from this pose add +10deg to Sec_Sleeve_L_01 local Euler Z.",
+    "source": "assets/source/characters/platform-evaluation/tripo/fuyuan-p2-tpose/exports/fu-yuan-hanhong-zhenjun-tpose-p2-local-rig-v1.fbx",
+    "sourceSHA256": "811848c3fa8b5ce925e3ce991813ed450481319ac25c302ca2868710bfbcf668",
+    "importer": "5.2.0 LTS",
+    "parent": "LeftUpperArm",
+    "watchCount": 3946,
+    "directCount": 1952,
+    "vertices": 21603,
+    "polygons": 21810,
+    "bones": 39,
+    "actions": 0,
+    "constraints": 0,
+    "driverCount": 0,
+    "modifiers": [
+      "ARMATURE"
+    ],
+    "weights": {
+      "Sec_Sleeve_L_01": [
+        1952,
+        0.3227
+      ],
+      "Sec_Sleeve_L_02": [
+        1450,
+        0.7
+      ],
+      "Sec_Sleeve_R_01": [
+        1960,
+        0.3227
+      ],
+      "Sec_Sleeve_R_02": [
+        1455,
+        0.7
+      ]
+    },
+    "rest18maxMM": 0.0,
+    "raiseArm45maxMM": 375.7599182128906,
+    "hold12maxMM": 0.0,
+    "directSleeveRotation10MedianMM": 26.724214553833008,
+    "directSleeveRotation10MaxMM": 61.11637878417969
+  },
+  "pairProtocol": "Same rest-mesh P2, 39-bone working Blends. Clear actions in memory, identity pose, both sleeve roots rotated by 10 degrees about world X with mirror signs, all other joints held fixed. Watch 0.40 < abs(x) < 0.71, 0.60 < z < 1.05 in metres; count nonzero sleeve group membership above 1e-5.",
+  "pairFolder": "assets/source/characters/platform-evaluation/tripo/fuyuan-p2-tpose/working",
+  "pairSHA256": {
+    "fu-yuan-p2-v2-project-rig-axisfix-v1.blend": "8e60cd27c1f8e668df677651a867dc97ea4d954a91a9576a22296ff9edc052d8",
+    "fuyuan-charakuru-v111-weights-test.blend": "b34e2b666c425d99c0ac785259cea0a02fb536e16622e07557b45613fadeee63"
+  },
+  "pairResults": {
+    "fu-yuan-p2-v2-project-rig-axisfix-v1.blend": [
+      {
+        "mesh": "FU_Yuan_Working",
+        "rig": "TZ_HumanoidEval",
+        "allSleeveGroups": {
+          "Sec_Sleeve_L_01": 1963,
+          "Sec_Sleeve_L_02": 1453,
+          "Sec_Sleeve_R_01": 1969,
+          "Sec_Sleeve_R_02": 1458
+        },
+        "sample": 1710,
+        "verticesMovedOver1mm": 1590,
+        "medianMM": 41.783,
+        "maxMM": 85.982
+      }
+    ],
+    "fuyuan-charakuru-v111-weights-test.blend": [
+      {
+        "mesh": "苻渊_Charakuru蒙皮",
+        "rig": "苻渊_39骨_Charakuru测试",
+        "allSleeveGroups": {
+          "Sec_Sleeve_L_01": 0,
+          "Sec_Sleeve_L_02": 0,
+          "Sec_Sleeve_R_01": 0,
+          "Sec_Sleeve_R_02": 0
+        },
+        "sample": 1710,
+        "verticesMovedOver1mm": 0,
+        "medianMM": 0.0,
+        "maxMM": 0.0
+      }
+    ]
+  },
+  "restoredVrmReference": "../charakuru-sleeves/restored-sleeves-qa.json"
+}
