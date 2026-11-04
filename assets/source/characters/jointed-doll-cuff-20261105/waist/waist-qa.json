@@ -1,0 +1,198 @@
+{
+  "unit": "mm unless otherwise indicated",
+  "waist_rest": {
+    "front_panel.L": {
+      "old": {
+        "width_mm": 320.0,
+        "tab_above_cloth_mm": 64.6
+      },
+      "new": {
+        "width_mm": 234.6,
+        "tab_above_cloth_mm": -15.0
+      }
+    },
+    "front_panel.R": {
+      "old": {
+        "width_mm": 320.0,
+        "tab_above_cloth_mm": 64.6
+      },
+      "new": {
+        "width_mm": 234.6,
+        "tab_above_cloth_mm": -15.0
+      }
+    },
+    "rear_panel.L": {
+      "old": {
+        "width_mm": 420.0,
+        "tab_above_cloth_mm": 76.0
+      },
+      "new": {
+        "width_mm": 294.2,
+        "tab_above_cloth_mm": -15.0
+      }
+    },
+    "rear_panel.R": {
+      "old": {
+        "width_mm": 420.0,
+        "tab_above_cloth_mm": 76.0
+      },
+      "new": {
+        "width_mm": 294.2,
+        "tab_above_cloth_mm": -15.0
+      }
+    }
+  },
+  "motion": "Both actual Blender sample sets from the Nov 3 rig. Original geometry uses original pre-correction bone matrices. New geometry uses refitted mesh coordinates and actual rekeyed bone matrices.",
+  "method": "Project actual triangles in front (-Y) or rear (+Y) at 1.5 mm grid spacing. For each matching panel, compare the exterior depth of its near-side leg and shoe below rest-space z=0.78 m wherever both overlap in projection. Positive values indicate the underlayer is visible through or in front of the waist panel. Does not certify 360-degree visibility, internal contact, or continuously swept geometry between captured samples.",
+  "poses": {
+    "walk": {
+      "old": {
+        "panel_pose_count": 192,
+        "positive_over_1mm_count": 25,
+        "most_forward_leg_minus_outer_cloth_mm": 44.97,
+        "max_visible_underlayer_cm2": 32.56,
+        "worst_pose": "walk48/rear_panel.R"
+      },
+      "new": {
+        "panel_pose_count": 192,
+        "positive_over_1mm_count": 0,
+        "most_forward_leg_minus_outer_cloth_mm": -1.15,
+        "max_visible_underlayer_cm2": 0.0,
+        "worst_pose": "walk2/rear_panel.R"
+      }
+    },
+    "cast36": {
+      "old": {
+        "panel_pose_count": 4,
+        "positive_over_1mm_count": 0,
+        "most_forward_leg_minus_outer_cloth_mm": -16.61,
+        "max_visible_underlayer_cm2": 0.0,
+        "worst_pose": "cast36/front_panel.L"
+      },
+      "new": {
+        "panel_pose_count": 4,
+        "positive_over_1mm_count": 0,
+        "most_forward_leg_minus_outer_cloth_mm": -4.12,
+        "max_visible_underlayer_cm2": 0.0,
+        "worst_pose": "cast36/front_panel.L"
+      }
+    },
+    "attack30": {
+      "old": {
+        "panel_pose_count": 4,
+        "positive_over_1mm_count": 0,
+        "most_forward_leg_minus_outer_cloth_mm": -15.24,
+        "max_visible_underlayer_cm2": 0.0,
+        "worst_pose": "attack30/front_panel.R"
+      },
+      "new": {
+        "panel_pose_count": 4,
+        "positive_over_1mm_count": 0,
+        "most_forward_leg_minus_outer_cloth_mm": -2.71,
+        "max_visible_underlayer_cm2": 0.0,
+        "worst_pose": "attack30/front_panel.R"
+      }
+    }
+  },
+  "hem_distance": {
+    "measurement": "Median exact 3D point-to-triangle distance in mm from lower 73 mm band of a panel to same-side leg/shoe mesh below rest-space z=0.78 m, per pose. Columns are original then revised; walking counts skin distance in the actual pose, including deliberate heel release.",
+    "per_panel_pose_mm": {
+      "walk1 / front_panel.L": [
+        146.9,
+        118.8
+      ],
+      "walk1 / front_panel.R": [
+        298.2,
+        269.4
+      ],
+      "walk1 / rear_panel.L": [
+        306.5,
+        278.7
+      ],
+      "walk1 / rear_panel.R": [
+        72.6,
+        114.9
+      ],
+      "walk13 / front_panel.L": [
+        189.4,
+        164.9
+      ],
+      "walk13 / front_panel.R": [
+        265.3,
+        235.0
+      ],
+      "walk13 / rear_panel.L": [
+        169.5,
+        142.8
+      ],
+      "walk13 / rear_panel.R": [
+        169.1,
+        142.5
+      ],
+      "walk25 / front_panel.L": [
+        297.5,
+        269.0
+      ],
+      "walk25 / front_panel.R": [
+        147.7,
+        118.9
+      ],
+      "walk25 / rear_panel.L": [
+        75.3,
+        114.0
+      ],
+      "walk25 / rear_panel.R": [
+        307.3,
+        279.2
+      ],
+      "walk37 / front_panel.L": [
+        264.6,
+        234.4
+      ],
+      "walk37 / front_panel.R": [
+        196.1,
+        172.0
+      ],
+      "walk37 / rear_panel.L": [
+        177.8,
+        149.7
+      ],
+      "walk37 / rear_panel.R": [
+        161.9,
+        135.6
+      ],
+      "cast36 / front_panel.L": [
+        178.9,
+        155.4
+      ],
+      "cast36 / front_panel.R": [
+        210.9,
+        185.4
+      ],
+      "cast36 / rear_panel.L": [
+        205.8,
+        178.8
+      ],
+      "cast36 / rear_panel.R": [
+        143.6,
+        117.2
+      ],
+      "attack30 / front_panel.L": [
+        218.0,
+        192.3
+      ],
+      "attack30 / front_panel.R": [
+        178.3,
+        154.9
+      ],
+      "attack30 / rear_panel.L": [
+        134.5,
+        107.9
+      ],
+      "attack30 / rear_panel.R": [
+        216.0,
+        188.5
+      ]
+    }
+  }
+}

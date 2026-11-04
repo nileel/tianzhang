@@ -1,0 +1,26 @@
+{
+  "sampledFrames": {
+    "attack": 60,
+    "cast": 72,
+    "walk": 48
+  },
+  "intersectingObjectFramePairs": [],
+  "bindPoseHandPassage": {
+    "L": {
+      "handWidthMm": 114.7,
+      "handVertices": 937,
+      "blockedVertexRays": 0,
+      "handSilhouetteRays": 2270,
+      "blockedSilhouetteRays": 0,
+      "gridMm": 1.5
+    },
+    "R": {
+      "handWidthMm": 114.8,
+      "handVertices": 943,
+      "blockedVertexRays": 0,
+      "handSilhouetteRays": 2349,
+      "blockedSilhouetteRays": 0,
+      "gridMm": 1.5
+    }
+  }
+}

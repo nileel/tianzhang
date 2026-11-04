@@ -1,0 +1,52 @@
+{
+  "fbx": {
+    "path": "assets/source/characters/jointed-doll-cuff-20261105/export/fuyuan-jointed-doll-cuff.fbx",
+    "sha256": "71fd596616abaa8dc0623ecf6c62253f67e24ef6446c6f7ba67e18e2420c0200"
+  },
+  "buildInputs": {
+    "BuildPaperPuppet.cs": "b946c89f18c75cbc89400a9591ac18cab08499bb5e2629487774089735f8740a",
+    "PaperPuppetPlayer.cs": "2046039f38120aec5f0ab5b7e1542292eac9bbbe51d8d463a763758727c9b13d",
+    "manifest.json": "2799c809ed5d7e4ec2113e87eeea32dbc3037c7640ca6864e576140b3a46db6d",
+    "ProjectVersion.txt": "d03fca18d2e511a37f7a81f8709404ebb2a571d3e0e5c854038c91a943ae15da",
+    "material-map.json": "5c775c30658122f2730da805ca4c06d75aa45037da40669da47d2ad87b8cdf19"
+  },
+  "textures": {
+    "tripo_mat_70b22547": "520ab3be2918aee93ca5293c44f96e966700739267a9cca3fdca7abef34671e5",
+    "tripo_mat_ca52eafe": "5a693e98a6bb2fb70654d6601758aac91144a355c3e7297fa959279fb8cd748f",
+    "tripo_mat_d34218e0": "df3e9498d6bf165f6a2b571d4357579e5d2d450f5d17625597e8f40dd963ab86",
+    "tripo_mat_bf35f67e": "1e874457344ef28ef6a094a85d0ffc5a5271f847a02f54ec2a2be4ee10488bb2"
+  },
+  "playerFilesVerified": 139,
+  "videos": {
+    "three-actions-six-directions.mp4": "56de4dd3845e77255d09d55e9b588b9bc2210cf634ef749c96d8116af0d880ee",
+    "three-actions-preview.mp4": "f6f908deea3bcbe7f69116753cac48bd0da19453e146febfea029f2eb7df1983"
+  },
+  "comparison": {
+    "name": "before-after-details.png",
+    "sha256": "fcfd2cc6415a99493be14926514fb8ee797bbf3d5ab1c223ed3438c87043b484",
+    "frames": [
+      "cast-d3-f035",
+      "walk-d2-f011"
+    ],
+    "cropXYWH": [
+      [
+        373,
+        260,
+        244,
+        148
+      ],
+      [
+        450,
+        316,
+        220,
+        220
+      ]
+    ]
+  },
+  "previewCropXYWH": [
+    330,
+    165,
+    408,
+    408
+  ]
+}

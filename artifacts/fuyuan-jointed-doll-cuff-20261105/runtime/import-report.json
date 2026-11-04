@@ -1,0 +1,86 @@
+{
+    "model": "Assets/Model/model.fbx",
+    "renderers": 7,
+    "skinnedRenderers": 7,
+    "meshCount": 7,
+    "vertices": 79476,
+    "triangles": 99053,
+    "clips": [
+        {
+            "name": "JointedDollRig|walk",
+            "seconds": 1.5666667222976685,
+            "fps": 30.0,
+            "curves": 240
+        },
+        {
+            "name": "JointedDollRig|cast",
+            "seconds": 2.366666793823242,
+            "fps": 30.0,
+            "curves": 240
+        },
+        {
+            "name": "JointedDollRig|attack",
+            "seconds": 1.9666668176651,
+            "fps": 30.0,
+            "curves": 240
+        }
+    ],
+    "materials": [
+        {
+            "name": "tripo_mat_70b22547",
+            "shader": "Standard",
+            "path": "Assets/Model/Materials/tripo_mat_70b22547.mat",
+            "texture": "Assets/Model/Textures/fuyuan-jointed-body-5642ad55-4k_basecolor.jpg",
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "width": 4096,
+            "height": 4096
+        },
+        {
+            "name": "tripo_mat_d34218e0",
+            "shader": "Standard",
+            "path": "Assets/Model/Materials/tripo_mat_d34218e0.mat",
+            "texture": "Assets/Model/Textures/fuyuan-jointed-front-panel-db1fdc46-4k_basecolor.jpg",
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "width": 4096,
+            "height": 4096
+        },
+        {
+            "name": "tripo_mat_bf35f67e",
+            "shader": "Standard",
+            "path": "Assets/Model/Materials/tripo_mat_bf35f67e.mat",
+            "texture": "Assets/Model/Textures/fuyuan-jointed-rear-panel-f7fa1e29-4k_basecolor.jpg",
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "width": 4096,
+            "height": 4096
+        },
+        {
+            "name": "tripo_mat_ca52eafe",
+            "shader": "Standard",
+            "path": "Assets/Model/Materials/tripo_mat_ca52eafe.mat",
+            "texture": "Assets/Model/Textures/fuyuan-hollow-cuff-2247faf7-4k_basecolor.jpg",
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "width": 4096,
+            "height": 4096
+        }
+    ]
+}
