@@ -1,0 +1,9 @@
+{
+  "sampledFrames": {
+    "attack": 60,
+    "cast": 72,
+    "walk": 48
+  },
+  "intersectingObjectFramePairs": [],
+  "scope": "Three authored clips at integer source frames; no claim for other motions, interpolation, self-intersection or fabric simulation."
+}

@@ -1,0 +1,22 @@
+{
+  "L": {
+    "handSilhouetteRays": 2230,
+    "blockedEntryToWristRays": 0,
+    "gridMm": 1.5,
+    "axisSegmentM": [
+      0.35,
+      0.73
+    ],
+    "scope": "Bind-pose hand silhouette through the elbow entry to wrist opening; hanging lining beyond this interval is intentionally excluded."
+  },
+  "R": {
+    "handSilhouetteRays": 2221,
+    "blockedEntryToWristRays": 0,
+    "gridMm": 1.5,
+    "axisSegmentM": [
+      0.35,
+      0.73
+    ],
+    "scope": "Bind-pose hand silhouette through the elbow entry to wrist opening; hanging lining beyond this interval is intentionally excluded."
+  }
+}

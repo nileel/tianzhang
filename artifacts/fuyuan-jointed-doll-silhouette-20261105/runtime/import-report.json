@@ -1,0 +1,86 @@
+{
+    "model": "Assets/Model/model.fbx",
+    "renderers": 7,
+    "skinnedRenderers": 7,
+    "meshCount": 7,
+    "vertices": 80185,
+    "triangles": 99241,
+    "clips": [
+        {
+            "name": "JointedDollRig|walk",
+            "seconds": 1.5666667222976685,
+            "fps": 30.0,
+            "curves": 240
+        },
+        {
+            "name": "JointedDollRig|cast",
+            "seconds": 2.366666793823242,
+            "fps": 30.0,
+            "curves": 240
+        },
+        {
+            "name": "JointedDollRig|attack",
+            "seconds": 1.9666668176651,
+            "fps": 30.0,
+            "curves": 240
+        }
+    ],
+    "materials": [
+        {
+            "name": "tripo_mat_70b22547",
+            "shader": "Standard",
+            "path": "Assets/Model/Materials/tripo_mat_70b22547.mat",
+            "texture": "Assets/Model/Textures/Body.jpg",
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "width": 4096,
+            "height": 4096
+        },
+        {
+            "name": "tripo_mat_d34218e0",
+            "shader": "Standard",
+            "path": "Assets/Model/Materials/tripo_mat_d34218e0.mat",
+            "texture": "Assets/Model/Textures/FrontRobe.jpg",
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "width": 4096,
+            "height": 4096
+        },
+        {
+            "name": "tripo_mat_bf35f67e",
+            "shader": "Standard",
+            "path": "Assets/Model/Materials/tripo_mat_bf35f67e.mat",
+            "texture": "Assets/Model/Textures/RearRobe.jpg",
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "width": 4096,
+            "height": 4096
+        },
+        {
+            "name": "tripo_mat_29b70357",
+            "shader": "Standard",
+            "path": "Assets/Model/Materials/tripo_mat_29b70357.mat",
+            "texture": "Assets/Model/Textures/Sleeve.jpg",
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "width": 4096,
+            "height": 4096
+        }
+    ]
+}

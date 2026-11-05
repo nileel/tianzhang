@@ -1,0 +1,45 @@
+{
+  "created": "2026-11-05",
+  "tripoTaskId": "cd834ca9-0090-424c-b4ae-c1d1046fb1e9",
+  "creditsBefore": 2405,
+  "creditsSpent": 55,
+  "creditsAfter": 2350,
+  "minimumBalance": 2000,
+  "artifacts": [
+    {
+      "path": "working/fuyuan-jointed-doll-silhouette.blend",
+      "bytes": 8014308,
+      "sha256": "218f365e179672e7ce5bb06ccbd556f96d9b644e32056b5ad9da1ceb169021b8"
+    },
+    {
+      "path": "export/fuyuan-jointed-doll-silhouette.fbx",
+      "bytes": 9706044,
+      "sha256": "657179dfe7e0cd5d9c8559978b010bf3f8999217d3baf93bc87d64a5699d221f"
+    },
+    {
+      "path": "sleeve/source.zip",
+      "bytes": 1775135,
+      "sha256": "61d716ce154191aa0805b9d1c082a6d4ed05734d9bf08d256a9de1d5f9531967"
+    },
+    {
+      "path": "export/textures/Body.jpg",
+      "bytes": 1530391,
+      "sha256": "520ab3be2918aee93ca5293c44f96e966700739267a9cca3fdca7abef34671e5"
+    },
+    {
+      "path": "export/textures/Sleeve.jpg",
+      "bytes": 1451741,
+      "sha256": "34e950720afc50127976b74aec3ded276212740748ee9a0cc8e3c7a660dd627e"
+    },
+    {
+      "path": "export/textures/FrontRobe.jpg",
+      "bytes": 894102,
+      "sha256": "df3e9498d6bf165f6a2b571d4357579e5d2d450f5d17625597e8f40dd963ab86"
+    },
+    {
+      "path": "export/textures/RearRobe.jpg",
+      "bytes": 1191013,
+      "sha256": "1e874457344ef28ef6a094a85d0ffc5a5271f847a02f54ec2a2be4ee10488bb2"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "materials": [
+    {
+      "sourceMaterialName": "tripo_mat_70b22547",
+      "baseColorPath": "Assets/Model/Textures/Body.jpg"
+    },
+    {
+      "sourceMaterialName": "tripo_mat_29b70357",
+      "baseColorPath": "Assets/Model/Textures/Sleeve.jpg"
+    },
+    {
+      "sourceMaterialName": "tripo_mat_d34218e0",
+      "baseColorPath": "Assets/Model/Textures/FrontRobe.jpg"
+    },
+    {
+      "sourceMaterialName": "tripo_mat_bf35f67e",
+      "baseColorPath": "Assets/Model/Textures/RearRobe.jpg"
+    }
+  ]
+}

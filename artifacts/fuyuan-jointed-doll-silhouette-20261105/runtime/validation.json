@@ -1,0 +1,61 @@
+{
+  "fbx": {
+    "path": "assets/source/characters/jointed-doll-silhouette-20261105/export/fuyuan-jointed-doll-silhouette.fbx",
+    "sha256": "657179dfe7e0cd5d9c8559978b010bf3f8999217d3baf93bc87d64a5699d221f"
+  },
+  "buildInputs": {
+    "BuildPaperPuppet.cs": "bbccc02162dffcba94a5130cd6dc5f0a16ef3b3a009963f76ded0d06c00490fb",
+    "PaperPuppetPlayer.cs": "8a73f865a99647a416c1c660c6c2e750c8c35feadd2316ff6fc1da3c0db1cfc0",
+    "manifest.json": "2799c809ed5d7e4ec2113e87eeea32dbc3037c7640ca6864e576140b3a46db6d",
+    "ProjectVersion.txt": "d03fca18d2e511a37f7a81f8709404ebb2a571d3e0e5c854038c91a943ae15da",
+    "material-map.json": "ef28c3ff6976354d3581ad4cdb2702723e6095bf3c96fdfecdcf8e9cb0ce9bac"
+  },
+  "textures": {
+    "tripo_mat_70b22547": "520ab3be2918aee93ca5293c44f96e966700739267a9cca3fdca7abef34671e5",
+    "tripo_mat_29b70357": "34e950720afc50127976b74aec3ded276212740748ee9a0cc8e3c7a660dd627e",
+    "tripo_mat_d34218e0": "df3e9498d6bf165f6a2b571d4357579e5d2d450f5d17625597e8f40dd963ab86",
+    "tripo_mat_bf35f67e": "1e874457344ef28ef6a094a85d0ffc5a5271f847a02f54ec2a2be4ee10488bb2"
+  },
+  "playerFilesVerified": 139,
+  "videos": {
+    "three-actions-six-directions.mp4": "59f0efdac6279e0d6b153f1325a9f8d0045151f2fbb401c36cd805a4a4ffdcef",
+    "three-actions-preview.mp4": "679bcb61bf0a0246660ddae8d4f09ec39a5e2d17c22b113e02ce4af46294158d"
+  },
+  "comparison": {
+    "reference": "assets/generated-character-art/fuyuan-jointed-doll-cuff-20261105/concept/jointed-doll-assembly-concept-v3.png",
+    "referenceCropXYWH": [
+      1065,
+      144,
+      435,
+      767
+    ],
+    "runtimeCropXYWH": [
+      405,
+      146,
+      300,
+      458
+    ],
+    "displayedCharacterHeight": 760,
+    "pose": "cast-d3-f000",
+    "fixedCameraVerifiedEqual": true,
+    "baselineModelSha256": "71fd596616abaa8dc0623ecf6c62253f67e24ef6446c6f7ba67e18e2420c0200",
+    "previewDirections": [
+      3,
+      1
+    ],
+    "previewFrames": 362,
+    "previewCropXYWH": [
+      252,
+      48,
+      616,
+      616
+    ]
+  },
+  "visuals": {
+    "three-actions-preview.mp4": "679bcb61bf0a0246660ddae8d4f09ec39a5e2d17c22b113e02ce4af46294158d",
+    "design-before-after.png": "1aeaebe9632b76720818ddf29307d54777d2c50fa204b9e81463bd084f7abcb8",
+    "low-arm-reference.png": "328f514b8f936fdda50b89ae5ee1c7aba7f4adfe02b747da6b60d4cfbcb15c88",
+    "front-reference.png": "6a26b7a1d31498dd9e1d5969656e267d2614c8b29e7a5b3ec5ea4c2fe8d1de3b",
+    "cast-reference.png": "10799bf572d3294e30e6547b6bba6ca956e216e6ac9a23bf209ba8c5d9726483"
+  }
+}

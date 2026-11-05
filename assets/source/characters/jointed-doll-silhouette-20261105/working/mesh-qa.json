@@ -1,0 +1,129 @@
+{
+  "fps": 30,
+  "bones": 23,
+  "meshes": [
+    {
+      "name": "Body",
+      "vertices": 25279,
+      "polygons": 25287,
+      "triangles": 50423,
+      "boundaryEdges": 242,
+      "nonmanifoldEdges": 281,
+      "materials": [
+        "tripo_mat_70b22547"
+      ]
+    },
+    {
+      "name": "sleeve.L",
+      "vertices": 5463,
+      "polygons": 4506,
+      "triangles": 10905,
+      "boundaryEdges": 33,
+      "nonmanifoldEdges": 33,
+      "materials": [
+        "tripo_mat_29b70357"
+      ]
+    },
+    {
+      "name": "sleeve.R",
+      "vertices": 5463,
+      "polygons": 4510,
+      "triangles": 10905,
+      "boundaryEdges": 33,
+      "nonmanifoldEdges": 33,
+      "materials": [
+        "tripo_mat_29b70357"
+      ]
+    },
+    {
+      "name": "front_panel.L",
+      "vertices": 3412,
+      "polygons": 3383,
+      "triangles": 6816,
+      "boundaryEdges": 0,
+      "nonmanifoldEdges": 0,
+      "materials": [
+        "tripo_mat_d34218e0"
+      ]
+    },
+    {
+      "name": "front_panel.R",
+      "vertices": 3412,
+      "polygons": 3383,
+      "triangles": 6816,
+      "boundaryEdges": 0,
+      "nonmanifoldEdges": 0,
+      "materials": [
+        "tripo_mat_d34218e0"
+      ]
+    },
+    {
+      "name": "rear_panel.L",
+      "vertices": 3348,
+      "polygons": 3326,
+      "triangles": 6688,
+      "boundaryEdges": 0,
+      "nonmanifoldEdges": 0,
+      "materials": [
+        "tripo_mat_bf35f67e"
+      ]
+    },
+    {
+      "name": "rear_panel.R",
+      "vertices": 3348,
+      "polygons": 3326,
+      "triangles": 6688,
+      "boundaryEdges": 0,
+      "nonmanifoldEdges": 0,
+      "materials": [
+        "tripo_mat_bf35f67e"
+      ]
+    }
+  ],
+  "actions": {
+    "attack": [
+      1.0,
+      60.0
+    ],
+    "cast": [
+      1.0,
+      72.0
+    ],
+    "walk": [
+      1.0,
+      48.0
+    ]
+  },
+  "lowArmSleeve": {
+    "L": {
+      "heightM": 0.5890809297561646,
+      "belowFingerTipM": 0.22279024124145508,
+      "forearmLengthM": 0.2784043252468109,
+      "sleeveMin": [
+        0.20316243171691895,
+        -0.2051611691713333,
+        0.48830556869506836
+      ],
+      "sleeveMax": [
+        0.558014988899231,
+        0.049853235483169556,
+        1.077386498451233
+      ]
+    },
+    "R": {
+      "heightM": 0.589081346988678,
+      "belowFingerTipM": 0.2227904200553894,
+      "forearmLengthM": 0.27840444445610046,
+      "sleeveMin": [
+        -0.5580151081085205,
+        -0.20516110956668854,
+        0.4883050322532654
+      ],
+      "sleeveMax": [
+        -0.20316243171691895,
+        0.04985324293375015,
+        1.0773863792419434
+      ]
+    }
+  }
+}
