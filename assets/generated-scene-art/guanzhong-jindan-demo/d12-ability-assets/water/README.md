@@ -1,12 +1,32 @@
 # D12.2 蓄澜水与地表资源包
 
+## 2026-11-17 重做：卷浪、水花与持续水面
+
+沿用户已确认方向重做 `TideRise`／`TideEbb` 和湿／浅／深表现；原八个 Prefab 身份不变。新样例与旧样例分别保存，正式 Adventure／V3 HUD 绑定仍留 D12 集成。
+
+[新版默认镜头视频与关键帧](index.html) · [新版1080p记录](evidence/redesign-20261117/1920/runtime-proof.txt) · [新版768p记录](evidence/redesign-20261117/1366/runtime-proof.txt)
+
+- **卷浪**：原 WaterHex 六角足迹细分为 `TideCurlSheet`，局部 HLSL 让浪尖卷起，最高约0.29米。单次0.65秒，真实变化集合中各格按源向外／向源回收；脚下支承、规则水深和格心不移动。阶梯仍按踏面裁剪，曲坡沿真实支承贴合；浪的高度只在 shader 绘制时生效。
+- **水花**：浪尖每格一次12粒短水滴，0.24–0.40秒寿命；本包原创解析轮廓 shader，无新位图、模型、采购或外部依赖。动画结束后与潮头一起清理。
+- **持续水面**：双层滚动法线、流动亮纹、破碎边缘泡沫。核实官方打包泡沫图的 R 通道中位数为0、B为130/255，因此宽泡沫改读 B；R只保留泥面稀疏细节。浅青与深蓝区分水量，退水保留湿泥再露干。
+- **旧规则与共用资源**：两涨两退、真实推移、首涨留低植／次涨冲蚀、终止不恢复旧水、真实火→湿蒸汽保持；Fire继续引用同一 `WetMud`／`ExtinguishSteam`。共用蒸汽的粒子设置未改。
+- **镜头与证据**：全部视频以38°、size5默认镜头播放，size3只作静态补图。运行记录包含实际 shader、mesh、Legacy Animation／PropertyBlock writer、世界剔除包围、屏幕投影、实际可见像素范围及结束残留。
+
+运行入口沿下方历史复现命令，帧目录改为 `src/Logs/d12-water-redesign/<宽度>/`；输出位于 `evidence/redesign-20261117/<宽度>/`。执行 `export-video.ps1` 导出新片，不覆盖旧证据。
+
+本轮验证：Unity 6000.3.18f1 编译、Builder生成后保存重开、1920×1080与1366×768实际命令样例均PASS。每尺寸550784个支承面内部采样，最大误差0.0371毫米；四次潮头在默认镜头贡献25895–31799／13114–16145像素，Legacy Animation实测 `_Progress=0.4102564`、涨退 `_Flow` 相反。两涨两退与低植结果一致，动画结束像素残留均0。新原速视频30fps、11.5秒；已查看默认镜头、近景、结束关键帧和运动序列。用户最终画面审阅及正式HUD集成仍待后续。
+
+范围与复核：仅Water资源包、包内样例及本交付说明；其他两包只引用共用水地表与蒸汽。只读交叉检查未发现阻断问题。References loaded：runtime-owner-proof、unity-validation、ui-and-visual-assets、ai-workflows；Project maps loaded：UNITY_STRUCTURE.md、UNITY_STRUCTURE.content.md，并以当前源码／独立asmdef核实。无新的公共接口或运行管理器。
+
+## 历史交付与验证（2026-11-16，以下不代表重做版本）
+
 2026-11-16。交付八个 Prefab、四段材质动画、湿／浅／深与露干材质、低潮头和共用灭火蒸汽，以及正式阶地上的六帧 Unity 资源样例。
 
 [双分辨率视频与六帧](index.html) · [1080p 运行记录](evidence/1920/runtime-proof.txt) · [768p 运行记录](evidence/1366/runtime-proof.txt) · [素材来源与许可](source/README.md)
 
 本包尚未绑定正式 Adventure 的 `CombatSurfaceView`，也未进行 V3 HUD 同屏验收。样例使用现有战斗命令产生真实结果，证明的是这些资源在该结果下可播放、状态可辨；统一 Demo 接线仍属 D12 集成。
 
-## 交付与用法
+### 交付与用法
 
 Unity 根目录：`src/Assets/Art/VFX/Guanzhong/Jindan/Water/`。
 
@@ -24,7 +44,7 @@ Unity 根目录：`src/Assets/Art/VFX/Guanzhong/Jindan/Water/`。
 
 四段 Legacy Clip 在实例上自动播放并停留末帧。需要表现层决定的时点仍由结算驱动，不能让粒子寿命决定地表期限。销毁视觉实例时一并释放调用方创建的 Mesh／Material 副本。
 
-## 接入约定
+### 接入约定
 
 - 水片根放到 `CombatBattlefieldSurface.Center(cell)`，显示面为实际支承高度＋0.018米；潮头用＋0.023米，蒸汽发射点＋0.04米。沿用原六角 XZ 足迹。
 - 首先读取冻结 `Changes`，实际成功结算后使用 `CombatSurfaceSettlement.Changes` 的 Before／After 驱动过渡。无变化的格不生成潮头、蒸汽或额外命中表现。
@@ -37,7 +57,7 @@ Unity 根目录：`src/Assets/Art/VFX/Guanzhong/Jindan/Water/`。
 
 当前生产 `CombatSurfacePresentationSnapshot` 只含当前状态与预览数据，没有完整提交过渡；生产低植损毁仍映射 `Charred`。这两处正式绑定留后续集成，本包未修改共享 DTO、View、Builder 或正式场景。
 
-## 六帧样例
+### 六帧样例
 
 打开 `Samples/WaterAssetSample.unity` 并进入 Play。样例从现有 Adventure 场景复制出独立场景，保留144格阶地、灯光与背景。镜头沿用38°、游戏内 size=3 缩放，另保存每个结果的 size=5 默认缩放图。
 
@@ -55,7 +75,7 @@ Unity 根目录：`src/Assets/Art/VFX/Guanzhong/Jindan/Water/`。
 
 规则结算分别在 tick 10／20／30／40，动画按60Hz推进、视频30fps原速；展示暂停不推进战斗时间。视频只包含资源样例的相机画面，没有正式操作 HUD。
 
-## 验证与复现
+### 验证与复现
 
 2026-11-16，Unity 6000.3.18f1／URP 17.3.0 编译、构建保存重开及最终1920×1080／1366×768两次运行均 PASS，关键帧人工查看通过。视频均为30fps、10.27秒。
 

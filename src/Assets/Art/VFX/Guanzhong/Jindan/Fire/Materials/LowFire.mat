@@ -28,6 +28,6 @@ Material:
     - _Opacity: 1
     - _Strength: 1
     m_Colors:
-    - _BaseColor: {r: 1, g: 0.34, b: 0.055, a: 1}
+    - _BaseColor: {r: 1, g: 0.19, b: 0.025, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

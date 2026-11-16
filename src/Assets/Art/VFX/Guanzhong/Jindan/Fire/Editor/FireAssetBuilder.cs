@@ -21,7 +21,7 @@ namespace TianZhang.Art.Jindan.Fire.Editor
         public const string Source = "Assets/Art/Environments/Guanzhong";
         private const string Water = "Assets/Art/VFX/Guanzhong/Jindan/Water";
         public static string Evidence => Path.GetFullPath(Path.Combine(Application.dataPath,
-            "../../assets/generated-scene-art/guanzhong-jindan-demo/d12-ability-assets/fire/evidence"));
+            "../../assets/generated-scene-art/guanzhong-jindan-demo/d12-ability-assets/fire/evidence/redesign-20261117"));
 
         [MenuItem("TianZhang/Art/D12.3/Rebuild Fire resources and sample")]
         public static void Build()
@@ -36,7 +36,7 @@ namespace TianZhang.Art.Jindan.Fire.Editor
             center = Save(center, "Materials/CenterWarmRune.mat");
             var ember = new Material(Load<Material>("Assets/Art/VFX/Guanzhong/Jindan/Earth/Materials/SoilDust.mat"));
             ember.SetColor("_BaseColor", new Color(1, .43f, .065f, .8f)); ember = Save(ember, "Materials/FiniteEmbers.mat");
-            BuildLowFire(flame, ember); BuildEdge(warm); BuildCenter(center); BuildScorched();
+            BuildLowFire(flame, ember); BuildEdge(warm); BuildCenter(center, flame); BuildScorched();
             BuildScene(); AssetDatabase.SaveAssets();
             EditorSceneManager.OpenScene(Root + "/Samples/FireAssetSample.unity");
             var sample = UnityEngine.Object.FindFirstObjectByType<FireAssetSample>();
@@ -47,18 +47,20 @@ namespace TianZhang.Art.Jindan.Fire.Editor
         private static void BuildLowFire(Material flame, Material ember)
         {
             var mesh = new Mesh { name = "SparseLowFlameCards" };
-            var vertices = new List<Vector3>(); var uv = new List<Vector2>(); var triangles = new List<int>();
-            var centers = new[] { new Vector3(-.21f, 0, -.07f), new Vector3(.15f, 0, .13f), new Vector3(.04f, 0, -.22f) };
+            var vertices = new List<Vector3>(); var uv = new List<Vector2>(); var seeds = new List<Vector2>(); var triangles = new List<int>();
+            var centers = new[] { new Vector3(-.19f, 0, -.055f), new Vector3(.18f, 0, .07f), new Vector3(.01f, 0, -.19f) };
+            var heights = new[] { .64f, .76f, .57f };
             for (int k = 0; k < centers.Length; k++) for (int side = 0; side < 2; side++)
             {
                 float angle = (k * 37 + side * 90) * Mathf.Deg2Rad;
-                var width = new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle)) * .12f;
-                float height = .27f + k * .035f; int start = vertices.Count;
+                var width = new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle)) * .22f;
+                float height = heights[k]; int start = vertices.Count;
                 vertices.AddRange(new[] { centers[k] - width, centers[k] + width, centers[k] + width + Vector3.up * height, centers[k] - width + Vector3.up * height });
                 uv.AddRange(new[] { Vector2.zero, Vector2.right, Vector2.one, Vector2.up });
+                for (int vertex = 0; vertex < 4; vertex++) seeds.Add(new Vector2(k * 1.8f + side * .35f, 0));
                 triangles.AddRange(new[] { start, start + 1, start + 2, start, start + 2, start + 3 });
             }
-            mesh.SetVertices(vertices); mesh.SetUVs(0, uv); mesh.SetTriangles(triangles, 0); mesh.RecalculateBounds(); mesh.RecalculateNormals();
+            mesh.SetVertices(vertices); mesh.SetUVs(0, uv); mesh.SetUVs(1, seeds); mesh.SetTriangles(triangles, 0); mesh.RecalculateBounds(); mesh.RecalculateNormals();
             mesh = Save(mesh, "Meshes/SparseLowFlameCards.asset");
             var go = new GameObject("LowFire");
             var tongues = new GameObject("LowTongues"); tongues.transform.SetParent(go.transform, false);
@@ -103,13 +105,22 @@ namespace TianZhang.Art.Jindan.Fire.Editor
             var renderer = go.AddComponent<MeshRenderer>(); renderer.sharedMaterial = material;
             renderer.shadowCastingMode = ShadowCastingMode.Off; renderer.receiveShadows = false; SavePrefab(go);
         }
-        private static void BuildCenter(Material material)
+        private static void BuildCenter(Material material, Material flame)
         {
             var go = (GameObject)PrefabUtility.InstantiatePrefab(Load<GameObject>(Source + "/Props/SupportStele.prefab"));
             PrefabUtility.UnpackPrefabInstance(go, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
             go.name = "FireCenter";
             foreach (var renderer in go.transform.Find("Intact/Glow").GetComponentsInChildren<Renderer>(true))
                 renderer.sharedMaterials = renderer.sharedMaterials.Select(_ => material).ToArray();
+            var body = go.transform.Find("Intact/Body").GetComponentsInChildren<Renderer>(true);
+            var bounds = body[0].bounds; foreach (var renderer in body) bounds.Encapsulate(renderer.bounds);
+            var spirit = new GameObject("CenterSpiritFlame");
+            spirit.transform.localScale = Vector3.one * .48f;
+            spirit.transform.SetParent(go.transform.Find("Intact/Glow"), true);
+            spirit.transform.position = new Vector3(bounds.center.x, bounds.max.y - .035f, bounds.center.z);
+            spirit.AddComponent<MeshFilter>().sharedMesh = Load<Mesh>(Root + "/Meshes/SparseLowFlameCards.asset");
+            var flameRenderer = spirit.AddComponent<MeshRenderer>(); flameRenderer.sharedMaterial = flame;
+            flameRenderer.shadowCastingMode = ShadowCastingMode.Off; flameRenderer.receiveShadows = false;
             go.transform.Find("Intact/Glow").gameObject.SetActive(false); go.transform.Find("Failed").gameObject.SetActive(false); SavePrefab(go);
         }
         private static void BuildScorched()

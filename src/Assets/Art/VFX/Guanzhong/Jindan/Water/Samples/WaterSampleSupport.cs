@@ -9,7 +9,7 @@ namespace TianZhang.Art.Jindan.Water.Samples
     internal static class WaterSampleSupport
     {
         public static Mesh Fit(Mesh source, Transform transform, CombatBattlefieldSurface surface,
-            CombatBattlefieldSurface.Cell support, float lift)
+            CombatBattlefieldSurface.Cell support, float lift, int subdivisions = 12)
         {
             var mesh = Object.Instantiate(source);
             var world = source.vertices.Select(transform.TransformPoint).ToArray();
@@ -20,7 +20,6 @@ namespace TianZhang.Art.Jindan.Water.Samples
             else if (support.kind == 1)
             {
                 // Match the existing D3.2 ramp's 12 subdivisions per original hex radius.
-                const int subdivisions = 12;
                 var vertices = new List<Vector3>(); var uv = new List<Vector2>(); var triangles = new List<int>();
                 var indices = source.triangles;
                 for (int t = 0; t < indices.Length; t += 3)

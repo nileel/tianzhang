@@ -38,15 +38,15 @@ namespace TianZhang.Art.Jindan.Space.Samples
         private Vector3[] initialCenters;
         private RenderTexture target;
         private Texture2D pixels;
-        private string output,evidence,phase;
-        private int frame;
+        private string output,evidence,phase,sequence;
+        private int frame,strikeIndex;
         private int compressedCost,expandedCost;
         private static readonly HexCoord Home=new(4,14);
 
         private IEnumerator Start()
         {
-            output=Path.GetFullPath(Path.Combine(Application.dataPath,"../Logs/d12-space/"+captureWidth));
-            evidence=Path.GetFullPath(Path.Combine(Application.dataPath,"../../assets/generated-scene-art/guanzhong-jindan-demo/d12-ability-assets/space/evidence/"+captureWidth));
+            output=Path.GetFullPath(Path.Combine(Application.dataPath,"../Logs/d12-space/redesign-20261117/"+captureWidth));
+            evidence=Path.GetFullPath(Path.Combine(Application.dataPath,"../../assets/generated-scene-art/guanzhong-jindan-demo/d12-ability-assets/space/evidence/redesign-20261117/"+captureWidth));
             if(capture)
             {
                 Directory.CreateDirectory(output); Directory.CreateDirectory(evidence); Time.captureDeltaTime=1f/60;
@@ -76,18 +76,20 @@ namespace TianZhang.Art.Jindan.Space.Samples
             yield return GateSequence();
             var after=surface.Cells.Select(c=>Point(new HexCoord(c.q,c.r))).ToArray();
             Check(initialCenters.SequenceEqual(after),"all 144 ground centers unchanged");
-            proof.Add("ground centers="+after.Length+" maximum displacement=0; camera tilt38 size3 + size5 keyframes; Unity="+Application.unityVersion);
+            proof.Add("ground centers="+after.Length+" maximum displacement=0; camera tilt38 size5 video + size3 detail keyframes; Unity="+Application.unityVersion);
             proof.Add("Only independent resource sample; production Views and V3 HUD binding pending.");
         }
         private void Fresh(HexCoord focus)
         {
             foreach(var go in effects)if(go)Destroy(go);effects.Clear();
+            support=band=outer=inner=null;strikeIndex=0;
             demo=new SpaceSampleRules(this);provider.ConfigureSurface(surface);
             provider.Prepare(JindanRehearsalFactory.Descriptors(demo.Spawned,"combat_player_default_v1"));
-            Focus(focus,3);
+            Focus(focus,5);
         }
         private IEnumerator ScaleSequence(int metric,string label)
         {
+            sequence=label;
             Fresh(SpaceSampleRules.ScaleFrom); yield return Hold(label+"-01-before");
             Check(demo.Metric==2,"scale starts at normal distance2");
             demo.Scale(metric);
@@ -95,10 +97,11 @@ namespace TianZhang.Art.Jindan.Space.Samples
             var midpoint=(Point(SpaceSampleRules.ScaleFrom)+Point(SpaceSampleRules.ScaleTo))*.5f;
             Check(surface.TryHeight(midpoint,out float height),"scale support grounded");midpoint.y=height;
             support=Instantiate(scaleSupport,midpoint,Quaternion.identity);effects.Add(support);
+            Pulse(band,0);phase=label+"-deploy";yield return Frames(12);Key(phase);RecordVisual(band,phase);
             Check(demo.Metric==metric,"committed scale distance");
             proof.Add(label+" metric="+demo.Metric+" support="+demo.ScaleSeat.ActiveScale.Support.Durability);
             yield return Hold(label+"-02-active"); Visibility(band,label);
-            SetShimmer(0);Key(label+"-02-no-shimmer");SetShimmer(.25f);
+            SetShimmer(0);Key(label+"-02-no-shimmer");SetShimmer(1);
             yield return Strike(SpaceSampleRules.ScaleFrom);
             Check(demo.ScaleSeat.ActiveScale.Support.Durability==170,"first scale strike actual durability170");
             support.transform.Find("Intact/Glow").gameObject.SetActive(false);
@@ -115,13 +118,14 @@ namespace TianZhang.Art.Jindan.Space.Samples
                 Check(demo.ScaleSeat.ActiveScale==null,"zero durability ends compression");
             }
             else { demo.CloseScale();Check(demo.ScaleSeat.ActiveScale==null,"close ends expansion"); }
-            band.SetActive(false);support.SetActive(false);
+            yield return Dissolve(band,label+"-dissolve");support.SetActive(false);
             Check(demo.Metric==2,"ending restores normal metric2");
             yield return Hold(label+"-05-restored");
             proof.Add(label+" ended metric="+demo.Metric+" reason="+demo.ScaleSeat.LastEndReason);
         }
         private IEnumerator GateSequence()
         {
+            sequence="seal";
             Fresh(SpaceSampleRules.GateTo);
             support=Instantiate(sealSupport,Point(SpaceSampleRules.GateTo),Quaternion.identity);effects.Add(support);
             support.transform.Find("Intact/Glow").gameObject.SetActive(false);
@@ -134,19 +138,21 @@ namespace TianZhang.Art.Jindan.Space.Samples
             support.transform.Find("Intact/Glow").gameObject.SetActive(true);
             outer=PlaceBand(sealOuter,SpaceSampleRules.GateFrom,SpaceSampleRules.GateTo);
             inner=PlaceBand(sealInner,SpaceSampleRules.GateFrom,SpaceSampleRules.GateTo);
+            Pulse(outer,0);Pulse(inner,0);phase="seal-deploy";yield return Frames(12);Key(phase);
+            RecordVisual(outer,"seal outer deployed");RecordVisual(inner,"seal inner deployed");
             yield return Hold("seal-01-two-layers");CheckGate(true);Visibility(outer,"seal outer");Visibility(inner,"seal inner");
-            SetShimmer(0);Key("seal-01-no-shimmer");SetShimmer(.25f);
+            SetShimmer(0);Key("seal-01-no-shimmer");SetShimmer(1);
             // Show a real detour and legal reverse crossing before breaking the anchor.
             yield return Move(SpaceSampleRules.Player,SpaceSampleRules.GateTo,"seal-02-detour");
             yield return Move(SpaceSampleRules.Player,SpaceSampleRules.GateFrom,"seal-03-reverse");
             for(int i=0;i<4;i++)yield return Strike(SpaceSampleRules.GateTo);
             Check(seal.OuterDurability==0&&seal.InnerDurability==80,"four committed strikes break outer only");
-            outer.SetActive(false);support.transform.Find("Intact/Glow").gameObject.SetActive(false);
+            yield return Dissolve(outer,"seal-outer-dissolve");support.transform.Find("Intact/Glow").gameObject.SetActive(false);
             CheckGate(true);yield return Hold("seal-04-outer-broken");
             proof.Add("outer broken outer="+seal.OuterDurability+" inner="+seal.InnerDurability+" expiry="+seal.ExpiresTick);
             for(int i=0;i<3;i++)yield return Strike(SpaceSampleRules.GateTo);
             Check(demo.SealSeat.ActiveSeal==null&&seal.Support.Durability==0,"seventh strike opens gate");
-            inner.SetActive(false);support.transform.Find("Intact").gameObject.SetActive(false);support.transform.Find("Failed").gameObject.SetActive(true);
+            yield return Dissolve(inner,"seal-inner-dissolve");support.transform.Find("Intact").gameObject.SetActive(false);support.transform.Find("Failed").gameObject.SetActive(true);
             CheckGate(false);yield return Hold("seal-05-broken-open");
             yield return Move(SpaceSampleRules.Player,SpaceSampleRules.GateTo,"seal-06-through");
             Check(support.activeInHierarchy&&support.transform.Find("Failed").gameObject.activeInHierarchy,"fixed failed stele remains");
@@ -166,10 +172,17 @@ namespace TianZhang.Art.Jindan.Space.Samples
         }
         private IEnumerator Strike(HexCoord cell)
         {
+            var sealBefore=demo.SealSeat.ActiveSeal;
+            int outerBefore=sealBefore?.OuterDurability??0,innerBefore=sealBefore?.InnerDurability??0;
             demo.Strike(cell);var actor=demo.Actor(SpaceSampleRules.Player);
+            if(band&&band.activeInHierarchy)Pulse(band,1);
+            if(outer&&outer.activeInHierarchy&&outerBefore>0)Pulse(outer,1);
+            if(inner&&inner.activeInHierarchy&&(outerBefore==0||(sealBefore!=null&&sealBefore.InnerDurability<innerBefore)))Pulse(inner,1);
             provider.Present(new CombatUnitPresentationEventProjection(actor.Id,CombatUnitPresentationEvent.Cast,Hex(actor.Position),Hex(actor.Position),actor.Facing,null,
                 profileId:"spell_guanshiji",sourceCell:Hex(actor.Position),targetCell:Hex(cell)));
-            yield return Frames(24);
+            phase=sequence+"-impact-"+(++strikeIndex);yield return Frames(12);Key(phase);
+            foreach(var effect in new[]{band,outer,inner})if(effect&&effect.activeInHierarchy)RecordVisual(effect,phase);
+            yield return Frames(12);
         }
         private IEnumerator Move(string id,HexCoord cell,string label)
         {
@@ -190,7 +203,7 @@ namespace TianZhang.Art.Jindan.Space.Samples
         private IEnumerator Hold(string name)
         {
             phase=name;yield return Frames(48);Key(name);
-            sampleCamera.orthographicSize=5;Key(name+"-default-zoom");sampleCamera.orthographicSize=3;
+            Key(name+"-default-zoom");sampleCamera.orthographicSize=3;Key(name+"-detail");sampleCamera.orthographicSize=5;
         }
         private void Focus(HexCoord cell,float size)
         {sampleCamera.transform.rotation=Quaternion.Euler(38,0,0);sampleCamera.orthographic=true;sampleCamera.orthographicSize=size;sampleCamera.transform.position=Point(cell)-sampleCamera.transform.forward*20;}
@@ -203,9 +216,53 @@ namespace TianZhang.Art.Jindan.Space.Samples
             for(int i=0;i<vertices.Length;i++)
             {var world=go.transform.TransformPoint(vertices[i]);Check(surface.TryHeight(world,out float h),"space band support exists");world.y=h+.035f;vertices[i]=go.transform.InverseTransformPoint(world);}
             mesh.vertices=vertices;mesh.RecalculateBounds();filter.sharedMesh=mesh;
-            var renderer=go.GetComponent<Renderer>();var material=new Material(renderer.sharedMaterial);materials.Add(material);renderer.sharedMaterial=material;
+            foreach(var renderer in go.GetComponentsInChildren<Renderer>())
+            {var material=new Material(renderer.sharedMaterial);material.name=renderer.sharedMaterial.name+" Runtime";materials.Add(material);renderer.sharedMaterial=material;}
             return go;
         }
+        private static void Pulse(GameObject effect,int kind)
+        {
+            foreach(var renderer in effect.GetComponentsInChildren<Renderer>())
+            {renderer.sharedMaterial.SetFloat("_EventTime",Time.time);renderer.sharedMaterial.SetFloat("_EventKind",kind);}
+        }
+        private IEnumerator Dissolve(GameObject effect,string label)
+        {
+            phase=label;Pulse(effect,2);
+            var renderers=effect.GetComponentsInChildren<Renderer>();
+            for(int i=0;i<30;i++)
+            {
+                foreach(var renderer in renderers)renderer.sharedMaterial.SetFloat("_Opacity",1-(i+1)/30f);
+                yield return Frames(1);if(i==10)Key(label);
+            }
+            // Same-frame comparison proves opacity-zero carriers leave no pixels.
+            if(capture)
+            {
+                Render();var before=pixels.GetPixels32();effect.SetActive(false);Render();var after=pixels.GetPixels32();
+                int residual=PixelDifference(before,after);proof.Add(label+" opacity-zero residual pixels="+residual);
+                Check(residual==0,"space ending has no residual "+label);
+            }
+            effect.SetActive(false);
+        }
+        private void RecordVisual(GameObject effect,string label)
+        {
+            foreach(var renderer in effect.GetComponentsInChildren<Renderer>())
+            {
+                Bounds bounds=renderer.bounds;var min=new Vector2(float.MaxValue,float.MaxValue);var max=new Vector2(float.MinValue,float.MinValue);
+                for(int i=0;i<8;i++)
+                {
+                    var corner=bounds.center+Vector3.Scale(bounds.extents,new Vector3((i&1)==0?-1:1,(i&2)==0?-1:1,(i&4)==0?-1:1));
+                    Vector2 screen=sampleCamera.WorldToScreenPoint(corner);min=Vector2.Min(min,screen);max=Vector2.Max(max,screen);
+                }
+                var material=renderer.sharedMaterial;
+                proof.Add(label+" owner=SpaceAssetSample/PlaceBand object="+effect.name+"/"+renderer.name+" mesh="+renderer.GetComponent<MeshFilter>().sharedMesh.name
+                    +" parent="+(effect.transform.parent?effect.transform.parent.name:"scene root")+" scene="+effect.scene.name+" position="+effect.transform.position.ToString("F4")
+                    +" boundsCenter="+bounds.center.ToString("F4")+" boundsSize="+bounds.size.ToString("F4")+" screenMin="+min.ToString("F2")+" screenMax="+max.ToString("F2")
+                    +" camera="+sampleCamera.name+" size="+sampleCamera.orthographicSize+" output="+captureWidth+" shader="+material.shader.name+" material="+material.name
+                    +" time="+Time.time.ToString("F3")+" eventTime="+material.GetFloat("_EventTime").ToString("F3")+" eventKind="+material.GetFloat("_EventKind")+" opacity="+material.GetFloat("_Opacity"));
+            }
+        }
+        private static int PixelDifference(Color32[] before,Color32[] after)
+        {int count=0;for(int i=0;i<before.Length;i++)if(Math.Abs(before[i].r-after[i].r)+Math.Abs(before[i].g-after[i].g)+Math.Abs(before[i].b-after[i].b)>3)count++;return count;}
         private void SetShimmer(float value){foreach(var material in materials)if(material)material.SetFloat("_Shimmer",value);}
         private Vector3 Point(HexCoord cell)=>surface.Center(Hex(cell));
         private static CombatUnitPresentationHex Hex(HexCoord c)=>new(c.Q,c.R);
@@ -225,8 +282,16 @@ namespace TianZhang.Art.Jindan.Space.Samples
         private void Visibility(GameObject effect,string label)
         {
             if(!capture)return;Render();var before=pixels.GetPixels32();effect.SetActive(false);Render();var after=pixels.GetPixels32();effect.SetActive(true);
-            int difference=0;for(int i=0;i<before.Length;i++)if(Math.Abs(before[i].r-after[i].r)+Math.Abs(before[i].g-after[i].g)+Math.Abs(before[i].b-after[i].b)>3)difference++;
-            proof.Add(label+" band pixels="+difference);Check(difference>30,"space pattern visible "+label);
+            int difference=PixelDifference(before,after);
+            proof.Add(label+" complete effect pixels="+difference+" at camera size="+sampleCamera.orthographicSize);Check(difference>30,"space pattern visible "+label);
+            var film=effect.transform.GetChild(0).gameObject;Render();before=pixels.GetPixels32();film.SetActive(false);Render();after=pixels.GetPixels32();film.SetActive(true);
+            int energyPixels=PixelDifference(before,after);proof.Add(label+" energy film pixels="+energyPixels);
+            int minX=target.width,minY=target.height,maxX=-1,maxY=-1;
+            for(int i=0;i<before.Length;i++)
+                if(Math.Abs(before[i].r-after[i].r)+Math.Abs(before[i].g-after[i].g)+Math.Abs(before[i].b-after[i].b)>3)
+                {int x=i%target.width,y=i/target.width;minX=Math.Min(minX,x);minY=Math.Min(minY,y);maxX=Math.Max(maxX,x);maxY=Math.Max(maxY,y);}
+            proof.Add(label+" drawnEnergyPixelRect=("+minX+","+minY+")..("+maxX+","+maxY+")");
+            Check(energyPixels>30,"energy layer visible at default zoom "+label);RecordVisual(effect,label+" active");
         }
         private static void Check(bool value,string message){if(!value)throw new InvalidOperationException(message);}
         private void OnGUI()=>GUI.Label(new Rect(24,18,900,40),"D12.4 资源样例 · "+phase+" · 正式 Demo 尚未接线");

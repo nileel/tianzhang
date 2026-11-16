@@ -1,12 +1,34 @@
 # D12.3 长明火域资源包
 
+## 2026-11-17 重做：弯曲灵火
+
+本轮按已确认方向完成风格化火焰资源及Unity样例重做。新证据写入 `evidence/redesign-20261117/<1920|1366>/`，原 `evidence/1920`、`evidence/1366` 保留为下方旧版历史。
+
+[新版默认镜头视频与关键帧](index.html) · [新版1080p记录](evidence/redesign-20261117/1920/runtime-proof.txt) · [新版768p记录](evidence/redesign-20261117/1366/runtime-proof.txt)
+
+- `LowFire.shader` 用连贯弯曲火舌和弧形缺口形成外轮廓，以橙红外焰、金黄中层和浅黄内焰分层；小火舌向上脱离消散。形状为本包原创解析 HLSL，不借用参考展示图，也不依赖噪声碎点、屏幕折射或新插件。
+- 每格仍为3簇、6张交叉承载片，单片宽0.44米、三簇承载高度0.64／0.76／0.57米。可见轮廓由 shader 裁出；这些是资源尺寸，不是实测屏幕可见尺寸。足迹保留在本格内，根仍为实际支承格心+0.025米；不修改格位、地形或碰撞。
+- `FireCenter/Intact/Glow/CenterSpiritFlame` 复用同一网格和材质，以0.48倍尺寸置于原碑体最高点附近，随原 `Glow` 开关。展开后中心灵火表示主域有效，**不表示地表已经点火**；中心受损仍存在，毁中心随主域撤去。
+- `FireAssetSample.Sync` 仍以真实地表／来源／Main／tails 决定低火资格，写 `_Strength=1/.65` 和 `_Opacity`；原0.25秒淡出、水灭回执及本人周期验证保留。
+- 新原速视频全程用38°、orthographic size5默认镜头；size3只保留近景补图。运行记录新增每格及中心的 hierarchy、源网格／shader、world bounds、`Camera.WorldToScreenPoint` 投影范围、最终可见像素范围和实际 writer；需结合默认镜头短片检查弯曲与消散，不能用非零像素替代观感核验。
+
+生成与Capture入口沿用下文，逐项串行执行。新JPEG目录为 `src/Logs/d12-fire-redesign-20261117/<宽度>/`；`export-video.ps1` 默认只生成本轮视频。
+
+### 本轮验证记录
+
+Unity 6000.3.18f1编译、重建保存重开、1920×1080与1366×768实际命令样例均PASS。默认镜头三格火贡献8381／4515像素，中心灵火686／394像素；实际世界／屏幕包围与writer见运行记录。展开不点地表火→后续本人结束3格燃烧，中心600→225仍有效→0撤主域与中心灵火，合法余火2→1→0；receipt6恰好两份蒸汽，水灭两格为湿、剩一格自然灭为焦，蒸汽尾效残留0。两版视频均30fps、9秒，已查看默认与近景关键帧及连续火舌运动序列。正式View／V3 HUD接线与用户最终画面审阅仍属后续。
+
+范围与复核：仅Fire资源包及包内样例，引用现有Water资源。References loaded：runtime-owner-proof、unity-validation、ui-and-visual-assets、ai-workflows；Project maps loaded：UNITY_STRUCTURE.md、UNITY_STRUCTURE.content.md，结合当前源码和独立asmdef核实。未改战斗规则、正式场景或共享渲染配置。
+
+## 旧版交付与验证（重做前历史）
+
 2026-11-17。交付低火、有限余烬、全棋盘弱暖边、暖纹中心与焦地共5个 Prefab，直接引用 D12.2 的湿地和灭火蒸汽。
 
 [双分辨率短片与关键帧](index.html) · [1080p运行记录](evidence/1920/runtime-proof.txt) · [768p运行记录](evidence/1366/runtime-proof.txt) · [素材来源](source/README.md)
 
 本包仅验证正式地图尺度下的独立资源样例。生产 `CombatSurfaceView`、`JindanFireDomainView` 与 V3 HUD 接线仍属 D12 集成。
 
-## 交付与接线
+### 交付与接线
 
 Unity 目录：`src/Assets/Art/VFX/Guanzhong/Jindan/Fire/`。
 
@@ -24,7 +46,7 @@ Unity 目录：`src/Assets/Art/VFX/Guanzhong/Jindan/Fire/`。
 
 灭火只消费已提交 `CombatSurfaceSettlement.Changes` 的 Burning→Wet，并按`Sequence`去重；预览不播放蒸汽。直接实例化`Water/Prefabs/ExtinguishSteam.prefab`，原蒸汽材质和粒子参数不改。湿／浅／深也直接引用Water资源，自然结束只将仍由火域拥有的燃烧格变焦，不覆盖已被水改写的湿格。
 
-## 真实命令样例
+### 真实命令样例
 
 样例沿正式地图、合法第二段角色及原数值，明确配置独立初态：土修`(7,11)`、水修`(8,11)`、火修`(7,14)`；干燃料格`(7,13)`、`(8,12)`、`(8,13)`各4燃料。入场后只通过生产Preview/Execute推进，没有直接写耐久或余火周期。
 
@@ -39,7 +61,7 @@ Unity 目录：`src/Assets/Art/VFX/Guanzhong/Jindan/Fire/`。
 
 样例有近看size3、默认size5与144格全棋盘暖边图，镜头倾角38°。原28个静态水层在样例停用，之后按真实地表快照绘制。短片以60Hz表现推进、30fps相机帧导出，包含展示停顿，不推进额外战斗周期；没有正式操作HUD。
 
-## 验证与复现
+### 验证与复现
 
 Unity 6000.3.18f1／URP17.3，Gamma；无深度／背景纹理依赖、全局渲染配置变化或新插件。Builder保存并重新打开样例验证引用；双分辨率Capture检查真实命令、三格上限、预览纯净、回执去重、周期、水灭／自然灭差异、材质支持与蒸汽尾效像素差。最终画面与日志见上方链接。
 

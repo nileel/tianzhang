@@ -25,7 +25,7 @@ namespace TianZhang.Art.Jindan.Water.Editor
         [MenuItem("TianZhang/Art/D12.2/Rebuild Water resources and sample")]
         public static void Build()
         {
-            foreach (string folder in new[] { "Materials", "Animations", "Prefabs", "Samples" }) Directory.CreateDirectory(Root + "/" + folder);
+            foreach (string folder in new[] { "Materials", "Animations", "Prefabs", "Samples", "Meshes" }) Directory.CreateDirectory(Root + "/" + folder);
             Directory.CreateDirectory(Evidence);
             AssetDatabase.Refresh();
             foreach (string name in new[] { "foam_detail_tiling", "puddle_norm" })
@@ -36,8 +36,8 @@ namespace TianZhang.Art.Jindan.Water.Editor
                 importer.SaveAndReimport();
             }
             var wet = Surface("WetMud", 0, new Color(.19f, .215f, .16f), "WetShore");
-            var shallow = Surface("ShallowWater", 1, new Color(.17f, .37f, .36f), "Water");
-            var deep = Surface("DeepWater", 2, new Color(.075f, .25f, .36f), "Water");
+            var shallow = Surface("ShallowWater", 1, new Color(.10f, .48f, .53f), "Water");
+            var deep = Surface("DeepWater", 2, new Color(.035f, .24f, .39f), "Water");
             foreach (var material in new[] { wet, shallow, deep }) SaveSheet(material, material.name);
             var dry = InstantiateSheet(); dry.name = "WetToDry";
             var dryMaterial = new Material(wet); dryMaterial.SetColor("_MudColor", Load<Material>(Source + "/Waterbank/MudBank.mat").GetColor("_BaseColor"));
@@ -85,7 +85,54 @@ namespace TianZhang.Art.Jindan.Water.Editor
             material = Save(material, "Materials/" + name + ".mat");
             var go = InstantiateSheet(); go.name = name;
             go.GetComponentInChildren<Renderer>().sharedMaterial = material;
-            Animate(go, name, "_Progress", 0, 1, .4f); SavePrefab(go);
+            var filter = go.GetComponentInChildren<MeshFilter>();
+            filter.sharedMesh = Save(SubdivideFront(filter.sharedMesh), "Meshes/TideCurlSheet.asset");
+            var spray = new GameObject("CrestSpray"); spray.transform.SetParent(go.transform, false);
+            spray.transform.localPosition = Vector3.up * .17f;
+            spray.transform.localRotation = Quaternion.Euler(-65, 0, 0);
+            var ps = spray.AddComponent<ParticleSystem>(); ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            var main = ps.main; main.loop = false; main.duration = .65f; main.startDelay = .12f;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(.24f, .40f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(.55f, .9f);
+            main.startSize = new ParticleSystem.MinMaxCurve(.026f, .060f); main.gravityModifier = .65f;
+            main.maxParticles = 14; main.startColor = Color.white;
+            var emission = ps.emission; emission.rateOverTime = 0;
+            emission.SetBursts(new[] { new ParticleSystem.Burst(0, (short)12) });
+            var shape = ps.shape; shape.shapeType = ParticleSystemShapeType.Cone; shape.angle = 24; shape.radius = .18f;
+            var size = ps.sizeOverLifetime; size.enabled = true;
+            size.size = new ParticleSystem.MinMaxCurve(1, AnimationCurve.Linear(0, 1, 1, 0));
+            var pr = spray.GetComponent<ParticleSystemRenderer>();
+            pr.sharedMaterial = Save(new Material(Shader.Find("TianZhang/Jindan/Water Spray")), "Materials/WaterSpray.mat");
+            pr.shadowCastingMode = ShadowCastingMode.Off; pr.receiveShadows = false;
+            ps.useAutoRandomSeed = false; ps.randomSeed = 1731;
+            Animate(go, name, "_Progress", 0, 1, .65f); SavePrefab(go);
+        }
+        private static Mesh SubdivideFront(Mesh source)
+        {
+            // Subdivide the authorized water footprint; this is a transient VFX sheet, not a new terrain model.
+            const int n = 28;
+            var vertices = new System.Collections.Generic.List<Vector3>();
+            var triangles = new System.Collections.Generic.List<int>();
+            var p = source.vertices; var indices = source.triangles;
+            void Triangle(Vector3 a, Vector3 b, Vector3 c)
+            {
+                foreach (var v in new[] { a, b, c }) { triangles.Add(vertices.Count); vertices.Add(v); }
+            }
+            for (int t = 0; t < indices.Length; t += 3)
+            {
+                Vector3 a = p[indices[t]], b = p[indices[t + 1]], c = p[indices[t + 2]];
+                Vector3 Point(int i, int j) => a + (b - a) * (i / (float)n) + (c - a) * (j / (float)n);
+                for (int i = 0; i < n; i++) for (int j = 0; j < n - i; j++)
+                {
+                    Triangle(Point(i, j), Point(i + 1, j), Point(i, j + 1));
+                    if (i + j < n - 1) Triangle(Point(i + 1, j), Point(i + 1, j + 1), Point(i, j + 1));
+                }
+            }
+            var mesh = new Mesh(); mesh.SetVertices(vertices); mesh.SetTriangles(triangles, 0);
+            mesh.RecalculateNormals(); mesh.RecalculateBounds();
+            // Include the shader's 0.30m crest in the culling bounds.
+            var bounds = mesh.bounds; bounds.Expand(new Vector3(.3f, .6f, .3f)); mesh.bounds = bounds;
+            return mesh;
         }
         private static void Animate(GameObject go, string name, string property, float from, float to, float duration)
         {

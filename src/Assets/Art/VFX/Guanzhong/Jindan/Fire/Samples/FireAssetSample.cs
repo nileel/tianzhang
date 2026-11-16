@@ -45,9 +45,9 @@ namespace TianZhang.Art.Jindan.Fire.Samples
 
         private IEnumerator Start()
         {
-            output = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/d12-fire/" + captureWidth));
+            output = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/d12-fire-redesign-20261117/" + captureWidth));
             evidence = Path.GetFullPath(Path.Combine(Application.dataPath,
-                "../../assets/generated-scene-art/guanzhong-jindan-demo/d12-ability-assets/fire/evidence/" + captureWidth));
+                "../../assets/generated-scene-art/guanzhong-jindan-demo/d12-ability-assets/fire/evidence/redesign-20261117/" + captureWidth));
             if (capture)
             {
                 Directory.CreateDirectory(output); Directory.CreateDirectory(evidence); Time.captureDeltaTime = 1f / 60;
@@ -82,14 +82,14 @@ namespace TianZhang.Art.Jindan.Fire.Samples
             stele = Instantiate(center, Point(demo.Fire.Support.Cell), Quaternion.identity);
             foreach (var cell in surface.Cells) warmth.Add(PlaceSheet(edge, new HexCoord(cell.q, cell.r), .025f));
             foreach (var cell in demo.Session.Surfaces.Cells) SetSurface(cell.Cell, cell.Kind);
-            Focus(3); yield return Present("01-before");
+            Focus(5); yield return Present("01-before");
             Check(demo.Fire.Main == null && fires.Count == 0, "undeployed has no warmth or fire");
             long sequence = demo.Session.Surfaces.SettlementSequence;
             var quote = demo.Commands.Preview(demo.Session, demo.Deploy());
             Check(quote.IsLegal && demo.Session.Surfaces.SettlementSequence == sequence && steamCount == 0, "preview is pure");
             demo.Execute(demo.Deploy()); yield return Present("02-deployed-no-fire");
             Check(demo.Fire.Main != null && fires.Count == 0, "deployment does not ignite");
-            FocusBoard(); Key("02-whole-board-warm-range"); Focus(3);
+            FocusBoard(); Key("02-whole-board-warm-range"); Focus(5);
             demo.NextFireTurn(); yield return Present("03-deployment-end-no-fire");
             Check(demo.Seat.MaintenancePayments == 0 && fires.Count == 0, "deployment own end does not tick");
             demo.NextFireTurn(); yield return Present("04-three-burning");
@@ -97,18 +97,25 @@ namespace TianZhang.Art.Jindan.Fire.Samples
             Check(demo.FuelCells.All(c => demo.Session.Surfaces.Get(c).Kind == CombatSurfaceKind.Burning), "expected three fuel cells burning");
             foreach (var fire in fires)
             {
-                var renderer = fire.Value.GetComponentInChildren<MeshRenderer>();
-                proof.Add("low-fire source=" + renderer.GetComponent<MeshFilter>().sharedMesh.name + " cell=" + fire.Key +
-                    " root=" + fire.Value.transform.position.ToString("F5") + " bounds=" + renderer.bounds + " shader=" + renderer.sharedMaterial.shader.name);
+                Geometry(fire.Value.GetComponentInChildren<MeshRenderer>(), "ground-flame " + fire.Key,
+                    "FireAssetSample.Sync -> Instantiate(lowFire); Sync writes _Strength/_Opacity; LowFire.shader Frag writes silhouette/colour from _Time");
+                Visibility(new[] { fire.Value }, "default-zoom-ground-flame " + fire.Key);
             }
-            Visibility(fires.Values.ToArray(), "three-low-fire");
+            var spirit = stele.transform.Find("Intact/Glow/CenterSpiritFlame");
+            Check(spirit && spirit.gameObject.activeInHierarchy, "center spirit follows active Glow");
+            Geometry(spirit.GetComponent<MeshRenderer>(), "center-spirit",
+                "FireAssetBuilder.BuildCenter -> Intact/Glow/CenterSpiritFlame; FireAssetSample.Sync toggles Glow from Main");
+            Visibility(new[] { spirit.gameObject }, "default-zoom-center-spirit");
+            Visibility(fires.Values.ToArray(), "default-zoom-three-low-fire");
             Visibility(warmth.ToArray(), "whole-board-weak-warmth");
             demo.ToActor(FireSampleRules.EarthActor);
             demo.Execute(demo.Strike()); yield return Present("05-center-damaged");
-            Check(demo.Fire.Support.Durability == 225 && demo.Fire.Main != null && warmth.All(w => w.activeSelf), "375 damage leaves225 and main warmth");
+            Check(demo.Fire.Support.Durability == 225 && demo.Fire.Main != null && warmth.All(w => w.activeSelf) && spirit.gameObject.activeInHierarchy,
+                "375 damage leaves225, main warmth and center spirit");
             demo.Execute(demo.Strike()); yield return Present("06-center-destroyed-tails");
             Check(demo.Fire.Support.IsDestroyed && demo.Fire.Main == null && fires.Count == 3 && demo.Fire.Tails.Single().RemainingCycles == 2, "center destroyed retains paid two-cycle tail");
-            Check(warmth.All(w => !w.activeSelf) && !stele.transform.Find("Intact").gameObject.activeSelf, "main warmth and center removed immediately");
+            Check(warmth.All(w => !w.activeSelf) && !stele.transform.Find("Intact").gameObject.activeSelf && !spirit.gameObject.activeInHierarchy,
+                "main warmth, center and center spirit removed immediately");
             demo.ToActor(FireSampleRules.FireActor);
             Check(demo.Fire.Tails.Single().RemainingCycles == 2, "next owner start does not age tail");
             demo.EndCurrent(); yield return Present("07-tail-one-own-cycle");
@@ -140,7 +147,7 @@ namespace TianZhang.Art.Jindan.Fire.Samples
             Check(extinguished.All(c => demo.Session.Surfaces.Get(c).Kind == CombatSurfaceKind.Wet), "natural expiry never overwrites water extinguish");
             Check(warmth.All(w => !w.activeSelf), "no main-range residual");
             proof.Add("Consumed steam instances=" + steamCount + "; owned burning maximum=3; original static water disabled=" + staticWaterOverlays.Length);
-            proof.Add("Only sample bindings tested; production Adventure/View/V3 HUD integration pending. Camera38deg size3/size5; Unity=" + Application.unityVersion);
+            proof.Add("Only sample bindings tested; production Adventure/View/V3 HUD integration pending. All video frames camera38deg size5; size3 supplementary keys; Unity=" + Application.unityVersion);
         }
 
         private List<GameObject> ConsumeReceipts()
@@ -159,8 +166,8 @@ namespace TianZhang.Art.Jindan.Fire.Samples
         }
         private IEnumerator Present(string name)
         {
-            phase = name; yield return Sync(); yield return Frames(50); Key(name); Record();
-            Focus(5); Key(name + "-default-zoom"); Focus(3);
+            Focus(5); phase = name; yield return Sync(); yield return Frames(50); Key(name + "-default-zoom"); Record();
+            Focus(3); Key(name); Focus(5);
         }
         private IEnumerator Sync()
         {
@@ -217,6 +224,29 @@ namespace TianZhang.Art.Jindan.Fire.Samples
                 " tails=" + string.Join(",", demo.Fire.Tails.Select(t => t.RemainingCycles)) + " fuel=" + demo.Fire.RemainingFuel + "/" + demo.Fire.ReservedFuel +
                 " surfaces=" + string.Join(";", demo.FuelCells.Select(c => c + "=" + demo.Session.Surfaces.Get(c).Kind)));
         }
+        private void Geometry(MeshRenderer renderer, string label, string writer)
+        {
+            var bounds = renderer.bounds; var min = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
+            var max = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
+            for (int corner = 0; corner < 8; corner++)
+            {
+                var p = bounds.center + Vector3.Scale(bounds.extents,
+                    new Vector3((corner & 1) == 0 ? -1 : 1, (corner & 2) == 0 ? -1 : 1, (corner & 4) == 0 ? -1 : 1));
+                Vector2 screen = sampleCamera.WorldToScreenPoint(p); min = Vector2.Min(min, screen); max = Vector2.Max(max, screen);
+            }
+            var chain = new List<string>(); for (var node = renderer.transform; node; node = node.parent) chain.Add(node.name); chain.Reverse();
+            var block = new MaterialPropertyBlock(); renderer.GetPropertyBlock(block);
+            float strength = block.isEmpty ? renderer.sharedMaterial.GetFloat("_Strength") : block.GetFloat("_Strength");
+            float opacity = block.isEmpty ? renderer.sharedMaterial.GetFloat("_Opacity") : block.GetFloat("_Opacity");
+            proof.Add(label + " hierarchy=" + string.Join("/", chain) + " active=" + renderer.gameObject.activeInHierarchy +
+                " mesh=" + renderer.GetComponent<MeshFilter>().sharedMesh.name + " material=" + renderer.sharedMaterial.name +
+                " shader=" + renderer.sharedMaterial.shader.name + " position=" + renderer.transform.position.ToString("F5") +
+                " worldBounds=" + bounds + " camera=" + sampleCamera.name + " orthographicSize=" + sampleCamera.orthographicSize +
+                " target=" + (target ? target.width + "x" + target.height : "GameView") +
+                " conversion=Camera.WorldToScreenPoint(worldBoundsCorners) projectedMin=" + min.ToString("F2") +
+                " projectedMax=" + max.ToString("F2") + " projectedSize=" + (max-min).ToString("F2") +
+                " Strength=" + strength + " Opacity=" + opacity + " writer=" + writer);
+        }
         private Vector3 Point(HexCoord cell) => surface.Center(new CombatUnitPresentationHex(cell.Q, cell.R));
         private void Focus(float size)
         {
@@ -258,8 +288,13 @@ namespace TianZhang.Art.Jindan.Fire.Samples
             if (!capture) return;
             var renderers = objects.SelectMany(go => go.GetComponentsInChildren<Renderer>()).Where(r => r.enabled).ToArray();
             Render(); var before = pixels.GetPixels32(); foreach (var r in renderers) r.enabled = false;
-            Render(); int count = Difference(before, pixels.GetPixels32()); foreach (var r in renderers) r.enabled = true;
-            proof.Add(label + " changedPixels=" + count); Check(count > 10, label + " is visible");
+            Render(); var after = pixels.GetPixels32(); int count = Difference(before, after); foreach (var r in renderers) r.enabled = true;
+            int minX=target.width, minY=target.height, maxX=-1, maxY=-1;
+            for (int i=0; i<before.Length; i++)
+                if (Math.Abs(before[i].r-after[i].r)+Math.Abs(before[i].g-after[i].g)+Math.Abs(before[i].b-after[i].b)>3)
+                { int x=i%target.width, y=i/target.width; minX=Math.Min(minX,x); minY=Math.Min(minY,y); maxX=Math.Max(maxX,x); maxY=Math.Max(maxY,y); }
+            proof.Add(label + " changedPixels=" + count + " finalDrawnPixelRect=(" + minX + "," + minY + ")..(" + maxX + "," + maxY +
+                ") cameraSize=" + sampleCamera.orthographicSize); Check(count > 10, label + " is visible");
         }
         private void Invisible(GameObject[] objects, string label)
         {

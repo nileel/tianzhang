@@ -48,9 +48,9 @@ namespace TianZhang.Art.Jindan.Water.Samples
 
         private IEnumerator Start()
         {
-            output = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/d12-water/" + captureWidth));
+            output = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/d12-water-redesign/" + captureWidth));
             evidence = Path.GetFullPath(Path.Combine(Application.dataPath,
-                "../../assets/generated-scene-art/guanzhong-jindan-demo/d12-ability-assets/water/evidence/" + captureWidth));
+                "../../assets/generated-scene-art/guanzhong-jindan-demo/d12-ability-assets/water/evidence/redesign-20261117/" + captureWidth));
             if (capture)
             {
                 Directory.CreateDirectory(output); Directory.CreateDirectory(evidence); Time.captureDeltaTime = 1f / 60;
@@ -82,7 +82,7 @@ namespace TianZhang.Art.Jindan.Water.Samples
             Check(staticWaterOverlays.Length > 0 && staticWaterOverlays.All(go => go && !go.activeInHierarchy), "original static water overlays are disabled");
             proof.Add("original static water overlays disabled=" + staticWaterOverlays.Length);
             provider.Prepare(JindanRehearsalFactory.Descriptors(demo.Spawned, "combat_player_default_v1"));
-            Focus(3);
+            Focus(5);
             foreach (var state in demo.Session.Surfaces.Cells) SetState(state.Cell, state.Kind);
             plant = Instantiate(plantSource, Point(demo.PlantCell), Quaternion.identity);
             phase = "01-before"; yield return Frames(45); Key(phase); RecordState();
@@ -110,7 +110,7 @@ namespace TianZhang.Art.Jindan.Water.Samples
             Check(supportError < .0001f, "surface and wave triangle interiors follow support within 0.1mm");
             proof.Add("support triangle-interior samples=" + supportSamples + " maxErrorMetres=" + supportError.ToString("G9"));
             proof.Add("original vertex-only stair adaptation interior errorMetres=" + legacyInteriorError.ToString("G9"));
-            proof.Add("camera=38deg size3 plus size5 keyframes; Unity=" + Application.unityVersion);
+            proof.Add("camera=38deg size5 primary plus size3 closeups; Unity=" + Application.unityVersion);
             proof.Add("Only sample calls production CombatCommandService; Adventure/HUD resource binding remains pending.");
         }
 
@@ -158,6 +158,8 @@ namespace TianZhang.Art.Jindan.Water.Samples
                     Vector3 direction = Point(change.Cell) - Point(demo.Source); direction.y = 0;
                     if (direction.sqrMagnitude < .001f) direction = Vector3.right;
                     direction.Normalize(); if (action == CombatTideAction.Ebb) direction = -direction;
+                    foreach (var spray in wave.GetComponentsInChildren<ParticleSystem>())
+                        spray.transform.rotation = Quaternion.LookRotation(Vector3.up + direction * .5f);
                     var props = new MaterialPropertyBlock(); props.SetVector("_Flow", new Vector4(direction.x, direction.z, 0, 0));
                     foreach (var renderer in wave.GetComponentsInChildren<Renderer>()) renderer.SetPropertyBlock(props);
                 }
@@ -174,9 +176,9 @@ namespace TianZhang.Art.Jindan.Water.Samples
                 Destroy(plant); plant = null;
             }
             phase = moving;
-            for (int f = 0; f < 24; f++)
+            for (int f = 0; f < 39; f++)
             {
-                float t = (f + 1) / 24f;
+                float t = (f + 1) / 39f;
                 foreach (var c in changes.Where(c => c.After != CombatSurfaceKind.None))
                 {
                     var renderer = sheets[c.Cell].GetComponentInChildren<Renderer>();
@@ -188,7 +190,11 @@ namespace TianZhang.Art.Jindan.Water.Samples
                     if (c.Before == CombatSurfaceKind.Burning) m.SetColor("_MudColor", Color.Lerp(new Color(.92f, .27f, .055f), MaterialFor(c.After).GetColor("_MudColor"), t));
                 }
                 yield return Frames(1);
-                if (f == 9) { Key(moving); ParticleVisibility(effects, moving); FrontVisibility(effects, moving); }
+                if (f == 16)
+                {
+                    Key(moving); ParticleVisibility(effects, moving); FrontVisibility(effects, moving);
+                    Focus(3); Key(moving + "-closeup"); Focus(5);
+                }
             }
             yield return Frames(40);
             foreach (var effect in effects)
@@ -197,7 +203,7 @@ namespace TianZhang.Art.Jindan.Water.Samples
             foreach (var effect in effects) Destroy(effect);
             foreach (var c in changes) SetState(c.Cell, c.After);
             phase = settled; yield return Frames(50); Key(settled); RecordState();
-            Focus(5); Key(settled + "-default-zoom"); Focus(3);
+            Key(settled + "-default-zoom"); Focus(3); Key(settled + "-closeup"); Focus(5);
         }
 
         private bool PlantDestroyed() => demo.Session.SceneObjects.Find("LowPlant_4_6").IsDestroyed;
@@ -239,12 +245,15 @@ namespace TianZhang.Art.Jindan.Water.Samples
                         " root=" + go.transform.position.ToString("F5") + " bands=" + support.riserZ.Length + " lift=" + lift);
                     Destroy(original);
                 }
-                var mesh = WaterSampleSupport.Fit(filter.sharedMesh, filter.transform, surface, support, lift); meshes.Add(mesh);
+                bool front = prefab == rise || prefab == ebb;
+                var mesh = WaterSampleSupport.Fit(filter.sharedMesh, filter.transform, surface, support, lift, front ? 1 : 12); meshes.Add(mesh);
                 float error = WaterSampleSupport.InteriorError(mesh, filter.transform, surface, support, lift, out int count);
                 if (error > .0001f) proof.Add("SUPPORT_PROBE cell=" + cell + " kind=" + support.kind + " lower=" + support.lowerY + " upper=" + support.upperY +
                     " bands=" + string.Join(",", support.riserZ) + " heights=" + string.Join(",", support.riserY) + " error=" + error + " root=" + go.transform.position + " mesh=" + mesh.bounds);
                 supportError = Mathf.Max(supportError, error);
-                supportSamples += count; filter.sharedMesh = mesh;
+                supportSamples += count;
+                if (front) { var bounds = mesh.bounds; bounds.Expand(new Vector3(.3f, .6f, .3f)); mesh.bounds = bounds; }
+                filter.sharedMesh = mesh;
             }
             return go;
         }
@@ -278,7 +287,7 @@ namespace TianZhang.Art.Jindan.Water.Samples
         private void ParticleVisibility(List<GameObject> effects, string name)
         {
             if (!capture) return;
-            var renderers = effects.SelectMany(e => e.GetComponentsInChildren<ParticleSystemRenderer>()).ToArray();
+            var renderers = effects.Where(e => e.name.StartsWith("ExtinguishSteam", StringComparison.Ordinal)).SelectMany(e => e.GetComponentsInChildren<ParticleSystemRenderer>()).ToArray();
             if (renderers.Length == 0) return;
             Render(); var visible = pixels.GetPixels32(); foreach (var r in renderers) r.enabled = false;
             Render(); int changed = Difference(visible, pixels.GetPixels32()); foreach (var r in renderers) r.enabled = true;
@@ -296,8 +305,27 @@ namespace TianZhang.Art.Jindan.Water.Samples
             var renderers = effects.Where(e => e.name.StartsWith("Tide", StringComparison.Ordinal)).SelectMany(e => e.GetComponentsInChildren<Renderer>()).ToArray();
             if (renderers.Length == 0) return;
             Render(); var visible = pixels.GetPixels32(); foreach (var r in renderers) r.enabled = false;
-            Render(); int changed = Difference(visible, pixels.GetPixels32()); foreach (var r in renderers) r.enabled = true;
+            Render(); var hidden = pixels.GetPixels32(); int changed = Difference(visible, hidden); foreach (var r in renderers) r.enabled = true;
             proof.Add(name + " front-only changedPixels=" + changed); Check(changed > 25, "travelling foam rendered visibly");
+            int minX=target.width, minY=target.height, maxX=-1, maxY=-1;
+            for (int i=0; i<visible.Length; i++)
+                if (Math.Abs(visible[i].r-hidden[i].r)+Math.Abs(visible[i].g-hidden[i].g)+Math.Abs(visible[i].b-hidden[i].b)>3)
+                { int x=i%target.width, y=i/target.width; minX=Math.Min(minX,x); minY=Math.Min(minY,y); maxX=Math.Max(maxX,x); maxY=Math.Max(maxY,y); }
+            var sample = renderers.OfType<MeshRenderer>().First();
+            var properties = new MaterialPropertyBlock(); sample.GetPropertyBlock(properties);
+            var b = sample.bounds;
+            Vector3 screenMin = new Vector3(float.MaxValue,float.MaxValue,0), screenMax = new Vector3(float.MinValue,float.MinValue,0);
+            for (int x = -1; x <= 1; x += 2) for (int y = -1; y <= 1; y += 2) for (int z = -1; z <= 1; z += 2)
+            {
+                var p = sampleCamera.WorldToScreenPoint(b.center + Vector3.Scale(b.extents,new Vector3(x,y,z)));
+                screenMin=Vector3.Min(screenMin,p); screenMax=Vector3.Max(screenMax,p);
+            }
+            proof.Add(name + " owner=WaterAssetSample.Transition->" + sample.transform.root.name + "/" + sample.name +
+                " shader=" + sample.sharedMaterial.shader.name + " mesh=" + sample.GetComponent<MeshFilter>().sharedMesh.name +
+                " cullingWorldBounds=" + b + " projectedCullingBounds=" + screenMin.ToString("F2") + ".." + screenMax.ToString("F2") +
+                " drawnFrontPixelRect=(" + minX + "," + minY + ")..(" + maxX + "," + maxY + ")" +
+                " cameraSize=" + sampleCamera.orthographicSize + " progress=" + properties.GetFloat("_Progress") + " flow=" + properties.GetVector("_Flow") +
+                " writer=LegacyAnimation + _Flow PropertyBlock; shaderMaxCrest=.29m");
         }
         private static int Difference(Color32[] a, Color32[] b)
         {

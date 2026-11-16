@@ -243,128 +243,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4340571474071019698, guid: 3dff5373d6d5eff468ac55e6a8b71ffd, type: 3}
   m_PrefabInstance: {fileID: 24528795}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &24728057
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 24728060}
-  - component: {fileID: 24728059}
-  - component: {fileID: 24728058}
-  m_Layer: 0
-  m_Name: D12.2 Water Resource Sample
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &24728058
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 24728057}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 98e71039a0ef4b1a8f4c1d57198dcd81, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: TianZhang.Features.CombatPresentation::TianZhang.Features.CombatPresentation.Static3DCombatUnitPresentationProvider
-  profileSet: {fileID: 11400000, guid: 3efef3dc211373a4ba192d8725f65e0a, type: 2}
-  attackVfxCatalog: {fileID: 0}
-  targetPreviewMaterial: {fileID: 0}
-  flightLineMaterial: {fileID: 0}
-  doubleCellFootprintFill: 0.9
---- !u!114 &24728059
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 24728057}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f17910fbfb9f7d2419a598483edd3917, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: TianZhang.Art.Water.Samples::TianZhang.Art.Jindan.Water.Samples.WaterAssetSample
-  surface: {fileID: 2046743064}
-  provider: {fileID: 24728058}
-  sampleCamera: {fileID: 45381837}
-  wet: {fileID: 2269499933555798908, guid: f9650d45f6a4e0a4e8413f4a6ec37144, type: 3}
-  shallow: {fileID: 7385924482309046915, guid: 23c658f35dbaa154cbfe319e68ca1ff5, type: 3}
-  deep: {fileID: 5471803111583616445, guid: 5f2443aa3043b5a44979b442c9483923, type: 3}
-  dry: {fileID: 5146704900454763411, guid: 27ad1c9cea1eb164b95a94b696a04e41, type: 3}
-  rise: {fileID: 1883973481720064202, guid: 0cabee7bf0cdf54489158843cfe65d7d, type: 3}
-  ebb: {fileID: 1714285370304274916, guid: 688b0405a00ee614b8687582c4dc4c2b, type: 3}
-  steam: {fileID: 727029802610936663, guid: 8e891450fa59d3149809b455118bfcde, type: 3}
-  plantErode: {fileID: 2819464354865387172, guid: 4f38dec67b6fc1c4283db60309a8f9d6, type: 3}
-  plantSource: {fileID: 2518486346478161507, guid: a3add1b735ce7e0489aa957eda5fee95, type: 3}
-  staticWaterOverlays:
-  - {fileID: 1607852739}
-  - {fileID: 798672679}
-  - {fileID: 1891871802}
-  - {fileID: 1507722570}
-  - {fileID: 1313328922}
-  - {fileID: 824034168}
-  - {fileID: 507969119}
-  - {fileID: 278980055}
-  - {fileID: 786051060}
-  - {fileID: 601985723}
-  - {fileID: 916920815}
-  - {fileID: 1205810041}
-  - {fileID: 1464553402}
-  - {fileID: 1748334522}
-  - {fileID: 1579532999}
-  - {fileID: 98410193}
-  - {fileID: 1189459484}
-  - {fileID: 715358387}
-  - {fileID: 324607840}
-  - {fileID: 1772440532}
-  - {fileID: 1700870520}
-  - {fileID: 288693964}
-  - {fileID: 289240953}
-  - {fileID: 1652414128}
-  - {fileID: 390884753}
-  - {fileID: 970406891}
-  - {fileID: 1766018586}
-  - {fileID: 996791735}
-  burningMaterial: {fileID: 2100000, guid: e97c4694ca46bdd4a83004c71d4291ba, type: 2}
-  catalog: {fileID: 11400000, guid: 9a8721129eed3f2459768f15848e4ea5, type: 2}
-  rules: {fileID: 11400000, guid: a597af4c6e37dab4883746e206254f60, type: 2}
-  environment: {fileID: 11400000, guid: b29455c1ee40d3a4297cab956b733a95, type: 2}
-  attacks:
-  - {fileID: 11400000, guid: 588f40063e8bb314eace22286ea47728, type: 2}
-  - {fileID: 11400000, guid: abb23574c4939df49b967a2e25d0216a, type: 2}
-  - {fileID: 11400000, guid: 3555f4c15eb80314ba125cf22f62f582, type: 2}
-  - {fileID: 11400000, guid: a10a8e22ff5a44545a2cbf651bbe51d1, type: 2}
-  - {fileID: 11400000, guid: 57e0d2be330d2ff4dbbbccfa2021f02d, type: 2}
-  - {fileID: 11400000, guid: 5cabaea41bfdcb44c9a3ea1525f575fc, type: 2}
-  - {fileID: 11400000, guid: 093e881a8bc5d784d9cb4739e3db7a6c, type: 2}
-  - {fileID: 11400000, guid: 0136c0fced51ffc44aa8eac71bb7de6d, type: 2}
-  - {fileID: 11400000, guid: 61f3377369568c94b9a5366a42a4a44b, type: 2}
-  - {fileID: 11400000, guid: 60ca361e62e57fa4d8de2ce04f269382, type: 2}
-  - {fileID: 11400000, guid: e09511b0bf790504187bcb58e2cf15a6, type: 2}
-  - {fileID: 11400000, guid: 363916019deda554a96cf594d475daa5, type: 2}
-  capture: 0
-  captureWidth: 1920
---- !u!4 &24728060
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 24728057}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &30890800
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4957,6 +4835,128 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4340571474071019698, guid: 3dff5373d6d5eff468ac55e6a8b71ffd, type: 3}
   m_PrefabInstance: {fileID: 849594736}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &866764903
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 866764906}
+  - component: {fileID: 866764905}
+  - component: {fileID: 866764904}
+  m_Layer: 0
+  m_Name: D12.2 Water Resource Sample
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &866764904
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 866764903}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98e71039a0ef4b1a8f4c1d57198dcd81, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: TianZhang.Features.CombatPresentation::TianZhang.Features.CombatPresentation.Static3DCombatUnitPresentationProvider
+  profileSet: {fileID: 11400000, guid: 3efef3dc211373a4ba192d8725f65e0a, type: 2}
+  attackVfxCatalog: {fileID: 0}
+  targetPreviewMaterial: {fileID: 0}
+  flightLineMaterial: {fileID: 0}
+  doubleCellFootprintFill: 0.9
+--- !u!114 &866764905
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 866764903}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f17910fbfb9f7d2419a598483edd3917, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: TianZhang.Art.Water.Samples::TianZhang.Art.Jindan.Water.Samples.WaterAssetSample
+  surface: {fileID: 2046743064}
+  provider: {fileID: 866764904}
+  sampleCamera: {fileID: 45381837}
+  wet: {fileID: 2269499933555798908, guid: f9650d45f6a4e0a4e8413f4a6ec37144, type: 3}
+  shallow: {fileID: 7385924482309046915, guid: 23c658f35dbaa154cbfe319e68ca1ff5, type: 3}
+  deep: {fileID: 5471803111583616445, guid: 5f2443aa3043b5a44979b442c9483923, type: 3}
+  dry: {fileID: 5146704900454763411, guid: 27ad1c9cea1eb164b95a94b696a04e41, type: 3}
+  rise: {fileID: 1883973481720064202, guid: 0cabee7bf0cdf54489158843cfe65d7d, type: 3}
+  ebb: {fileID: 1714285370304274916, guid: 688b0405a00ee614b8687582c4dc4c2b, type: 3}
+  steam: {fileID: 727029802610936663, guid: 8e891450fa59d3149809b455118bfcde, type: 3}
+  plantErode: {fileID: 2819464354865387172, guid: 4f38dec67b6fc1c4283db60309a8f9d6, type: 3}
+  plantSource: {fileID: 2518486346478161507, guid: a3add1b735ce7e0489aa957eda5fee95, type: 3}
+  staticWaterOverlays:
+  - {fileID: 1607852739}
+  - {fileID: 798672679}
+  - {fileID: 1891871802}
+  - {fileID: 1507722570}
+  - {fileID: 1313328922}
+  - {fileID: 824034168}
+  - {fileID: 507969119}
+  - {fileID: 278980055}
+  - {fileID: 786051060}
+  - {fileID: 601985723}
+  - {fileID: 916920815}
+  - {fileID: 1205810041}
+  - {fileID: 1464553402}
+  - {fileID: 1748334522}
+  - {fileID: 1579532999}
+  - {fileID: 98410193}
+  - {fileID: 1189459484}
+  - {fileID: 715358387}
+  - {fileID: 324607840}
+  - {fileID: 1772440532}
+  - {fileID: 1700870520}
+  - {fileID: 288693964}
+  - {fileID: 289240953}
+  - {fileID: 1652414128}
+  - {fileID: 390884753}
+  - {fileID: 970406891}
+  - {fileID: 1766018586}
+  - {fileID: 996791735}
+  burningMaterial: {fileID: 2100000, guid: e97c4694ca46bdd4a83004c71d4291ba, type: 2}
+  catalog: {fileID: 11400000, guid: 9a8721129eed3f2459768f15848e4ea5, type: 2}
+  rules: {fileID: 11400000, guid: a597af4c6e37dab4883746e206254f60, type: 2}
+  environment: {fileID: 11400000, guid: b29455c1ee40d3a4297cab956b733a95, type: 2}
+  attacks:
+  - {fileID: 11400000, guid: 588f40063e8bb314eace22286ea47728, type: 2}
+  - {fileID: 11400000, guid: abb23574c4939df49b967a2e25d0216a, type: 2}
+  - {fileID: 11400000, guid: 3555f4c15eb80314ba125cf22f62f582, type: 2}
+  - {fileID: 11400000, guid: a10a8e22ff5a44545a2cbf651bbe51d1, type: 2}
+  - {fileID: 11400000, guid: 57e0d2be330d2ff4dbbbccfa2021f02d, type: 2}
+  - {fileID: 11400000, guid: 5cabaea41bfdcb44c9a3ea1525f575fc, type: 2}
+  - {fileID: 11400000, guid: 093e881a8bc5d784d9cb4739e3db7a6c, type: 2}
+  - {fileID: 11400000, guid: 0136c0fced51ffc44aa8eac71bb7de6d, type: 2}
+  - {fileID: 11400000, guid: 61f3377369568c94b9a5366a42a4a44b, type: 2}
+  - {fileID: 11400000, guid: 60ca361e62e57fa4d8de2ce04f269382, type: 2}
+  - {fileID: 11400000, guid: e09511b0bf790504187bcb58e2cf15a6, type: 2}
+  - {fileID: 11400000, guid: 363916019deda554a96cf594d475daa5, type: 2}
+  capture: 0
+  captureWidth: 1920
+--- !u!4 &866764906
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 866764903}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &890614868
 GameObject:
   m_ObjectHideFlags: 0
@@ -11854,4 +11854,4 @@ SceneRoots:
   - {fileID: 45381840}
   - {fileID: 2128095517}
   - {fileID: 2046743065}
-  - {fileID: 24728060}
+  - {fileID: 866764906}

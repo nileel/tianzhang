@@ -1,0 +1,28 @@
+Fixture: production board/catalog/stats; staged actors earth(7,11), water(8,11), fire(7,14); dry fuel4 at (7,13),(8,12),(8,13). No runtime mutation of rules/fuel/durability.
+01-before tick=10 main=False center=600 burning=0 maintenance=0 tails= fuel=15/0 surfaces=(7, 13, -20)=None;(8, 12, -20)=None;(8, 13, -21)=None
+02-deployed-no-fire tick=10 main=True center=600 burning=0 maintenance=0 tails= fuel=9/6 surfaces=(7, 13, -20)=None;(8, 12, -20)=None;(8, 13, -21)=None
+whole board warmth cells=144 bounds=Center: (8.25, 1.09, 7.06), Extents: (8.25, 0.75, 6.93) cameraSize=5.995822
+03-deployment-end-no-fire tick=20 main=True center=600 burning=0 maintenance=0 tails= fuel=9/6 surfaces=(7, 13, -20)=None;(8, 12, -20)=None;(8, 13, -21)=None
+04-three-burning tick=30 main=True center=600 burning=3 maintenance=1 tails= fuel=6/6 surfaces=(7, 13, -20)=Burning;(8, 12, -20)=Burning;(8, 13, -21)=Burning
+ground-flame (7, 13, -20) hierarchy=LowFire(Clone)/LowTongues active=True mesh=SparseLowFlameCards material=LowFire shader=TianZhang/Jindan/Low Fire position=(13.50000, 1.86543, 12.25833) worldBounds=Center: (13.47, 2.25, 12.18), Extents: (0.38, 0.38, 0.32) camera=Main Camera orthographicSize=5 target=1920x1080 conversion=Camera.WorldToScreenPoint(worldBoundsCorners) projectedMin=(969.72, 547.48) projectedMax=(1052.42, 655.20) projectedSize=(82.70, 107.71) Strength=1 Opacity=1 writer=FireAssetSample.Sync -> Instantiate(lowFire); Sync writes _Strength/_Opacity; LowFire.shader Frag writes silhouette/colour from _Time
+default-zoom-ground-flame (7, 13, -20) changedPixels=2686 finalDrawnPixelRect=(973,559)..(1050,637) cameraSize=5
+ground-flame (8, 12, -20) hierarchy=LowFire(Clone)/LowTongues active=True mesh=SparseLowFlameCards material=LowFire shader=TianZhang/Jindan/Low Fire position=(14.00000, 1.86543, 11.39230) worldBounds=Center: (13.97, 2.25, 11.31), Extents: (0.38, 0.38, 0.32) camera=Main Camera orthographicSize=5 target=1920x1080 conversion=Camera.WorldToScreenPoint(worldBoundsCorners) projectedMin=(1023.72, 489.90) projectedMax=(1106.42, 597.61) projectedSize=(82.70, 107.71) Strength=1 Opacity=1 writer=FireAssetSample.Sync -> Instantiate(lowFire); Sync writes _Strength/_Opacity; LowFire.shader Frag writes silhouette/colour from _Time
+default-zoom-ground-flame (8, 12, -20) changedPixels=2926 finalDrawnPixelRect=(1027,492)..(1102,576) cameraSize=5
+ground-flame (8, 13, -21) hierarchy=LowFire(Clone)/LowTongues active=True mesh=SparseLowFlameCards material=LowFire shader=TianZhang/Jindan/Low Fire position=(14.50000, 1.86543, 12.25833) worldBounds=Center: (14.47, 2.25, 12.18), Extents: (0.38, 0.38, 0.32) camera=Main Camera orthographicSize=5 target=1920x1080 conversion=Camera.WorldToScreenPoint(worldBoundsCorners) projectedMin=(1077.72, 547.48) projectedMax=(1160.42, 655.20) projectedSize=(82.70, 107.71) Strength=1 Opacity=1 writer=FireAssetSample.Sync -> Instantiate(lowFire); Sync writes _Strength/_Opacity; LowFire.shader Frag writes silhouette/colour from _Time
+default-zoom-ground-flame (8, 13, -21) changedPixels=2792 finalDrawnPixelRect=(1080,550)..(1159,641) cameraSize=5
+center-spirit hierarchy=FireCenter(Clone)/Intact/Glow/CenterSpiritFlame active=True mesh=SparseLowFlameCards material=LowFire shader=TianZhang/Jindan/Low Fire position=(13.00000, 2.56043, 11.39230) worldBounds=Center: (12.99, 2.74, 11.35), Extents: (0.18, 0.18, 0.16) camera=Main Camera orthographicSize=5 target=1920x1080 conversion=Camera.WorldToScreenPoint(worldBoundsCorners) projectedMin=(938.75, 562.93) projectedMax=(978.44, 614.63) projectedSize=(39.69, 51.70) Strength=1 Opacity=1 writer=FireAssetBuilder.BuildCenter -> Intact/Glow/CenterSpiritFlame; FireAssetSample.Sync toggles Glow from Main
+default-zoom-center-spirit changedPixels=686 finalDrawnPixelRect=(939,563)..(976,607) cameraSize=5
+default-zoom-three-low-fire changedPixels=8381 finalDrawnPixelRect=(973,492)..(1159,641) cameraSize=5
+whole-board-weak-warmth changedPixels=34727 finalDrawnPixelRect=(0,0)..(1390,726) cameraSize=5
+05-center-damaged tick=40 main=True center=225 burning=3 maintenance=2 tails= fuel=3/6 surfaces=(7, 13, -20)=Burning;(8, 12, -20)=Burning;(8, 13, -21)=Burning
+06-center-destroyed-tails tick=40 main=False center=0 burning=3 maintenance=2 tails=2 fuel=3/6 surfaces=(7, 13, -20)=Burning;(8, 12, -20)=Burning;(8, 13, -21)=Burning
+07-tail-one-own-cycle tick=40 main=False center=0 burning=3 maintenance=2 tails=1 fuel=3/3 surfaces=(7, 13, -20)=Burning;(8, 12, -20)=Burning;(8, 13, -21)=Burning
+steam receipt=6 (8, 12, -20) Burning->Wet
+steam receipt=6 (8, 13, -21) Burning->Wet
+shared-steam changedPixels=109 finalDrawnPixelRect=(1055,517)..(1137,598) cameraSize=5
+expired-steam changedPixels=0
+08-water-wet-tail-remains tick=40 main=False center=0 burning=1 maintenance=2 tails=1 fuel=3/3 surfaces=(7, 13, -20)=Burning;(8, 12, -20)=Wet;(8, 13, -21)=Wet
+10-naturally-scorched tick=60 main=False center=0 burning=0 maintenance=2 tails= fuel=3/0 surfaces=(7, 13, -20)=Scorched;(8, 12, -20)=Wet;(8, 13, -21)=Wet
+Consumed steam instances=2; owned burning maximum=3; original static water disabled=28
+Only sample bindings tested; production Adventure/View/V3 HUD integration pending. All video frames camera38deg size5; size3 supplementary keys; Unity=6000.3.18f1
+PASS

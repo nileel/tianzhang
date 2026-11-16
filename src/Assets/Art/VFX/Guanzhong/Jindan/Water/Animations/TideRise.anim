@@ -25,15 +25,15 @@ AnimationClip:
         time: 0
         value: 0
         inSlope: 0
-        outSlope: 2.5
+        outSlope: 1.5384616
         tangentMode: 0
         weightedMode: 0
         inWeight: 0
         outWeight: 0
       - serializedVersion: 3
-        time: 0.4
+        time: 0.65
         value: 1
-        inSlope: 2.5
+        inSlope: 1.5384616
         outSlope: 0
         tangentMode: 0
         weightedMode: 0
@@ -61,7 +61,7 @@ AnimationClip:
     m_AdditiveReferencePoseClip: {fileID: 0}
     m_AdditiveReferencePoseTime: 0
     m_StartTime: 0
-    m_StopTime: 0.4
+    m_StopTime: 0.65
     m_OrientationOffsetY: 0
     m_Level: 0
     m_CycleOffset: 0
