@@ -1,0 +1,5 @@
+{
+    "name": "TianZhang.Art.Space.Samples",
+    "references": ["TianZhang.Features.CombatPresentation", "TianZhang.Gameplay.Contracts", "TianZhang.Features.Adventure", "TianZhang.Combat", "TianZhang.Spatial", "TianZhang.Content", "TianZhang.Infrastructure.UnityContent"],
+    "autoReferenced": false
+}

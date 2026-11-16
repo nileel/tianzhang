@@ -1,0 +1,6 @@
+{
+    "name": "TianZhang.Art.Fire.Editor",
+    "references": ["TianZhang.Art.Fire.Samples", "TianZhang.Features.CombatPresentation", "TianZhang.Gameplay.Contracts", "TianZhang.Content", "TianZhang.Infrastructure.UnityContent"],
+    "includePlatforms": ["Editor"],
+    "autoReferenced": false
+}

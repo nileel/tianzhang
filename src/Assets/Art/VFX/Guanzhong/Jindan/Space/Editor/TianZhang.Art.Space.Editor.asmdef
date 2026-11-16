@@ -1,0 +1,6 @@
+{
+    "name": "TianZhang.Art.Space.Editor",
+    "references": ["TianZhang.Art.Space.Samples", "TianZhang.Features.CombatPresentation", "TianZhang.Gameplay.Contracts", "TianZhang.Content", "TianZhang.Infrastructure.UnityContent"],
+    "includePlatforms": ["Editor"],
+    "autoReferenced": false
+}

@@ -1,0 +1,23 @@
+Fixture: production board/catalog/stats; staged actors earth(7,11), water(8,11), fire(7,14); dry fuel4 at (7,13),(8,12),(8,13). No runtime mutation of rules/fuel/durability.
+01-before tick=10 main=False center=600 burning=0 maintenance=0 tails= fuel=15/0 surfaces=(7, 13, -20)=None;(8, 12, -20)=None;(8, 13, -21)=None
+02-deployed-no-fire tick=10 main=True center=600 burning=0 maintenance=0 tails= fuel=9/6 surfaces=(7, 13, -20)=None;(8, 12, -20)=None;(8, 13, -21)=None
+whole board warmth cells=144 bounds=Center: (8.25, 1.09, 7.06), Extents: (8.25, 0.75, 6.93) cameraSize=5.995822
+03-deployment-end-no-fire tick=20 main=True center=600 burning=0 maintenance=0 tails= fuel=9/6 surfaces=(7, 13, -20)=None;(8, 12, -20)=None;(8, 13, -21)=None
+04-three-burning tick=30 main=True center=600 burning=3 maintenance=1 tails= fuel=6/6 surfaces=(7, 13, -20)=Burning;(8, 12, -20)=Burning;(8, 13, -21)=Burning
+low-fire source=SparseLowFlameCards cell=(7, 13, -20) root=(13.50000, 1.86543, 12.25833) bounds=Center: (13.46, 2.04, 12.20), Extents: (0.29, 0.17, 0.28) shader=TianZhang/Jindan/Low Fire
+low-fire source=SparseLowFlameCards cell=(8, 12, -20) root=(14.00000, 1.86543, 11.39230) bounds=Center: (13.96, 2.04, 11.34), Extents: (0.29, 0.17, 0.28) shader=TianZhang/Jindan/Low Fire
+low-fire source=SparseLowFlameCards cell=(8, 13, -21) root=(14.50000, 1.86543, 12.25833) bounds=Center: (14.46, 2.04, 12.20), Extents: (0.29, 0.17, 0.28) shader=TianZhang/Jindan/Low Fire
+three-low-fire changedPixels=5223
+whole-board-weak-warmth changedPixels=62521
+05-center-damaged tick=40 main=True center=225 burning=3 maintenance=2 tails= fuel=3/6 surfaces=(7, 13, -20)=Burning;(8, 12, -20)=Burning;(8, 13, -21)=Burning
+06-center-destroyed-tails tick=40 main=False center=0 burning=3 maintenance=2 tails=2 fuel=3/6 surfaces=(7, 13, -20)=Burning;(8, 12, -20)=Burning;(8, 13, -21)=Burning
+07-tail-one-own-cycle tick=40 main=False center=0 burning=3 maintenance=2 tails=1 fuel=3/3 surfaces=(7, 13, -20)=Burning;(8, 12, -20)=Burning;(8, 13, -21)=Burning
+steam receipt=6 (8, 12, -20) Burning->Wet
+steam receipt=6 (8, 13, -21) Burning->Wet
+shared-steam changedPixels=330
+expired-steam changedPixels=0
+08-water-wet-tail-remains tick=40 main=False center=0 burning=1 maintenance=2 tails=1 fuel=3/3 surfaces=(7, 13, -20)=Burning;(8, 12, -20)=Wet;(8, 13, -21)=Wet
+10-naturally-scorched tick=60 main=False center=0 burning=0 maintenance=2 tails= fuel=3/0 surfaces=(7, 13, -20)=Scorched;(8, 12, -20)=Wet;(8, 13, -21)=Wet
+Consumed steam instances=2; owned burning maximum=3; original static water disabled=28
+Only sample bindings tested; production Adventure/View/V3 HUD integration pending. Camera38deg size3/size5; Unity=6000.3.18f1
+PASS

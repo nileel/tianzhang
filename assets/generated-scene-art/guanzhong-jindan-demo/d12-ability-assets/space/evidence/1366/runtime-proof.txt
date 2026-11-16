@@ -1,0 +1,25 @@
+compress metric=1 support=200
+compress band pixels=504
+compress-approach (4, 14, -18)->(5, 14, -19) steps=1 AP=20833
+compress-04-cross (5, 14, -19)->(6, 14, -20) steps=1 AP=10416
+compress-return (6, 14, -20)->(4, 14, -18) steps=2 AP=31249
+compress ended metric=2 reason=jindan_support_destroyed
+expand metric=4 support=200
+expand band pixels=953
+expand-approach (4, 14, -18)->(5, 14, -19) steps=1 AP=20833
+expand-04-cross (5, 14, -19)->(6, 14, -20) steps=1 AP=41666
+expand ended metric=2 reason=jindan_closed
+same committed movement edge AP: compression=10416 expansion=41666
+seal-approach (4, 14, -18)->(8, 12, -20) steps=4 AP=83332
+gate blocked=True real path steps=2 forced steps=0
+seal outer band pixels=876
+seal inner band pixels=596
+seal-02-detour (8, 12, -20)->(9, 12, -21) steps=2 AP=41666
+seal-03-reverse (9, 12, -21)->(8, 12, -20) steps=1 AP=20833
+gate blocked=True real path steps=2 forced steps=0
+outer broken outer=0 inner=80 expiry=22
+gate blocked=False real path steps=1 forced steps=1
+seal-06-through (8, 12, -20)->(9, 12, -21) steps=1 AP=20833
+ground centers=144 maximum displacement=0; camera tilt38 size3 + size5 keyframes; Unity=6000.3.18f1
+Only independent resource sample; production Views and V3 HUD binding pending.
+PASS
