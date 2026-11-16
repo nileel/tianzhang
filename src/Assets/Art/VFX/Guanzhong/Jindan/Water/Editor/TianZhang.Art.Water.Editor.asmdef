@@ -1,0 +1,6 @@
+{
+    "name": "TianZhang.Art.Water.Editor",
+    "references": ["TianZhang.Art.Water.Samples", "TianZhang.Features.CombatPresentation", "TianZhang.Gameplay.Contracts", "TianZhang.Content", "TianZhang.Infrastructure.UnityContent"],
+    "includePlatforms": ["Editor"],
+    "autoReferenced": false
+}

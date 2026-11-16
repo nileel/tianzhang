@@ -1,0 +1,31 @@
+original static water overlays disabled=28
+01-before tick=10 source=ShallowWater plantSurface=Burning plantDurability=15 fuel=3 visiblePlant=True
+03-first-rise frozen=(5, 5, -10):ShallowWater->DeepWater;(6, 5, -11):None->Wet;(6, 4, -10):None->Wet;(5, 4, -9):None->Wet;(4, 5, -9):None->Wet;(4, 6, -10):Burning->Wet;(5, 6, -11):Burning->Wet
+03-first-rise push demo_20261024_water (4, 5, -9)->(4, 5, -9) direction=3 reason=open_cliff_blocks_ground
+stair source=WaterHex vertices=7 cell=(5, 4, -9) root=(7.00000, 1.09043, 4.46410) bands=8 lift=0.018
+02-first-rise-moving steam-only changedPixels=1160
+02-first-rise-moving front-only changedPixels=21397
+02-first-rise-moving expired-effects changedPixels=0
+03-first-rise tick=10 source=DeepWater plantSurface=Wet plantDurability=15 fuel=3 visiblePlant=True
+04-second-rise frozen=(6, 5, -11):Wet->ShallowWater;(6, 4, -10):Wet->ShallowWater;(5, 4, -9):Wet->ShallowWater;(4, 5, -9):Wet->ShallowWater;(4, 6, -10):Wet->ShallowWater;(5, 6, -11):Wet->ShallowWater
+04-second-rise push demo_20261024_water (4, 5, -9)->(4, 5, -9) direction=3 reason=open_cliff_blocks_ground
+04-second-rise-moving front-only changedPixels=18703
+04-second-rise-moving expired-effects changedPixels=0
+04-second-rise tick=20 source=DeepWater plantSurface=ShallowWater plantDurability=0 fuel=0 visiblePlant=False
+05-first-ebb frozen=(5, 5, -10):DeepWater->ShallowWater;(6, 5, -11):ShallowWater->Wet;(6, 4, -10):ShallowWater->Wet;(5, 4, -9):ShallowWater->Wet;(4, 5, -9):ShallowWater->Wet;(4, 6, -10):ShallowWater->Wet;(5, 6, -11):ShallowWater->Wet
+05-first-ebb push demo_20261024_water (4, 5, -9)->(5, 5, -10) direction=0 reason=distance_budget_exhausted
+05-first-ebb-moving front-only changedPixels=21780
+05-first-ebb-moving expired-effects changedPixels=0
+05-first-ebb tick=30 source=ShallowWater plantSurface=Wet plantDurability=0 fuel=0 visiblePlant=False
+06-second-ebb frozen=(5, 5, -10):ShallowWater->Wet;(6, 5, -11):Wet->None;(6, 4, -10):Wet->None;(5, 4, -9):Wet->None;(4, 5, -9):Wet->None;(4, 6, -10):Wet->None;(5, 6, -11):Wet->None
+06-second-ebb push demo_20261024_water (5, 5, -10)->(5, 5, -10) direction=-1 reason=tide_at_source
+06-second-ebb-moving front-only changedPixels=22087
+06-second-ebb-moving expired-effects changedPixels=0
+06-second-ebb tick=40 source=Wet plantSurface=None plantDurability=0 fuel=0 visiblePlant=False
+07-terminating expired-effects changedPixels=0
+07-terminated tick=40 source=None plantSurface=None plantDurability=0 fuel=0 visiblePlant=False
+support triangle-interior samples=64008 maxErrorMetres=3.70722264E-05
+original vertex-only stair adaptation interior errorMetres=0.124999993
+camera=38deg size3 plus size5 keyframes; Unity=6000.3.18f1
+Only sample calls production CombatCommandService; Adventure/HUD resource binding remains pending.
+PASS
