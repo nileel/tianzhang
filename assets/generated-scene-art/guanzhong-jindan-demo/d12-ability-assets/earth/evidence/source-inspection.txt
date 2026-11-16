@@ -1,0 +1,28 @@
+Main Camera active=True pos=(6.7290, 8.0000, -4.4899) rot=(38.00, 0.00, 0.00) components=Transform,Camera,AudioListener,AdventureCameraController
+Directional Light active=True pos=(0.0000, 0.0000, 0.0000) rot=(42.00, 132.00, 0.00) components=Transform,Light,UniversalAdditionalLightData
+VisualBackdrop active=False pos=(0.0000, -0.0400, 1.0000) rot=(0.00, 0.00, 0.00) components=Transform,MeshFilter,MeshRenderer
+EventSystem active=True pos=(0.0000, 0.0000, 0.0000) rot=(0.00, 0.00, 0.00) components=Transform,EventSystem,InputSystemUIInputModule
+AdventureRoot active=True pos=(0.0000, 0.0000, 0.0000) rot=(0.00, 0.00, 0.00) components=Transform,AdventureSceneInstaller,AdventureController,AdventureInputController,AdventureHudPresenter,AdventureUnitSpawner,EncounterCoordinator,CombatHudPresenter,CombatHudView,CombatCommandInput,CombatActionBarView,CombatLogView,Static3DCombatUnitPresentationProvider,CombatUnitHealthBarView,CombatTimelineView,CombatMovementView,CombatTargetView,CombatTargetInput,CombatActionPreviewView,CombatBountyTrackerView,JindanDemoView,JindanVisibilityView
+UICanvas active=True pos=(320.0000, 240.0000, 0.0000) rot=(0.00, 0.00, 0.00) components=RectTransform,Canvas,CanvasScaler,GraphicRaycaster
+UICanvas/AdventurePanel/TerrainRehearsalButton active=True pos=(78.0000, 362.6667, 0.0000) rot=(0.00, 0.00, 0.00) components=RectTransform,CanvasRenderer,Image,Button,LayoutElement
+GuanzhongBattlefield active=True pos=(0.0000, 0.0000, 0.0000) rot=(0.00, 0.00, 0.00) components=Transform
+GuanzhongTerrainRehearsal active=False pos=(0.0000, 0.0000, 0.0000) rot=(0.00, 0.00, 0.00) components=Transform,CombatBattlefieldSurface,CombatSceneObjectView
+Assets/Art/Environments/Guanzhong/Props/HighWall.prefab / HighWall(Clone)/Intact/Body mesh=HighWallIntact bounds=Center: (0.00, 0.50, 0.00), Extents: (0.28, 0.50, 0.08) world=Center: (0.00, 0.50, 0.00), Extents: (0.28, 0.50, 0.08) matrix=1.00000	0.00000	0.00000	0.00000
+0.00000	1.00000	0.00000	0.00000
+0.00000	0.00000	1.00000	0.00000
+0.00000	0.00000	0.00000	1.00000
+
+Assets/Art/Environments/Guanzhong/Props/HighWall.prefab / HighWall(Clone)/Damaged/Body mesh=HighWallDamaged bounds=Center: (0.00, 0.50, 0.00), Extents: (0.28, 0.50, 0.08) world=Center: (0.00, 0.50, 0.00), Extents: (0.28, 0.50, 0.08) matrix=1.00000	0.00000	0.00000	0.00000
+0.00000	1.00000	0.00000	0.00000
+0.00000	0.00000	1.00000	0.00000
+0.00000	0.00000	0.00000	1.00000
+
+Assets/Art/Environments/Guanzhong/Props/HighWall.prefab / HighWall(Clone)/Remnant/Body mesh=SharedRubble bounds=Center: (-0.02, 0.05, 0.00), Extents: (0.27, 0.05, 0.13) world=Center: (-0.02, 0.05, 0.00), Extents: (0.27, 0.05, 0.13) matrix=1.00000	0.00000	0.00000	0.00000
+0.00000	1.00000	0.00000	0.00000
+0.00000	0.00000	1.00000	0.00000
+0.00000	0.00000	0.00000	1.00000
+
+Assets/Art/Environments/Guanzhong/EarthManifest/EarthManifestRamp.prefab / EarthManifestRamp(Clone) mesh=EarthManifestRamp bounds=Center: (0.00, 0.35, 0.30), Extents: (0.25, 0.41, 0.20) world=Center: (0.00, 0.35, 0.30), Extents: (0.25, 0.41, 0.20) matrix=1.00000	0.00000	0.00000	0.00000
+0.00000	1.00000	0.00000	0.00000
+0.00000	0.00000	1.00000	0.00000
+0.00000	0.00000	0.00000	1.00000

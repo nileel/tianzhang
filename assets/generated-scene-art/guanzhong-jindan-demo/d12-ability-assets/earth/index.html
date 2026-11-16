@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>D12.1 · 厚载资源实机样例</title>
+<style>
+body{margin:0;background:#11212a;color:#e4e8df;font:16px/1.6 system-ui,sans-serif}main{max-width:1440px;margin:auto;padding:32px}h1{font-size:28px;margin:0 0 6px}p{color:#b9cbc9}a{color:#dbc39a}label{margin-right:16px}select{padding:8px;color:inherit;background:#203b45;border:1px solid #6b888c}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin-top:24px}article{padding:16px;background:#1c313a;border:1px solid #38515a}h2{font-size:19px;margin:0 0 8px}video{display:block;width:100%;background:#07161d}article p{font-size:14px;margin-bottom:0}@media(max-width:850px){.grid{grid-template-columns:1fr}main{padding:16px}}
+</style>
+<main>
+<h1>厚载 · 显化与重力</h1>
+<p>Unity 资源样例 · 2026-11-16。现有阶地、原墙坡网格与正式角色下降过程。<strong>尚未接入正式 Demo 与 V3 HUD。</strong></p>
+<label>画面尺寸 <select id="resolution"><option value="1920">1920 × 1080</option><option value="1366">1366 × 768</option></select></label>
+<a href="README.md">资源说明与验证</a>
+<div class="grid">
+<article><h2>显化岩墙</h2><video controls loop playsinline preload="metadata" data-sequence="wall" poster="evidence/1920/wall-03-solid.png" src="evidence/1920/wall.mp4"></video><p>空边 → 自下而上聚土 → 完整阻隔 → 消退、清空。成形与消退各0.35秒。</p></article>
+<article><h2>显化窄坡</h2><video controls loop playsinline preload="metadata" data-sequence="ramp" poster="evidence/1920/ramp-03-solid.png" src="evidence/1920/ramp.mp4"></video><p>保留低端、上端与原坡面支承；显现仅改变遮罩，不移动接口。</p></article>
+<article><h2>重力 · 高空压至低空</h2><video controls loop playsinline preload="metadata" data-sequence="gravity-low" poster="evidence/1920/gravity-low-02-descending.png" src="evidence/1920/gravity-low.mp4"></video><p>施术者也离地，目标从1.5米降至0.75米；解除后保持低空，没有落地尘。</p></article>
+<article><h2>重力 · 压至合法地面</h2><video controls loop playsinline preload="metadata" data-sequence="gravity-land" poster="evidence/1920/gravity-land-02-descending.png" src="evidence/1920/gravity-land.mp4"></video><p>施术者接地，目标沿真实运动压落；触地才起短尘，解除不自动回升。</p></article>
+</div>
+<p>四段为分别展示的资源状态；显化与重力不同时装配。镜头沿用38°与游戏内size=3缩放。细痕和落尘保持克制，最终HUD同屏效果留后续集成核对。</p>
+</main>
+<script>
+document.querySelector('#resolution').addEventListener('change',event=>{
+  for(const video of document.querySelectorAll('video')){
+    video.pause();
+    video.src=`evidence/${event.target.value}/${video.dataset.sequence}.mp4`;
+    video.poster=video.poster.replace(/evidence\/(1920|1366)\//,`evidence/${event.target.value}/`);
+    video.load();
+  }
+});
+</script>
+</html>

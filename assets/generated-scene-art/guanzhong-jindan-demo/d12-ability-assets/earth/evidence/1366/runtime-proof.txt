@@ -1,0 +1,76 @@
+ramp original mesh=EarthManifestRamp vertices=692 triangles=644 six-direction support samples=4368 maxErrorMetres=3.27825546E-07
+wall/02-forming ps=ShortSoilDust playing=True time=0.1666667 count=12 bounds=Center: (4.75, 0.45, 2.27), Extents: (0.50, 0.28, 0.41)
+particle position=(4.83, 0.46, 2.33) velocity=(0.00, 0.20, 0.00) screen=(693.51, 363.24, 12.17) size=0.1767916
+wall particle-only changedPixels=131 maximumRgbDelta=34
+wall/03-solid ps=ShortSoilDust playing=False time=0.4 count=0 bounds=Center: (4.75, 0.43, 2.30), Extents: (0.00, 0.00, 0.00)
+wall/03-solid-default-zoom ps=ShortSoilDust playing=False time=0.4 count=0 bounds=Center: (4.75, 0.43, 2.30), Extents: (0.00, 0.00, 0.00)
+wall/04-dissolving ps=ShortSoilDust playing=True time=0.1666667 count=12 bounds=Center: (4.75, 0.45, 2.27), Extents: (0.50, 0.28, 0.41)
+particle position=(4.83, 0.46, 2.33) velocity=(0.00, 0.20, 0.00) screen=(693.51, 363.24, 12.17) size=0.1767916
+wall/05-cleared ps=ShortSoilDust playing=False time=0.4 count=0 bounds=Center: (4.75, 0.43, 2.30), Extents: (0.00, 0.00, 0.00)
+wall cleared-vs-empty mean RGB difference=0.000000
+wall root=(4.75000, 0.34043, 2.29904) scale=(1.00000, 1.00000, 1.00000) form/dissolve=.35 seconds
+ramp/02-forming ps=ShortSoilDust playing=True time=0.01666666 count=3 bounds=Center: (11.29, 1.66, 8.19), Extents: (0.33, 0.27, 0.31)
+particle position=(11.23, 1.66, 8.23) velocity=(0.00, 0.20, 0.00) screen=(680.34, 357.95, 11.99) size=0.09484268
+ramp/02-forming ps=ShortSoilDust playing=True time=0.1266667 count=3 bounds=Center: (11.17, 1.14, 7.98), Extents: (0.33, 0.27, 0.31)
+particle position=(11.11, 1.14, 8.02) velocity=(0.00, 0.20, 0.00) screen=(664.98, 289.30, 12.15) size=0.1549385
+ramp/02-forming ps=ShortSoilDust playing=True time=0 count=0 bounds=Center: (11.24, 1.86, 8.34), Extents: (0.00, 0.00, 0.00)
+ramp/02-forming ps=ShortSoilDust playing=True time=0.07166667 count=3 bounds=Center: (11.23, 1.33, 8.09), Extents: (0.33, 0.27, 0.31)
+particle position=(11.17, 1.33, 8.13) velocity=(0.00, 0.20, 0.00) screen=(672.66, 316.55, 12.12) size=0.1248906
+ramp particle-only changedPixels=270 maximumRgbDelta=24
+ramp/03-solid ps=ShortSoilDust playing=False time=0.4 count=0 bounds=Center: (11.18, 1.66, 8.24), Extents: (0.00, 0.00, 0.00)
+ramp/03-solid ps=ShortSoilDust playing=False time=0.4 count=0 bounds=Center: (11.06, 1.12, 8.03), Extents: (0.00, 0.00, 0.00)
+ramp/03-solid ps=ShortSoilDust playing=False time=0.4 count=0 bounds=Center: (11.24, 1.86, 8.34), Extents: (0.00, 0.00, 0.00)
+ramp/03-solid ps=ShortSoilDust playing=False time=0.4 count=0 bounds=Center: (11.12, 1.32, 8.14), Extents: (0.00, 0.00, 0.00)
+ramp/03-solid-default-zoom ps=ShortSoilDust playing=False time=0.4 count=0 bounds=Center: (11.18, 1.66, 8.24), Extents: (0.00, 0.00, 0.00)
+ramp/03-solid-default-zoom ps=ShortSoilDust playing=False time=0.4 count=0 bounds=Center: (11.06, 1.12, 8.03), Extents: (0.00, 0.00, 0.00)
+ramp/03-solid-default-zoom ps=ShortSoilDust playing=False time=0.4 count=0 bounds=Center: (11.24, 1.86, 8.34), Extents: (0.00, 0.00, 0.00)
+ramp/03-solid-default-zoom ps=ShortSoilDust playing=False time=0.4 count=0 bounds=Center: (11.12, 1.32, 8.14), Extents: (0.00, 0.00, 0.00)
+ramp/04-dissolving ps=ShortSoilDust playing=True time=0.1266667 count=3 bounds=Center: (11.35, 1.88, 8.29), Extents: (0.33, 0.27, 0.31)
+particle position=(11.29, 1.88, 8.34) velocity=(0.00, 0.20, 0.00) screen=(688.02, 388.59, 11.94) size=0.1549385
+ramp/04-dissolving ps=ShortSoilDust playing=True time=0.1266667 count=3 bounds=Center: (11.29, 1.68, 8.19), Extents: (0.33, 0.27, 0.31)
+particle position=(11.23, 1.68, 8.23) velocity=(0.00, 0.20, 0.00) screen=(680.34, 360.21, 11.98) size=0.1549385
+ramp/04-dissolving ps=ShortSoilDust playing=True time=0.1266667 count=3 bounds=Center: (11.23, 1.34, 8.09), Extents: (0.33, 0.27, 0.31)
+particle position=(11.17, 1.34, 8.13) velocity=(0.00, 0.20, 0.00) screen=(672.66, 317.68, 12.11) size=0.1549385
+ramp/04-dissolving ps=ShortSoilDust playing=True time=0.1266667 count=3 bounds=Center: (11.17, 1.14, 7.98), Extents: (0.33, 0.27, 0.31)
+particle position=(11.11, 1.14, 8.02) velocity=(0.00, 0.20, 0.00) screen=(664.98, 289.30, 12.15) size=0.1549385
+ramp/05-cleared ps=ShortSoilDust playing=False time=0.4 count=0 bounds=Center: (11.24, 1.86, 8.34), Extents: (0.00, 0.00, 0.00)
+ramp/05-cleared ps=ShortSoilDust playing=False time=0.4 count=0 bounds=Center: (11.18, 1.66, 8.24), Extents: (0.00, 0.00, 0.00)
+ramp/05-cleared ps=ShortSoilDust playing=False time=0.4 count=0 bounds=Center: (11.12, 1.32, 8.14), Extents: (0.00, 0.00, 0.00)
+ramp/05-cleared ps=ShortSoilDust playing=False time=0.4 count=0 bounds=Center: (11.06, 1.12, 8.03), Extents: (0.00, 0.00, 0.00)
+ramp cleared-vs-empty mean RGB difference=0.000000
+ramp root=(11.00000, 1.09043, 7.92820) scale=(1.00000, 1.00000, 1.00000) form/dissolve=.35 seconds
+gravity-low/02-descending ps=DownTrace1 playing=True time=0.08333334 count=1 bounds=Center: (6.25, 3.44, 5.08), Extents: (0.71, 0.71, 0.71)
+particle position=(6.25, 3.44, 5.08) velocity=(0.00, -2.80, 0.00) screen=(682.42, 533.90, 11.31) size=0.22
+gravity-low/02-descending ps=DownTrace3 playing=True time=0.08333334 count=1 bounds=Center: (6.75, 3.44, 5.58), Extents: (0.71, 0.71, 0.71)
+particle position=(6.75, 3.44, 5.58) velocity=(0.00, -2.80, 0.00) screen=(747.58, 574.02, 11.71) size=0.22
+gravity-low/02-descending ps=DownTrace2 playing=True time=0.08333334 count=1 bounds=Center: (6.75, 3.44, 5.08), Extents: (0.71, 0.71, 0.71)
+particle position=(6.75, 3.44, 5.08) velocity=(0.00, -2.80, 0.00) screen=(747.58, 533.90, 11.31) size=0.22
+gravity-low/02-descending ps=DownTrace0 playing=True time=0.08333334 count=1 bounds=Center: (6.25, 3.44, 5.58), Extents: (0.71, 0.71, 0.71)
+particle position=(6.25, 3.44, 5.58) velocity=(0.00, -2.80, 0.00) screen=(682.42, 574.02, 11.71) size=0.22
+gravity-low particle-only changedPixels=423 maximumRgbDelta=46
+gravity-low/03-result ps=DownTrace1 playing=True time=0.2833334 count=1 bounds=Center: (6.25, 2.73, 5.08), Extents: (0.71, 0.71, 0.71)
+particle position=(6.25, 2.73, 5.08) velocity=(0.00, -2.80, 0.00) screen=(682.42, 462.35, 11.75) size=0.22
+gravity-low/03-result ps=DownTrace3 playing=True time=0.2833334 count=1 bounds=Center: (6.75, 2.73, 5.58), Extents: (0.71, 0.71, 0.71)
+particle position=(6.75, 2.73, 5.58) velocity=(0.00, -2.80, 0.00) screen=(747.58, 502.47, 12.15) size=0.22
+gravity-low/03-result ps=DownTrace2 playing=True time=0.2833334 count=1 bounds=Center: (6.75, 2.73, 5.08), Extents: (0.71, 0.71, 0.71)
+particle position=(6.75, 2.73, 5.08) velocity=(0.00, -2.80, 0.00) screen=(747.58, 462.35, 11.75) size=0.22
+gravity-low/03-result ps=DownTrace0 playing=True time=0.2833334 count=1 bounds=Center: (6.25, 2.73, 5.58), Extents: (0.71, 0.71, 0.71)
+particle position=(6.25, 2.73, 5.58) velocity=(0.00, -2.80, 0.00) screen=(682.42, 502.47, 12.15) size=0.22
+gravity-low actual descent frames=12 fixedDelta=1/60 finalFootOffset=0.750000 movementOwner=Static3DCombatUnitPresentationProvider.Present->CombatUnitFlightVisual.Transition speed=4m/s
+gravity-land/02-descending ps=DownTrace0 playing=True time=0.1666667 count=1 bounds=Center: (6.25, 3.16, 5.58), Extents: (0.71, 0.71, 0.71)
+particle position=(6.25, 3.16, 5.58) velocity=(0.00, -2.80, 0.00) screen=(682.42, 546.31, 11.88) size=0.22
+gravity-land/02-descending ps=DownTrace2 playing=True time=0.1666667 count=1 bounds=Center: (6.75, 3.16, 5.08), Extents: (0.71, 0.71, 0.71)
+particle position=(6.75, 3.16, 5.08) velocity=(0.00, -2.80, 0.00) screen=(747.58, 506.19, 11.48) size=0.22
+gravity-land/02-descending ps=DownTrace3 playing=True time=0.1666667 count=1 bounds=Center: (6.75, 3.16, 5.58), Extents: (0.71, 0.71, 0.71)
+particle position=(6.75, 3.16, 5.58) velocity=(0.00, -2.80, 0.00) screen=(747.58, 546.31, 11.88) size=0.22
+gravity-land/02-descending ps=DownTrace1 playing=True time=0.1666667 count=1 bounds=Center: (6.25, 3.16, 5.08), Extents: (0.71, 0.71, 0.71)
+particle position=(6.25, 3.16, 5.08) velocity=(0.00, -2.80, 0.00) screen=(682.42, 506.19, 11.48) size=0.22
+gravity-land particle-only changedPixels=396 maximumRgbDelta=52
+gravity-land/03-result ps=ShortSoilDust playing=True time=0.08333334 count=14 bounds=Center: (6.50, 1.14, 5.36), Extents: (0.44, 0.27, 0.44)
+particle position=(6.54, 1.14, 5.45) velocity=(0.00, 0.20, 0.00) screen=(720.23, 331.54, 13.02) size=0.1312644
+gravity-land/03-result ps=DownTrace0 playing=False time=0.36 count=0 bounds=Center: (6.25, 2.17, 5.58), Extents: (0.00, 0.00, 0.00)
+gravity-land/03-result ps=DownTrace2 playing=False time=0.36 count=0 bounds=Center: (6.75, 2.17, 5.08), Extents: (0.00, 0.00, 0.00)
+gravity-land/03-result ps=DownTrace3 playing=False time=0.36 count=0 bounds=Center: (6.75, 2.17, 5.58), Extents: (0.00, 0.00, 0.00)
+gravity-land/03-result ps=DownTrace1 playing=False time=0.36 count=0 bounds=Center: (6.25, 2.17, 5.08), Extents: (0.00, 0.00, 0.00)
+gravity-land actual descent frames=23 fixedDelta=1/60 finalFootOffset=0.000000 movementOwner=Static3DCombatUnitPresentationProvider.Present->CombatUnitFlightVisual.Transition speed=4m/s
+PASS

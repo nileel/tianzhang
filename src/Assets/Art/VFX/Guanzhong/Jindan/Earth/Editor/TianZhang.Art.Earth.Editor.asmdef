@@ -1,0 +1,6 @@
+{
+    "name": "TianZhang.Art.Earth.Editor",
+    "references": ["TianZhang.Art.Earth.Samples", "TianZhang.Features.CombatPresentation", "TianZhang.Gameplay.Contracts"],
+    "includePlatforms": ["Editor"],
+    "autoReferenced": false
+}

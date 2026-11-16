@@ -1,0 +1,5 @@
+{
+    "name": "TianZhang.Art.Earth.Samples",
+    "references": ["TianZhang.Features.CombatPresentation", "TianZhang.Gameplay.Contracts"],
+    "autoReferenced": false
+}
