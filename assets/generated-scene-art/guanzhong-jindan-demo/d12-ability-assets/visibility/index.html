@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>D12.5 · 阳照与藏真</title>
+<style>
+  :root{color-scheme:dark;font-family:"Microsoft YaHei",sans-serif;background:#10171d;color:#e3e9ed}
+  body{max-width:1280px;margin:auto;padding:28px}h1{font-size:28px;margin:0 0 12px}p{line-height:1.8;color:#bbcbd5}
+  label{display:inline-flex;align-items:center;gap:12px;margin:8px 24px 20px 0}select{background:#23333f;color:#eef3f6;border:1px solid #638092;padding:8px;border-radius:5px}
+  video,img{display:block;width:100%;border-radius:8px;background:#000}figure{margin:18px 0;padding:14px;background:#1c2832;border:1px solid #344653;border-radius:10px}
+  figcaption{margin-top:12px;line-height:1.6}.note{border-left:3px solid #caa45c;padding-left:16px}a{color:#a4d5ed}
+  .gallery{display:grid;grid-template-columns:1fr 1fr;gap:18px}.gallery figure{margin:0}button{background:#254358;color:white;border:1px solid #658ba3;padding:8px 16px;cursor:pointer}
+  @media(max-width:800px){body{padding:16px}.gallery{grid-template-columns:1fr}}
+</style>
+<h1>D12.5 · 日坛与月坛</h1>
+<p>原石碑的日／月识别纹样与暖／冷微光。以下为 Unity 6000.3.18f1 独立资源样例，默认镜头为俯角 38°、正交 size5；正式 V3 HUD 尚未接线。</p>
+<label>分辨率 <select id="resolution"><option value="1920">1920 × 1080</option><option value="1366">1366 × 768</option></select></label>
+<label>关键帧镜头 <select id="zoom"><option value="">默认镜头</option><option value="-detail">近看 size3</option></select></label>
+<figure><video id="video" controls preload="metadata"></video><figcaption>30fps 原速样例：阳胜 → 阴胜 → 接近现形／攻击受击／退回隐匿 → 中性 → 单列三态资源展示。</figcaption></figure>
+<p class="note">前三分支及近距变化由真实命令与观察回执驱动。最后的未展开／生效／破坏三态是明确标注的资源状态夹具；破坏态不是正式命令破坛证据。现有角色攻击力、速度及六 tick 期限均未改动。</p>
+<div class="gallery" id="gallery"></div>
+<p><a href="README.md">资源使用、复现与验证范围</a> · <a id="proof" href="evidence/1920/runtime-proof.txt">当前分辨率运行记录</a> · <a href="evidence/destruction-probe.txt">破坛样例诊断</a></p>
+<script>
+const shots=[
+  ['yang-00-dormant','未展开：日／月识别保留，局部微光关闭。'],
+  ['yang-03-result','阳胜：目标可见，双方各付 100MP，两座公开坛继续生效。'],
+  ['yin-03-result','阴胜：目标完全隐藏，双方各付 50MP；月坛保留，日坛也不熄灭。'],
+  ['yin-04-natural-reveal','近距自然现形：观察者合法接近后目标重现。'],
+  ['yin-07-concealed-after-feedback','真实攻击／受击反馈结束后退离近距，目标再次隐藏。'],
+  ['neutral-03-result','中性：双方各付 200MP，本见证恢复正常观察基础，可见。'],
+  ['states-01-active','资源状态夹具：日／月生效微光，只附着于公开坛。'],
+  ['states-02-destroyed','资源状态夹具：原断碑留存，无日月微光；不是正式破坛操作。']
+];
+const res=document.querySelector('#resolution'),zoom=document.querySelector('#zoom');
+function refresh(changeVideo){
+  const base='evidence/'+res.value+'/';
+  if(changeVideo){document.querySelector('#video').src=base+'visibility.mp4';document.querySelector('#video').poster=base+'yang-03-result.png'}
+  document.querySelector('#proof').href=base+'runtime-proof.txt';
+  document.querySelector('#gallery').replaceChildren(...shots.map(([name,caption])=>{
+    const f=document.createElement('figure'),a=document.createElement('a'),img=document.createElement('img'),c=document.createElement('figcaption');
+    img.src=base+name+zoom.value+'.png';img.alt=caption;img.loading='lazy';a.href=img.src;a.target='_blank';a.append(img);c.textContent=caption;f.append(a,c);return f;
+  }));
+}
+res.addEventListener('change',()=>refresh(true));zoom.addEventListener('change',()=>refresh(false));refresh(true);
+</script>
+</html>

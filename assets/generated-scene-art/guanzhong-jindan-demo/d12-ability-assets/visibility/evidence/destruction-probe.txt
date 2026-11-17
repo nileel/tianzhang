@@ -1,0 +1,12 @@
+ALTAR_PROBE hit=0 durability=600 tick=10 expiry=16 AP=750000 nextCost=50000 reject=
+ALTAR_PROBE hit=1 durability=570 tick=10 expiry=16 AP=700000 nextCost=50000 reject=
+ALTAR_PROBE hit=2 durability=540 tick=10 expiry=16 AP=650000 nextCost=62500 reject=
+ALTAR_PROBE hit=3 durability=510 tick=10 expiry=16 AP=587500 nextCost=75000 reject=
+ALTAR_PROBE hit=4 durability=480 tick=10 expiry=16 AP=512500 nextCost=75000 reject=
+ALTAR_PROBE hit=5 durability=450 tick=10 expiry=16 AP=437500 nextCost=75000 reject=
+ALTAR_PROBE hit=6 durability=420 tick=10 expiry=16 AP=362500 nextCost=75000 reject=
+ALTAR_PROBE hit=7 durability=390 tick=10 expiry=16 AP=287500 nextCost=75000 reject=
+ALTAR_PROBE hit=8 durability=360 tick=10 expiry=16 AP=212500 nextCost=75000 reject=
+ALTAR_PROBE hit=9 durability=330 tick=10 expiry=16 AP=137500 nextCost=75000 reject=
+ALTAR_PROBE hit=10 durability=300 tick=10 expiry=16 AP=62500 nextCost=75000 reject=action_points_insufficient
+ALTAR_PROBE after turn durability=300 tick=20 end=visibility_expired

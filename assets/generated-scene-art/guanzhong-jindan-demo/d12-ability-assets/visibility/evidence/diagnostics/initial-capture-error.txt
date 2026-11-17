@@ -1,0 +1,6 @@
+InvalidOperationException: actual altar destruction
+TianZhang.Art.Jindan.Visibility.Samples.VisibilityAssetSample+<DestroySupport>d__37.MoveNext () (at Assets/Art/VFX/Guanzhong/Jindan/Visibility/Samples/VisibilityAssetSample.cs:211)
+TianZhang.Art.Jindan.Visibility.Samples.VisibilityAssetSample+<Start>d__30.MoveNext () (at Assets/Art/VFX/Guanzhong/Jindan/Visibility/Samples/VisibilityAssetSample.cs:60)
+UnityEngine.Debug:LogException(Exception)
+TianZhang.Art.Jindan.Visibility.Samples.<Start>d__30:MoveNext() (at Assets/Art/VFX/Guanzhong/Jindan/Visibility/Samples/VisibilityAssetSample.cs:61)
+UnityEngine.SetupCoroutine:InvokeMoveNext(IEnumerator, IntPtr)
