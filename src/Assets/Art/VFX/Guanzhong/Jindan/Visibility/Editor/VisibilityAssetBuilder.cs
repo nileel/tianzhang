@@ -19,7 +19,7 @@ namespace TianZhang.Art.Jindan.Visibility.Editor
     {
         public const string Root = "Assets/Art/VFX/Guanzhong/Jindan/Visibility";
         public static string Evidence => Path.GetFullPath(Path.Combine(Application.dataPath,
-            "../../assets/generated-scene-art/guanzhong-jindan-demo/d12-ability-assets/visibility/evidence/motion-20261117"));
+            "../../assets/generated-scene-art/guanzhong-jindan-demo/d12-ability-assets/visibility/evidence/coverage-20261117"));
 
         [MenuItem("TianZhang/Art/D12.5/Rebuild Visibility resources and sample")]
         public static void Build()

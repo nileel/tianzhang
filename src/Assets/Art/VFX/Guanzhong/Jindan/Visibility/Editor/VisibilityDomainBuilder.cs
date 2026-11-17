@@ -34,9 +34,9 @@ namespace TianZhang.Art.Jindan.Visibility.Editor
                 else
                 {
                     Particle(go.transform,"SunShafts",coverage,"PressureTrace",new Color(2.2f,1.6f,.65f,.55f),
-                        new Vector2(1.6f,2.4f),new Vector2(2.8f,3.8f),Vector3.zero,7,.9f,true);
+                        new Vector2(1.6f,2.4f),new Vector2(2.8f,3.8f),Vector3.zero,21,.9f,true);
                     Particle(go.transform,"SunDust",coverage,"SoilDust",new Color(2.8f,2.15f,1.1f,.95f),
-                        new Vector2(.06f,.11f),new Vector2(.06f,.11f),new Vector3(.08f,.22f,-.025f),22,.15f,false);
+                        new Vector2(.06f,.11f),new Vector2(.06f,.11f),new Vector3(.08f,.22f,-.025f),35,.15f,false);
                 }
                 if (!PrefabUtility.SaveAsPrefabAsset(go,Root+"/Prefabs/"+name+".prefab"))
                     throw new InvalidOperationException("visibility_domain_save:"+name);

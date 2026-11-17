@@ -6,9 +6,9 @@ $repository = (Resolve-Path (Join-Path $PSScriptRoot '../../../../..')).Path
 $ffmpeg = (& python -c 'import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())').Trim()
 if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $ffmpeg)) { throw 'Existing imageio-ffmpeg runtime is unavailable.' }
 foreach ($width in $Resolutions) {
-    $frames = Join-Path $repository "src/Logs/d12-visibility/motion-20261117/$width/%04d.jpg"
-    $output = Join-Path $PSScriptRoot "evidence/motion-20261117/$width/visibility.mp4"
-    $frameCount = [int](Get-Content -LiteralPath (Join-Path $PSScriptRoot "evidence/motion-20261117/$width/capture-frames.txt") -Raw)
+    $frames = Join-Path $repository "src/Logs/d12-visibility/coverage-20261117/$width/%04d.jpg"
+    $output = Join-Path $PSScriptRoot "evidence/coverage-20261117/$width/visibility.mp4"
+    $frameCount = [int](Get-Content -LiteralPath (Join-Path $PSScriptRoot "evidence/coverage-20261117/$width/capture-frames.txt") -Raw)
     if ($frameCount -le 0) { throw "Invalid captured frame count: $width" }
     & $ffmpeg -hide_banner -loglevel error -y -framerate 30 -i $frames -frames:v $frameCount -c:v libx264 -preset medium -crf 20 -pix_fmt yuv420p -movflags +faststart $output
     if ($LASTEXITCODE -ne 0) { throw "Video encoding failed: $width" }

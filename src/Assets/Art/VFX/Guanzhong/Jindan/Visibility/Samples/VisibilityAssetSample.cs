@@ -45,9 +45,9 @@ namespace TianZhang.Art.Jindan.Visibility.Samples
 
         private IEnumerator Start()
         {
-            output = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/d12-visibility/motion-20261117/" + captureWidth));
+            output = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/d12-visibility/coverage-20261117/" + captureWidth));
             evidence = Path.GetFullPath(Path.Combine(Application.dataPath,
-                "../../assets/generated-scene-art/guanzhong-jindan-demo/d12-ability-assets/visibility/evidence/motion-20261117/" + captureWidth));
+                "../../assets/generated-scene-art/guanzhong-jindan-demo/d12-ability-assets/visibility/evidence/coverage-20261117/" + captureWidth));
             if (capture)
             {
                 Directory.CreateDirectory(output); Directory.CreateDirectory(evidence);

@@ -42,15 +42,16 @@ Shader "TianZhang/Jindan/Visibility Domain Range"
             }
             half4 Frag(Output input) : SV_Target
             {
-                // Continuous world-space motion across cell seams; no hex outline or actor input.
+                // Every covered cell keeps a soft ground wash beneath the continuous motion.
                 float t=_Time.y;
                 float2 p=input.world;
                 float coarse=Noise(p*.67+float2(-t*.18,t*.09));
                 float fine=Noise(p*1.43+float2(t*.11,-t*.15));
                 float haze=smoothstep(.20,.83,coarse*.72+fine*.28);
-                float rays=pow(saturate(.5+.5*sin(p.x*1.9+p.y*.65-t*.9+coarse*2.5)),6);
+                float rays=pow(saturate(.5+.5*sin(p.x*3.6+p.y*1.1-t*1.3+coarse*2.5)),4);
+                float cellWash=1-smoothstep(.18,.55,length(input.uv));
                 float opening=exp(-max(0,t-_EventTime)*2.4);
-                float alpha=lerp(.025+.16*rays,.04+.28*haze,step(.5,_Moon));
+                float alpha=lerp(.14+.12*cellWash+.20*rays,.16+.10*cellWash+.16*haze,step(.5,_Moon));
                 alpha+=opening*lerp(.14,.08,step(.5,_Moon))*haze;
                 return half4(_BaseColor.rgb,alpha*_BaseColor.a*_Opacity);
             }
