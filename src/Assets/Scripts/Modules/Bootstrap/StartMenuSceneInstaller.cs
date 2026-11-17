@@ -18,6 +18,7 @@ namespace TianZhang.Bootstrap
         public const string PointBuyConfigMissingReason = "character_creation_point_buy_config_missing";
 
         [SerializeField] private ContentCatalogData contentCatalog;
+        [SerializeField] private JindanDemoCatalogData jindanDemoCatalog;
         [SerializeField] private CharacterCreationPointBuyConfig pointBuyConfig;
         [SerializeField] private StartMenuController startMenuController;
         [SerializeField] private StartMenuView startMenuView;
@@ -101,7 +102,9 @@ namespace TianZhang.Bootstrap
             GameRuntime runtime = GameBootstrap.RequireRuntime();
             try
             {
-                runtime.BeginEquippedNewGame(
+                if (characterCreationController.IsJindanTrial)
+                    runtime.BeginJindanDemoGame(profile.charName, jindanDemoCatalog);
+                else runtime.BeginEquippedNewGame(
                     CharacterRuntimeProfile.FromDefinition("player", profile, contentCatalog.CombatRuleSet),
                     CultivationState.FromDefinition(profile.foundationPurpleMansionState),
                     startNodeId, contentCatalog);
@@ -112,7 +115,7 @@ namespace TianZhang.Bootstrap
                     return PlayerEntryResult.Failed(write.FailureReason.ToString());
                 }
                 bootstrap.ActivateSlot(slotId);
-                SceneManager.LoadScene(runtime.EnterWorld(startNodeId));
+                SceneManager.LoadScene(runtime.EnterWorld(runtime.Navigation.WorldNodeId));
                 return PlayerEntryResult.Success();
             }
             catch (Exception exception)
@@ -131,7 +134,7 @@ namespace TianZhang.Bootstrap
             GameRuntime runtime = GameBootstrap.RequireRuntime();
             try
             {
-                runtime.RestoreSave(read.Envelope, contentCatalog);
+                runtime.RestoreSave(read.Envelope, contentCatalog, jindanDemoCatalog);
                 if (!TryValidateNavigation(runtime.Navigation))
                 {
                     runtime.Clear();

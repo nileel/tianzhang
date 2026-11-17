@@ -16,6 +16,27 @@ namespace TianZhang.Features.CharacterCreation
         [SerializeField] private Button[] originButtons;
         [SerializeField] private Text[] originLabels;
 
+        [SerializeField] private Button ordinaryStartButton;
+        [SerializeField] private Button jindanStartButton;
+        [SerializeField] private Text startModeText;
+        private bool trialStart;
+
+        public void ConfigureStartMode(Action<bool> select)
+        {
+            ordinaryStartButton?.onClick.AddListener(() => select(false));
+            jindanStartButton?.onClick.AddListener(() => select(true));
+        }
+        public void RefreshStartMode(bool trial)
+        {
+            trialStart = trial;
+            if (startModeText != null) startModeText.text = trial
+                ? "已选：金丹试玩·长明｜关中开局，固定火灵根与合法来源；徒手、飞星指与长明同属本人。"
+                : "已选：普通开局｜按出身创建角色。";
+            if (ordinaryStartButton != null) ordinaryStartButton.interactable = trial;
+            if (jindanStartButton != null) jindanStartButton.interactable = !trial;
+            foreach (var button in originButtons ?? Array.Empty<Button>()) button.interactable = !trial;
+        }
+
         public void Configure(Action<string, string> submit, Action<string> selectOrigin)
         {
             if (submit == null) throw new ArgumentNullException(nameof(submit));
@@ -85,6 +106,10 @@ namespace TianZhang.Features.CharacterCreation
                 if (origin?.Id == "origin_minor_clan" && origin.StartNodeId == "guanzhong_hub")
                     summaryText.text += "\n关中小族试玩：练气起步，可使用贯石击与聚灵术；初始铁剑、铁刀各一件，活血丹三颗。仅新建角色生效，已有存档不变。";
             }
+            if (trialStart && summaryText != null)
+                summaryText.text = "金丹初结 · 秋水游心经 · 火界长明\n" +
+                    "术法槽 5／普通神通槽 2；长明占独立界席位，无飞行。\n" +
+                    "新建独立试玩存档，保留姓名与装配；挑战内状态结束后清空。";
             if (failureText != null) failureText.text = string.Join("\n", validation.Errors);
         }
 

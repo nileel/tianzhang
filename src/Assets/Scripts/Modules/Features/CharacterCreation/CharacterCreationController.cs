@@ -15,6 +15,13 @@ namespace TianZhang.Features.CharacterCreation
         private Action<string, CharacterData, string> completed;
 
         public CharacterCreationDraft Draft => draft;
+        public bool IsJindanTrial { get; private set; }
+        public void SelectStartMode(bool trial)
+        {
+            IsJindanTrial = trial;
+            view?.RefreshStartMode(trial);
+            RefreshOrigin();
+        }
 
         public void Configure(
             CharacterCreationView characterCreationView,
@@ -29,6 +36,8 @@ namespace TianZhang.Features.CharacterCreation
             draft = CharacterCreationCatalog.CreateDefaultDraft();
             view?.Configure(Submit, id => { SelectOrigin(id); });
             view?.ConfigureReturnToMenu(ReturnToMenu);
+            view?.ConfigureStartMode(SelectStartMode);
+            SelectStartMode(false);
         }
 
         public void Open()

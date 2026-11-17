@@ -14,6 +14,9 @@ namespace TianZhang.Infrastructure.Persistence
     {
         public int schemaVersion = GameSaveSerializer.SchemaVersion;
         public bool hasPlayer;
+        // Absent in existing schema 6 saves: ordinary start. Combat session state is never saved.
+        public string jindanDemoPresetId;
+        public string jindanDemoContentVersion;
         public CharacterRecord player;
         public CultivationRecord cultivation;
         public WorldClockRecord worldClock;

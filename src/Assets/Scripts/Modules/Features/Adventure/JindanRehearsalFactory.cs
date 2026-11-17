@@ -14,11 +14,21 @@ namespace TianZhang.Features.Adventure
     public static class JindanRehearsalFactory
     {
         public static AdventureSpawnSet Create(JindanDemoCatalogData catalog, int segmentIndex,
-            string earthEffect, Func<string, string> text, bool controlFire = false)
+            string earthEffect, Func<string, string> text, bool controlFire = false) =>
+            CreateActors(catalog, segmentIndex, earthEffect, text, controlFire, null);
+
+        public static AdventureSpawnSet CreateForPlayer(JindanDemoCatalogData catalog, string earthEffect,
+            Func<string, string> text, CharacterStateSnapshot player) =>
+            CreateActors(catalog, 1, earthEffect, text, true, player ?? throw new ArgumentNullException(nameof(player)));
+
+        private static AdventureSpawnSet CreateActors(JindanDemoCatalogData catalog, int segmentIndex,
+            string earthEffect, Func<string, string> text, bool controlFire, CharacterStateSnapshot player)
         {
             if (catalog == null || !catalog.Validate(out string reason))
                 throw new ArgumentException("jindan_catalog_invalid");
             if (segmentIndex < 0 || segmentIndex >= catalog.segments.Length) throw new ArgumentOutOfRangeException(nameof(segmentIndex));
+            if (player != null && (player.Identity.CharacterId != "player" || segmentIndex != 1 || !controlFire))
+                throw new ArgumentException("jindan_player_challenge_invalid");
             var segment = catalog.segments[segmentIndex];
             if (controlFire && segmentIndex != 1) throw new ArgumentException("fire_control_requires_second_segment");
             var players = new List<CombatantSnapshot>();
@@ -52,8 +62,17 @@ namespace TianZhang.Features.Adventure
                     equippedArtProfileIds: arts, availableArtProfileIds: arts)
                 { GongFaId = preset.sourceGongFaId };
                 actor.SetSpirit(preset.manaMaximum, preset.manaMaximum);
+                if (player != null && preset.characterId == JindanDemoCatalogData.PlayerFirePresetId)
+                {
+                    var playerBindings = bindings.ToDictionary(pair => pair.Key,
+                        pair => JindanDemoCatalogData.PlayerInstanceId(preset.characterId, pair.Value));
+                    actor = AdventureUnitSpawner.CreatePlayer(player, new HexCoord(placement.q, placement.r),
+                        string.IsNullOrEmpty(player.MainEquipmentBasicAttackProfileId)
+                            ? player.UnarmedBasicAttackProfileId : player.MainEquipmentBasicAttackProfileId,
+                        playerBindings, placement.facing);
+                }
                 (actor.Team == CombatTeam.Player ? players : enemies).Add(actor);
-                names.Add(actor.Id, text(preset.displayNameKey));
+                names.Add(actor.Id, actor.Id == "player" ? player.Identity.DisplayName : text(preset.displayNameKey));
             }
             return new AdventureSpawnSet(players[0], enemies[0], null, players[0].BasicAttackProfileId,
                 enemies[0].BasicAttackProfileId, players[0].EquippedArtProfileIds.ToArray(), enemies.Skip(1).ToArray(),
@@ -63,9 +82,14 @@ namespace TianZhang.Features.Adventure
         public static CombatJindanLoadout CreateLoadout(JindanDemoCatalogData catalog, AdventureSpawnSet spawned, string earthEffect)
         {
             var actors = new HashSet<string>(spawned.Players.Concat(spawned.Enemies).Select(value => value.Id));
+            bool playerTrial = actors.Contains("player");
+            if (playerTrial) actors.Add(JindanDemoCatalogData.PlayerFirePresetId);
+            string Owner(string id) => playerTrial && id == JindanDemoCatalogData.PlayerFirePresetId ? "player" : id;
+            string Instance(string owner, string id) => Owner(owner) == "player"
+                ? JindanDemoCatalogData.PlayerInstanceId(owner, id) : id;
             var seats = catalog.seats.Where(value => actors.Contains(value.characterId)).Select(value =>
-                new CombatJindanSeatDefinition(value.characterId, value.seatInstanceId, value.positionId, value.positionType.ToString(),
-                    value.guardianAbilityInstanceId, value.candidateEffectIds,
+                new CombatJindanSeatDefinition(Owner(value.characterId), Instance(value.characterId, value.seatInstanceId), value.positionId, value.positionType.ToString(),
+                    Instance(value.characterId, value.guardianAbilityInstanceId), value.candidateEffectIds,
                     value.candidateEffectIds.Contains(earthEffect) ? earthEffect : value.defaultEffectId)).ToArray();
             var abilities = new List<CombatJindanAbilityDefinition>();
             foreach (string effect in seats.SelectMany(value => value.Candidates).Distinct())
@@ -111,7 +135,7 @@ namespace TianZhang.Features.Adventure
         }
 
         public static CombatSurfaces CreateSurfaces(JindanDemoCatalogData catalog,
-            EnvironmentProfileDefinition environment, int segmentIndex)
+            EnvironmentProfileDefinition environment, int segmentIndex, bool playerFire = false)
         {
             if (catalog == null || !catalog.Validate(out _)) throw new ArgumentException("jindan_catalog_invalid");
             if (environment == null || environment.profileId != catalog.surfaceRules.environmentProfileId)
@@ -139,7 +163,7 @@ namespace TianZhang.Features.Adventure
                     (CombatSurfaceKind)Enum.Parse(typeof(CombatSurfaceKind), cell.kind), cell.fuel, cell.sourceRef, cell.fuelObjectId);
             }
             var fires = catalog.surfaceFires.Where(value => value.segmentId == segment).Select(value =>
-                new CombatFireDefinition(value.sourceRef, value.actorId, value.periodTicks, value.durationTicks,
+                new CombatFireDefinition(value.sourceRef, playerFire && value.actorId == JindanDemoCatalogData.PlayerFirePresetId ? "player" : value.actorId, value.periodTicks, value.durationTicks,
                     value.capacity, value.fuelBudget, value.attackCapacity, value.damageMultiplier));
             return new CombatSurfaces(definitions.Values, fires,
                 catalog.surfaceRules.wetMovementBurden, catalog.surfaceRules.deepMovementBurden);

@@ -91,7 +91,8 @@ namespace TianZhang.Bootstrap
             Vector3 focus = terrainRehearsalSurface.Center(new TianZhang.Gameplay.Contracts.CombatUnitPresentationHex(placement.q, placement.r));
             battlefieldCamera.transform.position = focus - battlefieldCamera.transform.forward * 20;
             if (!controller.BeginJindanRehearsal(jindanDemoCatalog, segmentIndex, earthEffect,
-                terrainRehearsalEnvironment, UiText.Resolve, out string reason, jindan.ControlFire))
+                terrainRehearsalEnvironment, UiText.Resolve, out string reason, jindan.ControlFire,
+                !string.IsNullOrEmpty(GameBootstrap.RequireRuntime().JindanDemoPresetId)))
                 throw new InvalidOperationException("jindan_rehearsal_entry_failed:" + reason);
         }
 
@@ -298,7 +299,8 @@ namespace TianZhang.Bootstrap
                     RequireReference(jindanFireDomainView, "jindan_fire_domain_view_missing");
                     RequireReference(earthView, "jindan_earth_view_missing");
                     RequireReference(surfaceView, "jindan_surface_view_missing");
-                    jindan = new JindanRehearsalPresenter(jindanDemoCatalog, encounterCoordinator, BeginJindanRehearsal, UiText.Resolve);
+                    jindan = new JindanRehearsalPresenter(jindanDemoCatalog, encounterCoordinator, BeginJindanRehearsal, UiText.Resolve,
+                        string.IsNullOrEmpty(runtime.JindanDemoPresetId) ? null : runtime.Player.Identity.DisplayName);
                     jindanRehearsalButton.onClick.AddListener(OpenJindanPreparation);
                     jindanDemoView.ActionRequested += HandleJindanAction;
                 }

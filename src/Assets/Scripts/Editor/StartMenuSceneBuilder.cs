@@ -1,5 +1,6 @@
 using TianZhang.Bootstrap;
 using TianZhang.Content;
+using TianZhang.Entity;
 using TianZhang.Features.CharacterCreation;
 using TianZhang.Game.CharacterCreation;
 using UnityEditor;
@@ -64,6 +65,8 @@ namespace TianZhang.Editor
             SceneBuildSupport.SetObject(creationView, "createButton", createButton);
             SceneBuildSupport.SetObject(creationView, "returnToMenuButton", returnToMenuButton);
             BuildOriginSelection(creationView, creationPanel, summary);
+            BuildStartMode(creationView, creationPanel);
+            BindJindanCatalog(installer);
             SceneBuildSupport.SetObject(controller, "view", menuView);
             SceneBuildSupport.SetObject(controller, "characterCreation", creationController);
             SceneBuildSupport.SetObject(creationController, "view", creationView);
@@ -77,6 +80,49 @@ namespace TianZhang.Editor
             SceneBuildSupport.SetObject(installer, "characterCreationController", creationController);
             SceneBuildSupport.SetObject(installer, "characterCreationView", creationView);
             SceneBuildSupport.Save(SceneBuildSupport.StartMenuScenePath);
+        }
+
+        [MenuItem("天章/场景/接入金丹试玩建角")]
+        public static void RebuildStartMode()
+        {
+            Scene scene = EditorSceneManager.OpenScene(SceneBuildSupport.StartMenuScenePath, OpenSceneMode.Single);
+            var installer = Object.FindFirstObjectByType<StartMenuSceneInstaller>();
+            var view = Object.FindFirstObjectByType<CharacterCreationView>(FindObjectsInactive.Include);
+            var serialized = new SerializedObject(view);
+            var panel = serialized.FindProperty("panel").objectReferenceValue as GameObject;
+            BuildStartMode(view, panel);
+            BindJindanCatalog(installer);
+            EditorSceneManager.MarkSceneDirty(scene);
+            if (!EditorSceneManager.SaveScene(scene)) throw new System.InvalidOperationException("start_menu_scene_save_failed");
+        }
+
+        private static void BindJindanCatalog(StartMenuSceneInstaller installer) =>
+            SceneBuildSupport.SetObject(installer, "jindanDemoCatalog",
+                SceneBuildSupport.RequireAsset<JindanDemoCatalogData>("Assets/Data/JindanDemo/JindanDemoCatalog.asset"));
+
+        private static void BuildStartMode(CharacterCreationView view, GameObject panel)
+        {
+            foreach (string name in new[] { "StartModeSelection", "StartModeText" })
+            {
+                var previous = panel.transform.Find(name);
+                if (previous != null) Object.DestroyImmediate(previous.gameObject);
+            }
+            var row = new GameObject("StartModeSelection", typeof(RectTransform), typeof(HorizontalLayoutGroup), typeof(LayoutElement));
+            row.transform.SetParent(panel.transform, false);
+            row.transform.SetSiblingIndex(3);
+            var layout = row.GetComponent<HorizontalLayoutGroup>();
+            layout.spacing = 6f;
+            layout.childControlHeight = layout.childControlWidth = true;
+            layout.childForceExpandHeight = false;
+            row.GetComponent<LayoutElement>().preferredHeight = 48f;
+            var ordinary = SceneBuildSupport.CreateButton("OrdinaryStartButton", row.transform, "普通开局", out _);
+            var trial = SceneBuildSupport.CreateButton("JindanStartButton", row.transform, "金丹试玩·长明", out _);
+            var text = SceneBuildSupport.CreateText("StartModeText", panel.transform, string.Empty, 16);
+            text.transform.SetSiblingIndex(4);
+            text.gameObject.AddComponent<LayoutElement>().preferredHeight = 44f;
+            SceneBuildSupport.SetObject(view, "ordinaryStartButton", ordinary);
+            SceneBuildSupport.SetObject(view, "jindanStartButton", trial);
+            SceneBuildSupport.SetObject(view, "startModeText", text);
         }
 
         public static void BindPointBuyConfig()

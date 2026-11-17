@@ -43,16 +43,19 @@ namespace TianZhang.Features.Adventure
         public bool IsTerrainRehearsal { get; private set; }
 
         public bool BeginJindanRehearsal(JindanDemoCatalogData demo, int segmentIndex, string earthEffect,
-            EnvironmentProfileAsset environment, Func<string, string> text, out string reason, bool controlFire = false)
+            EnvironmentProfileAsset environment, Func<string, string> text, out string reason, bool controlFire = false, bool usePlayer = false)
         {
             reason = "adventure_not_exploring";
             if (!CanSelectExplorationNode) return false;
-            var actors = JindanRehearsalFactory.Create(demo, segmentIndex, earthEffect, text, controlFire);
+            if (usePlayer && (segmentIndex != 1 || !controlFire))
+            { reason = "jindan_player_challenge_invalid"; return false; }
+            var actors = usePlayer ? JindanRehearsalFactory.CreateForPlayer(demo, earthEffect, text, player)
+                : JindanRehearsalFactory.Create(demo, segmentIndex, earthEffect, text, controlFire);
             if (!combatEntry.TryCreateSession(actors, attackProfiles, environment, out var prepared, out reason, demo)) return false;
             prepared.ConfigureJindan(JindanRehearsalFactory.CreateLoadout(demo, actors, earthEffect));
             prepared.ConfigureFlight(JindanRehearsalFactory.CreateFlight(demo, actors));
             if (!environment.TryCreateDefinition(out var surfaceEnvironment, out reason)) return false;
-            prepared.ConfigureSurfaces(JindanRehearsalFactory.CreateSurfaces(demo, surfaceEnvironment, segmentIndex));
+            prepared.ConfigureSurfaces(JindanRehearsalFactory.CreateSurfaces(demo, surfaceEnvironment, segmentIndex, usePlayer));
             if (!encounters.TryBeginRehearsal(actors, prepared,
                 JindanRehearsalFactory.Descriptors(actors, CombatUnitPresentationProfileCatalogData.PlayerProfileId),
                 environment.battlefieldCells.Select(cell => new TianZhang.Spatial.HexCoord(cell.q, cell.r)).ToArray(), out reason)) return false;

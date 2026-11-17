@@ -155,7 +155,8 @@ namespace TianZhang.Features.Adventure
             return hasMain ? mainEquipment : unarmed;
         }
 
-        private static CombatantSnapshot CreatePlayer(CharacterStateSnapshot source, HexCoord position, string basicAttackProfileId)
+        public static CombatantSnapshot CreatePlayer(CharacterStateSnapshot source, HexCoord position, string basicAttackProfileId,
+            IReadOnlyDictionary<string, string> abilityInstances = null, int facing = 0)
         {
             var attributes = new CharacterAttributes(
                 source.Attributes.RootBone,
@@ -194,7 +195,7 @@ namespace TianZhang.Features.Adventure
                 visibleRootElement: source.VisibleRootElement,
                 visibleRootGrade: source.VisibleRootGrade,
                 actionEconomyModifiers: Array.Empty<CombatActionEconomyModifier>(),
-                footprint: SpatialFootprintKind.Single, bodyScaleRank: 1, facing: 0)
+                footprint: SpatialFootprintKind.Single, bodyScaleRank: 1, facing: facing, abilityInstanceIds: abilityInstances)
             {
                 BlockRate = source.CombatModifiers.BlockRate,
                 BlockReduction = source.CombatModifiers.BlockReduction,

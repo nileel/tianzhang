@@ -9,6 +9,11 @@ namespace TianZhang.Entity
     [CreateAssetMenu(fileName = "JindanDemoCatalog", menuName = "天章/金丹演武目录")]
     public sealed class JindanDemoCatalogData : ScriptableObject
     {
+        public const string PlayerFirePresetId = "demo_20261024_fire";
+        public static string PlayerInstanceId(string presetId, string instanceId) =>
+            !string.IsNullOrEmpty(instanceId) && instanceId.StartsWith(presetId + "_", StringComparison.Ordinal)
+                ? "player:trial:" + instanceId : instanceId;
+
         public string contentVersion;
         public JindanDemoPresetDefinition[] presets;
         public JindanDemoSeatDefinition[] seats;

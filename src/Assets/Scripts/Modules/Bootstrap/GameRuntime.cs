@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TianZhang.Character;
 using TianZhang.Content;
 using TianZhang.Cultivation;
+using TianZhang.Entity;
 using TianZhang.Features.Settlement;
 using TianZhang.Gameplay.Contracts;
 using TianZhang.Infrastructure.Persistence;
@@ -35,6 +36,16 @@ namespace TianZhang.Bootstrap
         public GameRuntime()
         {
             Initialize(null, null, DefaultWorldNodeId);
+        }
+
+        public string JindanDemoPresetId { get; private set; }
+        public string JindanDemoContentVersion { get; private set; }
+        public void BeginJindanDemoGame(string name, JindanDemoCatalogData demo)
+        {
+            JindanDemoNewGame.Create(name, demo, growthRules, out var player, out var cultivation);
+            BeginNewGame(player, cultivation, "guanzhong_hub");
+            JindanDemoPresetId = JindanDemoCatalogData.PlayerFirePresetId;
+            JindanDemoContentVersion = demo.contentVersion;
         }
 
         public CharacterRuntimeProfile Player { get; private set; }
@@ -170,7 +181,7 @@ namespace TianZhang.Bootstrap
 
         public GameSaveEnvelope CaptureSave()
         {
-            return GameSaveEnvelope.Capture(
+            var save = GameSaveEnvelope.Capture(
                 Player,
                 Cultivation,
                 WorldClock,
@@ -180,18 +191,25 @@ namespace TianZhang.Bootstrap
                 bountyStore,
                 charterStore,
                 Navigation);
+            save.jindanDemoPresetId = JindanDemoPresetId;
+            save.jindanDemoContentVersion = JindanDemoContentVersion;
+            return save;
         }
 
-        public void RestoreSaveJson(string json, ContentCatalogData catalog)
+        public void RestoreSaveJson(string json, ContentCatalogData catalog, JindanDemoCatalogData demo = null)
         {
-            RestoreSave(GameSaveSerializer.Deserialize(json), catalog);
+            RestoreSave(GameSaveSerializer.Deserialize(json), catalog, demo);
         }
 
-        public void RestoreSave(GameSaveEnvelope envelope, ContentCatalogData catalog)
+        public void RestoreSave(GameSaveEnvelope envelope, ContentCatalogData catalog, JindanDemoCatalogData demo = null)
         {
             if (envelope == null) throw new ArgumentNullException(nameof(envelope));
             CombatRuleSetData rules = growthRules ?? catalog?.CombatRuleSet;
             RestoredGameState restored = envelope.Restore(catalog, rules);
+            JindanDemoNewGame.Validate(envelope.jindanDemoPresetId, envelope.jindanDemoContentVersion,
+                restored.Player, restored.Cultivation, demo);
+            JindanDemoPresetId = envelope.jindanDemoPresetId;
+            JindanDemoContentVersion = envelope.jindanDemoContentVersion;
             Player = restored.Player;
             Cultivation = restored.Cultivation;
             WorldClock = restored.WorldClock;
@@ -276,6 +294,8 @@ namespace TianZhang.Bootstrap
             CultivationState cultivation,
             string startNodeId)
         {
+            JindanDemoPresetId = null;
+            JindanDemoContentVersion = null;
             Player = player;
             Cultivation = cultivation;
             WorldClock = new WorldClockService(

@@ -90,6 +90,9 @@ namespace TianZhang.Infrastructure.Persistence
 
         private static void ValidateBodyPayload(GameSaveEnvelope envelope)
         {
+            bool trial = !string.IsNullOrEmpty(envelope.jindanDemoPresetId);
+            if (trial != !string.IsNullOrEmpty(envelope.jindanDemoContentVersion) || trial && !envelope.hasPlayer)
+                throw new InvalidDataException("jindan_player_preset_invalid");
             if (envelope.hasPlayer)
             {
                 if (envelope.player == null || envelope.player.characterId != "player" ||

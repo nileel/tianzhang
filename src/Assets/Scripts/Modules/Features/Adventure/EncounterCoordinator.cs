@@ -328,8 +328,9 @@ namespace TianZhang.Features.Adventure
             catch (Exception exception)
             { unitPresentation.Clear(); reason = "adventure_presentation_spawn_failed:" + exception.Message; return false; }
             spawned = values; session = prepared; battlefieldCells = cells;
-            // Demo identities never bind world equipment or inventory. Growth refresh is also disabled below.
-            session.ExternalResources = null;
+            // Fixed actors stay isolated; the trial player retains the existing equipment/inventory owner.
+            session.ExternalResources = values.Player.Id == "player"
+                ? this : null;
             enemyPolicies = values.Enemies.ToDictionary(value => value.Id, value => (ICombatActionPolicy)new LegalActionAI());
             playerDisplayName = ActorName(values.Player.Id);
             presentation.ClearLog(); presentation.AppendLog("金丹演武开始：" + string.Join("、", values.RehearsalNames.Values));
@@ -734,7 +735,7 @@ namespace TianZhang.Features.Adventure
 
         private bool RefreshGrowth()
         {
-            if (session == null || equipmentOwner == null || spawned?.IsJindanRehearsal == true) return false;
+            if (session == null || equipmentOwner == null || spawned?.IsJindanRehearsal == true && spawned.Player.Id != "player") return false;
             return session.RefreshActionEconomy("player", equipmentOwner.Attributes.ActionPointMaximumUnits,
                 equipmentOwner.Attributes.MovementEfficiencyMilliUnits, equipmentOwner.Progression.RealmStage,
                 string.IsNullOrEmpty(equipmentOwner.MainEquipmentBasicAttackProfileId)
