@@ -1349,6 +1349,8 @@ MonoBehaviour:
   sampleCamera: {fileID: 45381837}
   yangAltar: {fileID: 8626091902349918549, guid: 65f94ab93edb92743b311c71c96e50c8, type: 3}
   yinAltar: {fileID: 24524317809448177, guid: 6820970a51f9eb7409ef2af32a1e9f7b, type: 3}
+  yangRange: {fileID: 3504304534595220283, guid: 8150d31429dcd424aad137f61156de29, type: 3}
+  yinRange: {fileID: 7671371240057249783, guid: 0db3a39890f14d94eae6df1c527a964d, type: 3}
   catalog: {fileID: 11400000, guid: 9a8721129eed3f2459768f15848e4ea5, type: 2}
   rules: {fileID: 11400000, guid: a597af4c6e37dab4883746e206254f60, type: 2}
   environment: {fileID: 11400000, guid: b29455c1ee40d3a4297cab956b733a95, type: 2}

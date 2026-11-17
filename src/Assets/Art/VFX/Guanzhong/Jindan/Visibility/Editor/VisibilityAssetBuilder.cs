@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using TianZhang.Art.Jindan.Visibility.Samples;
@@ -18,7 +19,7 @@ namespace TianZhang.Art.Jindan.Visibility.Editor
     {
         public const string Root = "Assets/Art/VFX/Guanzhong/Jindan/Visibility";
         public static string Evidence => Path.GetFullPath(Path.Combine(Application.dataPath,
-            "../../assets/generated-scene-art/guanzhong-jindan-demo/d12-ability-assets/visibility/evidence"));
+            "../../assets/generated-scene-art/guanzhong-jindan-demo/d12-ability-assets/visibility/evidence/range-20261117"));
 
         [MenuItem("TianZhang/Art/D12.5/Rebuild Visibility resources and sample")]
         public static void Build()
@@ -46,7 +47,7 @@ namespace TianZhang.Art.Jindan.Visibility.Editor
             BuildScene(); AssetDatabase.SaveAssets();
             EditorSceneManager.OpenScene(Root + "/Samples/VisibilityAssetSample.unity");
             var sample = UnityEngine.Object.FindFirstObjectByType<VisibilityAssetSample>();
-            if (!sample || !sample.yangAltar || !sample.yinAltar || !sample.catalog || !sample.provider)
+            if (!sample || !sample.yangAltar || !sample.yinAltar || !sample.yangRange || !sample.yinRange || !sample.catalog || !sample.provider)
                 throw new InvalidOperationException("visibility_sample_persistence_failed");
             foreach (string side in new[] { "Yang", "Yin" })
             foreach (string state in new[] { "Dormant", "Active", "Destroyed" })
@@ -55,6 +56,8 @@ namespace TianZhang.Art.Jindan.Visibility.Editor
                 if (!prefab.transform.Find("Intact/Identity") || !prefab.transform.Find("Intact/Glow/Glyph") || !prefab.transform.Find("Failed/Body"))
                     throw new InvalidOperationException("visibility_prefab_persistence_failed:" + prefab.name);
             }
+            if (ShaderUtil.ShaderHasError(Shader.Find("TianZhang/Jindan/Visibility Domain Range")))
+                throw new InvalidOperationException("visibility_range_shader_compile_failed");
             Debug.Log("D12_VISIBILITY_BUILD_OK");
         }
 
@@ -126,12 +129,74 @@ namespace TianZhang.Art.Jindan.Visibility.Editor
             provider.ApplyModifiedPropertiesWithoutUndo();
             sample.yangAltar = Load<GameObject>(Root + "/Prefabs/YangDormant.prefab");
             sample.yinAltar = Load<GameObject>(Root + "/Prefabs/YinDormant.prefab");
+            BuildRanges(sample.surface);
+            sample.yangRange = Load<GameObject>(Root + "/Prefabs/YangDomainRange.prefab");
+            sample.yinRange = Load<GameObject>(Root + "/Prefabs/YinDomainRange.prefab");
             sample.catalog = Load<JindanDemoCatalogData>("Assets/Data/JindanDemo/JindanDemoCatalog.asset");
             sample.rules = Load<CombatRuleSetData>("Assets/Data/CombatRuleSet.asset");
             sample.environment = Load<EnvironmentProfileAsset>("Assets/Data/EnvironmentProfiles/EnvironmentProfile_env_guanzhong_jindan_demo.asset");
             sample.attacks = AssetDatabase.FindAssets("t:AttackProfileData", new[] { "Assets/Data/AttackProfiles" })
                 .Select(id => Load<AttackProfileData>(AssetDatabase.GUIDToAssetPath(id))).ToArray();
             EditorSceneManager.SaveScene(scene, Root + "/Samples/VisibilityAssetSample.unity");
+        }
+
+        private static void BuildRanges(CombatBattlefieldSurface surface)
+        {
+            // VFX carrier only. Bake this fixed map's 144 cells without changing its geometry.
+            const float lift = .025f;
+            var source = new Mesh();
+            var vertices = new Vector3[7]; var indices = new int[18];
+            for (int i = 0; i < 6; i++)
+            {
+                float a = (30+i*60)*Mathf.Deg2Rad;
+                vertices[i+1] = new Vector3(Mathf.Cos(a),0,Mathf.Sin(a))*.57735027f;
+                indices[i*3] = 0; indices[i*3+1] = i+1; indices[i*3+2] = (i+1)%6+1;
+            }
+            source.vertices = vertices; source.triangles = indices;
+            var carrier = new GameObject("Range bake transform");
+            var allVertices = new List<Vector3>(); var uv = new List<Vector2>();
+            var cells = new List<Vector2>(); var triangles = new List<int>();
+            float maxError = 0; int samples = 0;
+            foreach (var cell in surface.Cells)
+            {
+                Vector3 center = CombatBattlefieldSurface.Horizontal(cell.q,cell.r);
+                carrier.transform.position = center;
+                var fitted = VisibilityRangeSupport.Fit(source,carrier.transform,surface,cell,lift);
+                maxError = Mathf.Max(maxError,VisibilityRangeSupport.InteriorError(fitted,carrier.transform,surface,cell,lift,out int count));
+                samples += count;
+                int offset = allVertices.Count;
+                foreach (Vector3 local in fitted.vertices)
+                {
+                    allVertices.Add(carrier.transform.TransformPoint(local)); uv.Add(new Vector2(local.x,local.z));
+                    cells.Add(new Vector2(cell.q,cell.r));
+                }
+                triangles.AddRange(fitted.triangles.Select(index => offset+index));
+                UnityEngine.Object.DestroyImmediate(fitted);
+            }
+            UnityEngine.Object.DestroyImmediate(carrier); UnityEngine.Object.DestroyImmediate(source);
+            if (surface.Cells.Count != 144 || maxError > .001f) throw new InvalidOperationException("visibility_range_fit:"+maxError);
+            var mesh = new Mesh { indexFormat = IndexFormat.UInt32 };
+            mesh.SetVertices(allVertices); mesh.SetUVs(0,uv); mesh.SetUVs(1,cells); mesh.SetTriangles(triangles,0);
+            mesh.RecalculateNormals(); mesh.RecalculateBounds(); mesh = Save(mesh,"Meshes/WholeBoardRange.asset");
+            foreach (bool moon in new[] { false,true })
+            {
+                string name = moon ? "YinDomainRange" : "YangDomainRange";
+                var material = new Material(Shader.Find("TianZhang/Jindan/Visibility Domain Range"));
+                material.SetColor("_BaseColor",moon ? new Color(.36f,.72f,1f) : new Color(1f,.74f,.25f));
+                material.SetFloat("_Moon",moon ? 1 : 0); material.renderQueue = moon ? 3011 : 3010;
+                material = Save(material,"Materials/"+name+".mat");
+                var go = new GameObject(name); go.AddComponent<MeshFilter>().sharedMesh = mesh;
+                var renderer = go.AddComponent<MeshRenderer>(); renderer.sharedMaterial = material;
+                renderer.shadowCastingMode = ShadowCastingMode.Off; renderer.receiveShadows = false;
+                PrefabUtility.SaveAsPrefabAsset(go,Root+"/Prefabs/"+name+".prefab");
+                UnityEngine.Object.DestroyImmediate(go);
+            }
+            File.WriteAllText(Path.Combine(Evidence,"range-geometry-proof.txt"),
+                "144 fixed support cells including non-stoppable cells; UV2 records each cell q/r.\n"
+                +"Source=CombatBattlefieldSurface; local FireSampleSupport fitting algorithm; lift="+lift
+                +"m; strict interior samples="+samples+"; max height error="+maxError.ToString("F8")+"m\n"
+                +"vertices="+mesh.vertexCount+" triangles="+mesh.triangles.Length/3+" bounds="+mesh.bounds+"\n"
+                +"Slope: 12 subdivisions; stairs: clipped per tread, no cross-riser triangles. PASS\n");
         }
 
         private static T Load<T>(string path) where T : UnityEngine.Object =>
