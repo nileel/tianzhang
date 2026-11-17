@@ -19,7 +19,7 @@ namespace TianZhang.Art.Jindan.Visibility.Editor
     {
         public const string Root = "Assets/Art/VFX/Guanzhong/Jindan/Visibility";
         public static string Evidence => Path.GetFullPath(Path.Combine(Application.dataPath,
-            "../../assets/generated-scene-art/guanzhong-jindan-demo/d12-ability-assets/visibility/evidence/range-20261117"));
+            "../../assets/generated-scene-art/guanzhong-jindan-demo/d12-ability-assets/visibility/evidence/motion-20261117"));
 
         [MenuItem("TianZhang/Art/D12.5/Rebuild Visibility resources and sample")]
         public static void Build()
@@ -178,19 +178,7 @@ namespace TianZhang.Art.Jindan.Visibility.Editor
             var mesh = new Mesh { indexFormat = IndexFormat.UInt32 };
             mesh.SetVertices(allVertices); mesh.SetUVs(0,uv); mesh.SetUVs(1,cells); mesh.SetTriangles(triangles,0);
             mesh.RecalculateNormals(); mesh.RecalculateBounds(); mesh = Save(mesh,"Meshes/WholeBoardRange.asset");
-            foreach (bool moon in new[] { false,true })
-            {
-                string name = moon ? "YinDomainRange" : "YangDomainRange";
-                var material = new Material(Shader.Find("TianZhang/Jindan/Visibility Domain Range"));
-                material.SetColor("_BaseColor",moon ? new Color(.36f,.72f,1f) : new Color(1f,.74f,.25f));
-                material.SetFloat("_Moon",moon ? 1 : 0); material.renderQueue = moon ? 3011 : 3010;
-                material = Save(material,"Materials/"+name+".mat");
-                var go = new GameObject(name); go.AddComponent<MeshFilter>().sharedMesh = mesh;
-                var renderer = go.AddComponent<MeshRenderer>(); renderer.sharedMaterial = material;
-                renderer.shadowCastingMode = ShadowCastingMode.Off; renderer.receiveShadows = false;
-                PrefabUtility.SaveAsPrefabAsset(go,Root+"/Prefabs/"+name+".prefab");
-                UnityEngine.Object.DestroyImmediate(go);
-            }
+            VisibilityDomainBuilder.Build(mesh);
             File.WriteAllText(Path.Combine(Evidence,"range-geometry-proof.txt"),
                 "144 fixed support cells including non-stoppable cells; UV2 records each cell q/r.\n"
                 +"Source=CombatBattlefieldSurface; local FireSampleSupport fitting algorithm; lift="+lift

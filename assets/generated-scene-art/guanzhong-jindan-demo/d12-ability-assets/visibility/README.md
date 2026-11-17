@@ -1,10 +1,12 @@
 # D12.5 阳照与藏真公开支点及范围特效资源包
 
-**2026-11-17 最新状态：范围动效待重做。** 用户认为现版逐格连续／断续纹像选中框，要求先找持续领域动效参考。下文资源与运行记录保留为历史技术交付，不表示当前视觉验收通过；本轮仅完成参考调研，候选与确认状态统一见[开发计划](../../../../../开发计划.md)。
+**2026-11-17 最新状态：已按用户确认方向重做范围动效。** 阳照采用跨格日光、上浮光尘与流动地光；藏真采用横向漂移低雾、柔和月光与地面雾色。原逐格描边已移除，两个领域均有0.8秒展开、持续运动及0.55秒消散。新版仍须用户审阅最终画面。
 
-2026-11-17 初交付日／月公开坛各三态，共6个Prefab，19.43秒旧样例仅表现公开坛，遗漏领域覆盖。按同日用户反馈补交 `YangDomainRange`／`YinDomainRange` 两个全棋盘范围Prefab，共8个Prefab。默认镜头size5，关键帧另存size3近景与全图镜头；最新证据单列 `evidence/range-20261117/`，原始证据保留。Unity编译、保存重开与双分辨率实机样例通过；最新视频各793帧、30fps、26.43秒，完整解码通过。
+共8个Prefab：原日／月公开坛各三态，以及重做的 `YangDomainRange`／`YinDomainRange`。默认镜头size5，另存size3近景、全图与展开／消散中间帧。最新证据在 `evidence/motion-20261117/`；旧19.43秒公开坛样例及26.43秒格框样例保留为历史记录，不代表当前资源效果。
 
-[最新视频与关键帧](index.html) · [1920运行记录](evidence/range-20261117/1920/runtime-proof.txt) · [1366运行记录](evidence/range-20261117/1366/runtime-proof.txt) · [范围贴面量测](evidence/range-20261117/range-geometry-proof.txt) · [素材来源](source/README.md)
+Unity编译、保存重开、1920×1080／1366×768实机样例通过；视频均为973帧、30fps、32.43秒，完整解码通过。双分辨率默认镜头和全图截图均已实际查看，领域之间的0.5秒差帧确认持续变化；领域关闭／到期完成后根节点及粒子清空，隐者渲染贡献仍为0。独立只读复核检查了状态来源、截图与运行记录，并修正样例高帧率提前断言问题。[媒体验证](evidence/motion-20261117/media-validation.json)
+
+[最新视频与关键帧](index.html) · [1920运行记录](evidence/motion-20261117/1920/runtime-proof.txt) · [1366运行记录](evidence/motion-20261117/1366/runtime-proof.txt) · [范围贴面量测](evidence/motion-20261117/range-geometry-proof.txt) · [素材来源](source/README.md)
 
 这是资源交付与独立样例。正式 `JindanVisibilityView`、`AdventureSceneInstaller`、V3 HUD及自建角色流程未接线，用户最终画面审阅仍待后续。
 
@@ -17,8 +19,8 @@ Unity目录：`src/Assets/Art/VFX/Guanzhong/Jindan/Visibility/`。
 | YangDormant / YinDormant | 原完整碑，暗日纹／月牙可识别，微光关闭 |
 | YangActive / YinActive | 原完整碑，暖金日芒／冷蓝月牙与克制局部微光 |
 | YangDestroyed / YinDestroyed | 原失效断碑，无纹样微光 |
-| YangDomainRange | 全棋盘暖金连续线及轻微流光，标示阳照覆盖 |
-| YinDomainRange | 全棋盘冷蓝内圈断续线及轻微流光，标示藏真覆盖 |
+| YangDomainRange | 全棋盘流动地光、疏落日光束与上浮光尘 |
+| YinDomainRange | 全棋盘漂移低雾、月光薄幕与连续地面雾色 |
 
 直接复用D12.4 `ScaleSupport.prefab` 的原石碑完整／失效网格及材质。Builder只在本包副本中替换 `Intact/Glow`，不修改Space、原Props或正式场景。纹样为原创局部HLSL，无新增位图、外部依赖或最终模型。
 
@@ -32,17 +34,21 @@ Unity目录：`src/Assets/Art/VFX/Guanzhong/Jindan/Visibility/`。
 
 两种领域均覆盖本演武地图全部144个基础拓扑支承格，包括不可停格。阳照照明适用于全部粗阵营；藏真保护仅适用于施术方粗阵营存活角色。范围纹表达领域空间覆盖，不等于观察者视野、实际可见者或当前隐匿者集合；阳照不加视距、不穿墙。依据为[日坛昭明](../../../../../docs/角色养成/演示原型/神通/散修/演武·日坛昭明.txt)和[朔坛藏真](../../../../../docs/角色养成/演示原型/神通/散修/演武·朔坛藏真.txt)原规则。旧V2“只在公开坛附近增加微光”的表现文字已同步纠正。
 
-两个范围Prefab共用 `WholeBoardRange.asset`，按本张固定关中地图的 `CombatBattlefieldSurface` 烘焙，须以世界零位、单位缩放、无旋转装配；不挂在石碑或人物下随其移动。UV0是每格局部XZ，UV2记录固定q/r；样例用生产 `SceneObjects.Board.Cells` 核对集合完全相等。每域各一个Renderer、共用网格；本资源不宣称适配其他地图，更换地形需按实际支承面重新烘焙。
+两个范围Prefab共用 `WholeBoardRange.asset`，按本张固定关中地图的 `CombatBattlefieldSurface` 烘焙，须以世界零位、单位缩放、无旋转装配；不挂在石碑或人物下随其移动。UV2记录固定q/r，样例用生产 `SceneObjects.Board.Cells` 核对集合完全相等。每域包含一个贴面Renderer与两个原生ParticleSystem，粒子也由同一覆盖网格发射。柔软雾缘可在棋盘外侧自然淡去，不作为可选格或命中判定。本资源仅适用本张固定地图；更换地形需重新烘焙。
 
-`DomainRange.shader` 用两条错开的连续／断续纹辅助暖冷颜色识别，范围内仅有低透明流光。流光只读取固定网格坐标与表现秒数，不读取人物、观察结果、目标或施术者位置；角色隐匿不会导致范围挖空、移动、增强或追踪。不开启全局折射、Depth/Opaque Texture，不改变世界几何、碰撞、通行或距离规则。
+`DomainRange.shader` 改为连续世界XZ噪声与滚动光带，跨格衔接，不再画六角边线。粒子复用仓库已有Kenney CC0烟雾／柔光纹理：阳照为纵向光束和小光尘，藏真为横向低雾和柔月光。暖冷颜色之外，也以运动方向、形态和公开坛日／月纹区分。所有运动只读取固定覆盖网格、粒子生命周期与表现秒数，不读取人物、观察结果、目标或施术者位置；角色隐匿不会导致范围挖空、移动、增强或追踪。未开启全局折射、Depth/Opaque Texture，不改变世界几何、碰撞、通行或距离规则。
 
-样例唯一运行所有者仍为 `VisibilityAssetSample`，`Present()` 分别按本方 `seat.ActiveVisibility != null` 开关范围。冲突阳胜／阴胜／中性、近距自然现形及退隐均保留两层；日域合法关闭只清日纹，月域真实到期后清月纹；另起会话验证月域合法关闭及重置清理。公开碑失效的三态夹具单独标注，范围也随夹具关闭，不据此宣称真实破坛完成。
+样例唯一运行所有者仍为 `VisibilityAssetSample`，`Present()` 分别把本方 `seat.ActiveVisibility != null` 交给局部普通C#辅助类 `VisibilitySampleDomain.Set`；每帧 `Tick(Time.deltaTime)` 只驱动0.8秒渐入／0.55秒淡出。激活时播放原生粒子并记录地光展开时刻，结束时停止发射、淡出，随后清空粒子并停用根节点。材质使用PropertyBlock，Prefab初始地面透明度0、粒子不自动播放；后续正式View装配须遵循这套局部生命周期，不能只激活根节点。没有新增生产MonoBehaviour、全局管理器或战斗状态。
+
+冲突阳胜／阴胜／中性、近距自然现形及退隐均保留两域；日域合法关闭只淡出日光，月域真实到期后淡出月雾；另起会话验证月域合法关闭及重置清理。公开碑失效的三态夹具单独标注，范围也随夹具退出，不据此宣称真实破坛完成。普通Play的最终断言等待淡出完成，避免高帧率时固定帧数早于0.55秒。
 
 载片较原面抬高0.025米。坡面沿现有12等分算法，石阶按每个踏面条带裁剪；严格三角形内部采样251072点，最大高度误差0.00003817米，无跨踏面斜片。实际网格187450顶点、62768三角形，两个Prefab引用同一网格。运行记录包含原地图144格格心、范围实例、材质、世界bounds、屏幕投影及同帧关掉单层时的像素差，结合默认镜头和全图关键帧核对覆盖与可读性。
 
-双分辨率默认镜头下日／月范围均可辨，单层同帧开关分别影响362574／379662像素（1080p）、185374／193141像素（768p）；这仅证明可见贡献，结合关键帧确认角色、公开坛与地面仍可读。关闭／到期帧两层均无残留，隐藏人物基线仍为0像素。独立只读检查未发现范围集合、状态条件、贴面或隐藏位置输入问题。
+动效证据分别记录0.5秒间隔的 `motion-yang-a/b`、`motion-yin-a/b`。每个时刻先取领域启用／禁用Renderer的同帧差，再比较两次领域独立贡献，排除人物与坛纹变化；768p日光83184、月雾29773像素发生变化。运行记录另含每个粒子系统的存活数量、世界bounds、投影角点、材质与发射网格。展开0.2秒时透明度0.25，退场0.2秒时0.636364；最终根节点停用且粒子数0。隐藏人物基线仍为0像素。默认与全图关键帧用于核对角色、公开坛、地形与运动形态，数值本身不替代画面审阅。
 
-全图取证初轮曾将正交相机拉远至40，而相机附着的远景在深度35，导致远景遮住地形。只恢复样例既有20距离并改变正交size取全图；最终地图相机深度13.6238–26.3762，小于背景35，未改正式相机、背景或地形。
+1080p对应日光164741、月雾59384像素。1366捕获后仅修正等待淡入淡出完成的样例断言；捕获固定60FPS，原60帧已经覆盖0.8／0.55秒，该修正不增加其捕获帧。随后1920重新编译及运行通过，两尺寸均973帧；未重复未变输入的1366捕获。
+
+全图镜头按范围及粒子bounds调正交size，相机距离保持20并核对整体深度小于背景35。旧范围取证初轮拉远至40造成远景遮挡的问题未复发；未改正式相机、背景或地形。
 
 ## 已验证的真实命令分支
 
@@ -72,7 +78,7 @@ Unity目录：`src/Assets/Art/VFX/Guanzhong/Jindan/Visibility/`。
 3. 同上调用 `VisibilityAssetCapture.Capture1366`。双分辨率日志均为 `D12_VISIBILITY_CAPTURE_PASS`。
 4. `pwsh -NoProfile -ExecutionPolicy Bypass -File assets/generated-scene-art/guanzhong-jindan-demo/d12-ability-assets/visibility/export-video.ps1`。读取各自`capture-frames.txt`限制编码帧数，避免较早未完成采集的尾帧混入。
 
-纯规则诊断入口为 `VisibilityAssetCapture.ProbeDestruction`，带`-quit`。范围补充的原始JPG帧序列位于 `src/Logs/d12-visibility/range-20261117/`；最新运行记录、PNG和MP4在本包`evidence/range-20261117/`。未改动的破坛规则诊断不重复运行。
+纯规则诊断入口为 `VisibilityAssetCapture.ProbeDestruction`，带`-quit`。本轮原始JPG帧序列位于 `src/Logs/d12-visibility/motion-20261117/`；运行记录、PNG和MP4在本包`evidence/motion-20261117/`。未改动的破坛规则诊断不重复运行。
 
 References loaded：unity-agent-workflows的runtime-owner-proof、ui-and-visual-assets、asset-source-lock、visible-object-identity、runtime-numeric-proof、project-structure-discovery、unity-validation。Project maps loaded：UNITY_STRUCTURE.md、UNITY_STRUCTURE.ui.md、UNITY_STRUCTURE.assemblies.md，结合当前源码及独立asmdef核实。新C#只属于本包Samples／Editor，无新增生产公共接口，无跨Feature生产依赖；最大脚本低于500行。
 

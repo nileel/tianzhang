@@ -35,6 +35,7 @@ namespace TianZhang.Art.Jindan.Visibility.Samples
         private readonly List<string> proof = new();
         private GameObject yang, yin;
         private GameObject sunRange, moonRange;
+        private VisibilitySampleDomain sunMotion, moonMotion;
         private bool checkedRangeGeometry;
         private RenderTexture target;
         private Texture2D pixels;
@@ -44,9 +45,9 @@ namespace TianZhang.Art.Jindan.Visibility.Samples
 
         private IEnumerator Start()
         {
-            output = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/d12-visibility/range-20261117/" + captureWidth));
+            output = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/d12-visibility/motion-20261117/" + captureWidth));
             evidence = Path.GetFullPath(Path.Combine(Application.dataPath,
-                "../../assets/generated-scene-art/guanzhong-jindan-demo/d12-ability-assets/visibility/evidence/range-20261117/" + captureWidth));
+                "../../assets/generated-scene-art/guanzhong-jindan-demo/d12-ability-assets/visibility/evidence/motion-20261117/" + captureWidth));
             if (capture)
             {
                 Directory.CreateDirectory(output); Directory.CreateDirectory(evidence);
@@ -111,7 +112,11 @@ namespace TianZhang.Art.Jindan.Visibility.Samples
                 demo.Deploy(CombatVisibility.Yin); Present();
                 Check(!demo.Visible, "yin alone conceals the remote target");
                 yield return Hold(branch + "-01-concealed");
-                if (branch == "yang") yield return WholeBoard("range-01-yin-only-map");
+                if (branch == "yang")
+                {
+                    yield return VerifyMotion(moonMotion,"motion-yin"); yield return Frames(120);
+                    yield return WholeBoard("range-01-yin-only-map");
+                }
                 VerifyHidden(branch + " before conflict");
                 demo.Deploy(CombatVisibility.Yang); Present();
                 Check(demo.Session.Visibility.IsPaused, "both domains trigger observation conflict");
@@ -132,11 +137,11 @@ namespace TianZhang.Art.Jindan.Visibility.Samples
                 {
                     VerifyRangePixels(); yield return WholeBoard("range-02-both-map");
                     demo.Close(CombatVisibility.Yang); Present();
-                    Check(!sunRange.activeSelf && moonRange.activeSelf,"closing sun retains moon range");
+                    Check(!sunMotion.Active && moonMotion.Active,"closing sun retains moon range");
                     yield return Hold("range-03-yang-closed");
                     demo.Execute(new CombatCommand(CombatCommandKind.EndTurn,demo.Session.CurrentActorId));
                     demo.Commands.AdvanceUntilAction(demo.Session); Present();
-                    Check(!moonRange.activeSelf && demo.Seat(CombatVisibility.Yin).LastEndReason == "visibility_expired", "moon expiry clears range");
+                    Check(!moonMotion.Active && demo.Seat(CombatVisibility.Yin).LastEndReason == "visibility_expired", "moon expiry clears range");
                     yield return Hold("range-04-moon-expired");
                     proof.Add("Real CloseJindan sun: sun range off / moon range on; next scheduled tick="+demo.Session.TurnScheduler.CurrentTick
                         +" moon end="+demo.Seat(CombatVisibility.Yin).LastEndReason+"; both ranges off.");
@@ -151,10 +156,13 @@ namespace TianZhang.Art.Jindan.Visibility.Samples
                 }
             }
             Fresh(); demo.Deploy(CombatVisibility.Yang); Present();
-            yield return Hold("range-05-yang-only"); yield return WholeBoard("range-05-yang-only-map");
+            yield return Hold("range-05-yang-only");
+            yield return VerifyMotion(sunMotion,"motion-yang"); yield return Frames(120);
+            yield return WholeBoard("range-05-yang-only-map");
             Fresh(); demo.Deploy(CombatVisibility.Yin); Present();
+            yield return Hold("motion-yin-before-close");
             demo.Close(CombatVisibility.Yin); Present();
-            Check(!sunRange.activeSelf && !moonRange.activeSelf,"real moon close clears range");
+            Check(!sunMotion.Active && !moonMotion.Active,"real moon close clears range");
             yield return Hold("range-06-yin-closed");
             proof.Add("Real CloseJindan moon: both ranges off; new session clears previous sun range.");
             yield return ResourceStates();
@@ -176,6 +184,7 @@ namespace TianZhang.Art.Jindan.Visibility.Samples
             yin = Instantiate(yinAltar, Point(new HexCoord(config.yinQ,config.yinR)), Quaternion.identity);
             sunRange = Instantiate(yangRange,Vector3.zero,Quaternion.identity);
             moonRange = Instantiate(yinRange,Vector3.zero,Quaternion.identity);
+            sunMotion = new VisibilitySampleDomain(sunRange); moonMotion = new VisibilitySampleDomain(moonRange);
             if (!checkedRangeGeometry)
             {
                 var expected = new HashSet<HexCoord>(demo.Session.SceneObjects.Board.Cells);
@@ -184,6 +193,7 @@ namespace TianZhang.Art.Jindan.Visibility.Samples
                     var mesh = range.GetComponent<MeshFilter>().sharedMesh;
                     var covered = new HashSet<HexCoord>(mesh.uv2.Select(uv => new HexCoord((int)uv.x,(int)uv.y)));
                     Check(covered.Count == 144 && covered.SetEquals(expected),"range covers exact production board topology");
+                    Check(range.GetComponentsInChildren<ParticleSystem>(true).All(ps => ps.shape.mesh == mesh),"particles emit only from fixed domain mesh");
                     proof.Add(range.name+": exact production board cell set=144; includes non-stoppable cells; mesh="+mesh.name);
                 }
                 checkedRangeGeometry = true;
@@ -199,8 +209,8 @@ namespace TianZhang.Art.Jindan.Visibility.Samples
         {
             Support(yang, demo.Seat(CombatVisibility.Yang)); Support(yin, demo.Seat(CombatVisibility.Yin));
             // The public domain exists independently of observer conflict, team protection and actor position.
-            sunRange.SetActive(demo.Seat(CombatVisibility.Yang).ActiveVisibility != null);
-            moonRange.SetActive(demo.Seat(CombatVisibility.Yin).ActiveVisibility != null);
+            sunMotion.Set(demo.Seat(CombatVisibility.Yang).ActiveVisibility != null);
+            moonMotion.Set(demo.Seat(CombatVisibility.Yin).ActiveVisibility != null);
             foreach (var actor in demo.Session.Combatants.All)
                 if (provider.TryGetPresentedUnit(actor.Id, out var root))
                     root.SetActive(actor.IsAlive && (actor.Team == CombatTeam.Player || demo.Visible));
@@ -257,9 +267,9 @@ namespace TianZhang.Art.Jindan.Visibility.Samples
             // The existing slow actor cannot demolish a 600-durability altar before its six-tick expiry.
             Fresh(); yield return Hold("states-00-dormant");
             foreach (var altar in new[] { yang, yin }) altar.transform.Find("Intact/Glow").gameObject.SetActive(true);
-            sunRange.SetActive(true); moonRange.SetActive(true);
+            sunMotion.Set(true); moonMotion.Set(true);
             yield return Hold("states-01-active");
-            sunRange.SetActive(false); moonRange.SetActive(false);
+            sunMotion.Set(false); moonMotion.Set(false);
             foreach (var altar in new[] { yang, yin })
             {
                 altar.transform.Find("Intact/Glow").gameObject.SetActive(false);
@@ -292,18 +302,33 @@ namespace TianZhang.Art.Jindan.Visibility.Samples
 
         private IEnumerator Hold(string name)
         {
-            phase = name; yield return Frames(60); Key(name);
+            phase = name;
+            bool transition = sunMotion.Opacity != (sunMotion.Active ? 1 : 0) || moonMotion.Opacity != (moonMotion.Active ? 1 : 0);
+            yield return Frames(12);
+            if (transition)
+            {
+                Key(name+"-transition");
+                proof.Add(name+" transition +0.2s opacity sun="+sunMotion.Opacity+" moon="+moonMotion.Opacity);
+            }
+            yield return Frames(48);
+            while (sunMotion.Opacity != (sunMotion.Active ? 1 : 0) || moonMotion.Opacity != (moonMotion.Active ? 1 : 0))
+                yield return Frames(1);
+            Key(name);
             RecordAltar(yang,name); RecordAltar(yin,name);
             if (!name.StartsWith("states-"))
-                Check(sunRange.activeSelf == (demo.Seat(CombatVisibility.Yang).ActiveVisibility != null)
-                    && moonRange.activeSelf == (demo.Seat(CombatVisibility.Yin).ActiveVisibility != null),"range follows authoritative domain lifetime");
-            proof.Add(name+" public ranges sun="+sunRange.activeSelf+" moon="+moonRange.activeSelf+"; actor visible="+demo.Visible);
+                Check(sunMotion.Active == (demo.Seat(CombatVisibility.Yang).ActiveVisibility != null)
+                    && moonMotion.Active == (demo.Seat(CombatVisibility.Yin).ActiveVisibility != null),"range follows authoritative domain lifetime");
+            foreach (var domain in new[] { sunMotion,moonMotion })
+                if (!domain.Active) Check(!domain.Root.activeSelf && domain.Opacity == 0 && domain.Particles.All(ps=>ps.particleCount==0),"fade finished: no remaining renderer or particles");
+            proof.Add(name+" public ranges sun="+sunMotion.Active+" moon="+moonMotion.Active+"; actor visible="+demo.Visible);
             sampleCamera.orthographicSize = 3; Key(name + "-detail"); sampleCamera.orthographicSize = 5;
         }
         private IEnumerator WholeBoard(string label)
         {
             Vector3 position = sampleCamera.transform.position; float size = sampleCamera.orthographicSize;
             Bounds bounds = sunRange.GetComponent<Renderer>().bounds;
+            foreach (var renderer in sunMotion.Renderers.Concat(moonMotion.Renderers))
+                if (renderer.gameObject.activeInHierarchy) bounds.Encapsulate(renderer.bounds);
             // Orthographic framing changes size, not distance. The camera-attached backdrop is at depth 35.
             sampleCamera.transform.position = bounds.center-sampleCamera.transform.forward*20;
             float extent = 0, minDepth = float.MaxValue, maxDepth = float.MinValue;
@@ -328,7 +353,10 @@ namespace TianZhang.Art.Jindan.Visibility.Samples
             foreach (var range in new[] { sunRange,moonRange })
             {
                 Render(); Color32[] before = pixels.GetPixels32();
-                range.SetActive(false); Render(); int contribution = Difference(before,pixels.GetPixels32()); range.SetActive(true);
+                var renderers=range.GetComponentsInChildren<Renderer>();
+                foreach (var r in renderers) r.enabled=false;
+                Render(); int contribution = Difference(before,pixels.GetPixels32());
+                foreach (var r in renderers) r.enabled=true;
                 Check(contribution > 1000,"each range has visible rendered contribution");
                 var renderer = range.GetComponent<Renderer>(); Bounds bounds = renderer.bounds;
                 Vector2 min = new(float.MaxValue,float.MaxValue), max = new(float.MinValue,float.MinValue);
@@ -342,6 +370,37 @@ namespace TianZhang.Art.Jindan.Visibility.Samples
                     +" bounds="+bounds+" screen="+min+".."+max+" shader="+renderer.sharedMaterial.shader.name
                     +" material="+renderer.sharedMaterial.name+" changedPixels="+contribution+"; fixed map UV; no hidden actor input.");
             }
+        }
+        private IEnumerator VerifyMotion(VisibilitySampleDomain domain,string label)
+        {
+            if (!capture) yield break;
+            int[] before=RangePixels(domain); Key(label+"-a");
+            yield return Frames(30);
+            int[] after=RangePixels(domain); Key(label+"-b");
+            int changed=0;
+            for (int i=0;i<before.Length;i+=3)
+                if (Math.Abs(before[i]-after[i])+Math.Abs(before[i+1]-after[i+1])+Math.Abs(before[i+2]-after[i+2])>6) changed++;
+            Check(changed>1000,"domain visibly moves over half a second");
+            proof.Add(label+" isolated domain temporal difference over 0.5s="+changed+" pixels; opacity="+domain.Opacity);
+            foreach (var ps in domain.Particles)
+            {
+                var renderer=ps.GetComponent<Renderer>(); Bounds b=renderer.bounds;
+                Vector3 min=sampleCamera.WorldToScreenPoint(b.min),max=sampleCamera.WorldToScreenPoint(b.max);
+                proof.Add(label+" owner=VisibilityAssetSample/Present/VisibilitySampleDomain particle="+ps.name+" count="+ps.particleCount
+                    +" worldBounds="+b+" screenBoundCorners="+min+".."+max+" material="+renderer.sharedMaterial.name
+                    +" sourceMesh="+ps.shape.mesh.name+" renderer="+ps.GetComponent<ParticleSystemRenderer>().renderMode);
+            }
+        }
+        private int[] RangePixels(VisibilitySampleDomain domain)
+        {
+            Render(); Color32[] with=pixels.GetPixels32();
+            foreach (var r in domain.Renderers) r.enabled=false;
+            Render(); Color32[] without=pixels.GetPixels32();
+            foreach (var r in domain.Renderers) r.enabled=true;
+            var values=new int[with.Length*3];
+            for (int i=0;i<with.Length;i++)
+            { values[i*3]=with[i].r-without[i].r; values[i*3+1]=with[i].g-without[i].g; values[i*3+2]=with[i].b-without[i].b; }
+            return values;
         }
         private void RecordAltar(GameObject altar, string label)
         {
@@ -368,6 +427,7 @@ namespace TianZhang.Art.Jindan.Visibility.Samples
             for (int i = 0; i < count; i++)
             {
                 yield return null;
+                sunMotion?.Tick(Time.deltaTime); moonMotion?.Tick(Time.deltaTime);
                 if (capture && frame % 2 == 0) { Render(); File.WriteAllBytes(Path.Combine(output,(frame/2).ToString("D4") + ".jpg"),pixels.EncodeToJPG(90)); }
                 frame++;
             }

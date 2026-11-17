@@ -1,0 +1,30 @@
+{
+  "1366": {
+    "frames": 973,
+    "seconds": 32.43,
+    "size": [
+      1366,
+      768
+    ],
+    "fps": 30.0,
+    "fullDecode": "PASS",
+    "runtime": "PASS"
+  },
+  "1920": {
+    "frames": 973,
+    "seconds": 32.43,
+    "size": [
+      1920,
+      1080
+    ],
+    "fps": 30.0,
+    "fullDecode": "PASS",
+    "runtime": "PASS"
+  },
+  "gallery": {
+    "scriptSyntax": "PASS",
+    "shots": 17,
+    "allResolutionsAndZoomLinks": "PASS",
+    "readmeLinks": "PASS"
+  }
+}

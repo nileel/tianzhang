@@ -13,19 +13,23 @@
   @media(max-width:800px){body{padding:16px}.gallery{grid-template-columns:1fr}}
 </style>
 <h1>D12.5 · 日坛与月坛</h1>
-<p>补充全棋盘 144 格范围：阳照为暖金连续纹，藏真为冷蓝断续纹，轻微流光标示持续生效。公开坛保留日／月识别与暖／冷微光。以下为 Unity 6000.3.18f1 独立资源样例，默认镜头为俯角 38°、正交 size5；正式 V3 HUD 尚未接线。</p>
+<p>全棋盘 144 格持续动效：阳照为流动日光与上浮光尘，藏真为漂移低雾与柔和月光。展开 0.8 秒、结束后 0.55 秒消散，逐格描边已移除。以下为 Unity 6000.3.18f1 独立资源样例，默认镜头为俯角 38°、正交 size5；正式 View／V3 HUD 尚未接线。</p>
 <label>分辨率 <select id="resolution"><option value="1920">1920 × 1080</option><option value="1366">1366 × 768</option></select></label>
 <label>关键帧镜头 <select id="zoom"><option value="">默认镜头</option><option value="-detail">近看 size3</option></select></label>
-<figure><video id="video" controls preload="metadata"></video><figcaption>30fps 原速样例：阴域／双域全图 → 阳域关闭／阴域到期 → 阴胜 → 接近现形／攻击受击／退回隐匿 → 中性 → 单阳域全图／月域关闭 → 单列三态资源展示。</figcaption></figure>
+<figure><video id="video" controls preload="metadata"></video><figcaption>30fps 原速样例：月雾持续／双域全图 → 阳域消散／阴域到期 → 阴胜 → 接近现形／攻击受击／退回隐匿 → 中性 → 日光持续／全图 → 月域关闭 → 单列三态资源展示。</figcaption></figure>
 <p class="note">前三分支及近距变化由真实命令与观察回执驱动。最后的未展开／生效／破坏三态是明确标注的资源状态夹具；破坏态不是正式命令破坛证据。现有角色攻击力、速度及六 tick 期限均未改动。</p>
 <div class="gallery" id="gallery"></div>
 <p><a href="README.md">资源使用、复现与验证范围</a> · <a id="proof" href="evidence/1920/runtime-proof.txt">当前分辨率运行记录</a> · <a href="evidence/destruction-probe.txt">破坛样例诊断</a></p>
 <script>
 const shots=[
-  ['range-02-both-map','全图：两套范围纹覆盖同一 144 个基础拓扑格，包含不可停格；并非视距或实际隐匿目标集合。'],
-  ['range-01-yin-only-map','仅藏真：冷蓝断续纹覆盖全棋盘，保护资格仍只适用于施术方。'],
-  ['range-05-yang-only-map','仅阳照：暖金连续纹覆盖全棋盘，不增加视距或穿墙观察。'],
-  ['range-03-yang-closed','真实关闭阳照：金纹熄灭，冷蓝藏真范围仍在。'],
+  ['motion-yang-a','默认镜头阳照：疏落日光束、上浮光尘与流动地光。'],
+  ['motion-yin-a','默认镜头藏真：横向漂移低雾与柔月光；没有隐藏人物轮廓。'],
+  ['yang-01-concealed-transition','藏真展开 0.2 秒：透明度 0.25，逐渐成形。'],
+  ['range-03-yang-closed-transition','阳照关闭后 0.2 秒：日光透明度约 0.636，月雾继续生效。'],
+  ['range-02-both-map','全图：两种动效覆盖同一 144 个基础拓扑格，包含不可停格；并非视距或实际隐匿目标集合。'],
+  ['range-01-yin-only-map','仅藏真：低雾跨格铺展，保护资格仍只适用于施术方。'],
+  ['range-05-yang-only-map','仅阳照：日光与光尘遍布棋盘，不增加视距或穿墙观察。'],
+  ['range-03-yang-closed','阳照消散完成：日光与光尘清空，藏真范围仍在。'],
   ['range-04-moon-expired','藏真到期：剩余范围特效完全关闭。'],
   ['yang-00-dormant','未展开：日／月识别保留，范围与局部微光关闭。'],
   ['yang-03-result','阳胜：目标可见，双方各付 100MP，两座公开坛继续生效。'],
@@ -33,17 +37,18 @@ const shots=[
   ['yin-04-natural-reveal','近距自然现形：观察者合法接近后目标重现。'],
   ['yin-07-concealed-after-feedback','真实攻击／受击反馈结束后退离近距，目标再次隐藏。'],
   ['neutral-03-result','中性：双方各付 200MP，本见证恢复正常观察基础，可见。'],
-  ['states-01-active','资源状态夹具：日／月生效微光与全图范围纹。'],
+  ['states-01-active','资源状态夹具：日／月生效微光与全图持续动效。'],
   ['states-02-destroyed','资源状态夹具：原断碑留存，无日月微光；不是正式破坛操作。']
 ];
 const res=document.querySelector('#resolution'),zoom=document.querySelector('#zoom');
 function refresh(changeVideo){
-  const base='evidence/range-20261117/'+res.value+'/';
+  const base='evidence/motion-20261117/'+res.value+'/';
   if(changeVideo){document.querySelector('#video').src=base+'visibility.mp4';document.querySelector('#video').poster=base+'yang-03-result.png'}
   document.querySelector('#proof').href=base+'runtime-proof.txt';
   document.querySelector('#gallery').replaceChildren(...shots.map(([name,caption])=>{
     const f=document.createElement('figure'),a=document.createElement('a'),img=document.createElement('img'),c=document.createElement('figcaption');
-    img.src=base+name+(name.endsWith('-map')?'':zoom.value)+'.png';img.alt=caption;img.loading='lazy';a.href=img.src;a.target='_blank';a.append(img);c.textContent=caption;f.append(a,c);return f;
+    const fixedView=name.endsWith('-map')||name.endsWith('-transition')||name.startsWith('motion-');
+    img.src=base+name+(fixedView?'':zoom.value)+'.png';img.alt=caption;img.loading='lazy';a.href=img.src;a.target='_blank';a.append(img);c.textContent=caption;f.append(a,c);return f;
   }));
 }
 res.addEventListener('change',()=>refresh(true));zoom.addEventListener('change',()=>refresh(false));refresh(true);

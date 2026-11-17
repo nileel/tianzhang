@@ -1,0 +1,4 @@
+144 fixed support cells including non-stoppable cells; UV2 records each cell q/r.
+Source=CombatBattlefieldSurface; local FireSampleSupport fitting algorithm; lift=0.025m; strict interior samples=251072; max height error=0.00003817m
+vertices=187450 triangles=62768 bounds=Center: (8.25, 1.12, 7.06), Extents: (8.75, 0.75, 7.51)
+Slope: 12 subdivisions; stairs: clipped per tread, no cross-riser triangles. PASS
