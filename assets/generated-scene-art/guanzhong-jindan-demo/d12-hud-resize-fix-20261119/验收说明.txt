@@ -1,0 +1,37 @@
+D12 HUD：运行中切换分辨率与宽高比的适配修复
+日期：2026-11-19（Asia/Hong_Kong；XML 使用 UTC）
+
+问题与根因
+用户提供四张实际 Game View 截图：Full HD 下上下裁切，1366×768 下整个 HUD 缩在中央，16:10 下菜单错排或 HUD 消失。上一轮 75fe1f5f 的两种固定尺寸测试在切尺寸后重载场景，未覆盖同一场战斗中切换尺寸，不能作为动态适配通过的证据。
+在未修改生产代码时，新增同场连续切换探针复现了缩小／膨胀，before/ 中的测试失败与截图保留。具体原因是 D12CombatHudLayout.LateUpdate 用新的 Screen.width/height 除以旧 canvas.scaleFactor，随后缓存尺寸；本项目 uGUI 的 CanvasScaler 在更晚的 Canvas.preWillRenderCanvases 才更新 factor。下一帧缓存命中直接退出，错误逆缩放永久保留。DefaultExecutionOrder 无法把 LateUpdate 排到 preWillRender 之后。
+AdventureHudPresenter 的返回菜单位于同一 Canvas 的独立分支，AdventureController.LateUpdate 每帧刷新它，所以菜单会自愈，而 HUD 主体持续错位；该分支仍有切换当帧读取旧 factor 的问题。
+
+运行时所有者与测量
+正式 AdventureScene：UICanvas（ScreenSpaceOverlay，camera=null）→CombatHudRoot（D12CombatHudLayout）→资源卡／次序／目标／报价／底栏；CombatVignette 当前贴图为 vignette。菜单为 UICanvas/AdventureReturnEntry/ReturnButton，实际 writer 为 AdventureHudPresenter.ApplyReturnEntryLayout。
+根与按钮的 RectTransform.GetWorldCorners 经 RectTransformUtility.WorldToScreenPoint(null, ...) 转到屏幕坐标；Overlay 下世界角点与屏幕角点一致。resize-proof.txt 同时记录 Screen、Canvas.pixelRect、scaleFactor、HUD 局部矩形／localScale、最终矩形及活动贴图。源代码依据为本地 com.unity.ugui@2e4da8434a5c/Runtime/UGUI/UI/Core/Layout/CanvasScaler.cs 的 OnEnable、Canvas_preWillRenderCanvases、HandleScaleWithScreenSize；未猜测包版本。
+
+同一场战斗中的前后实测（像素，原点左下）
+切换目标       修复前 HUD 最终矩形                    修复后 HUD 最终矩形
+1366×768       x197.31 y110.93 w971.38 h546.13          x0 y0 w1366 h768
+1920×1080      x-390 y-219.38 w2700 h1518.75            x0 y0 w1920 h1080
+1600×1000      x133.33 y83.33 w1333.33 h833.33          x0 y0 w1600 h1000
+1920×1200      该次 factor 不变，恰好正常               x0 y0 w1920 h1200
+2560×1440      x-768 y-432 w4096 h2304                  x0 y0 w2560 h1440
+修复前从2560再切1366时缩到728.53×409.60；再次切回1920又膨胀到2700×1518.75。修复后反复往返均与视口一致，不依赖进入顺序。
+
+最小修改
+仅修改两个现有生产 owner。D12CombatHudLayout 保留原 V3 尺寸、断点、锚点和内容布局；逆缩放移到 willRenderCanvases，在 preWillRender 的 CanvasScaler 之后读取本帧 factor。AdventureHudPresenter 把菜单的逆缩放与对应 y 偏移同步放到该阶段，探索分支立即恢复原比例与坐标。
+两个组件均在 OnEnable 订阅、OnDisable 退订，HUD 重新启用时重置原尺寸缓存。没有新增布局组件、共享服务、重试或强刷 Canvas；没有修改场景、Prefab、图标、字体、战斗规则、CSV、存档格式或 asmdef。
+
+验证
+Unity 6000.3.18f1 编译及图形 PlayMode 最终3/3通过，after/playmode-results.xml 为结果副本：
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1 -TestFilter 'TianZhang.Tests.PlayMode.D12UnifiedHudPlayModeTests|TianZhang.Tests.PlayMode.D12PlayerStartPlayModeTests.CreateLoadEnterDeployWithdrawAndReenterAtBothResolutions' -EnableGraphics -ResultXmlPath 'D:/天章游戏开发/src/Logs/d12-resize-after.xml'
+新增 ActiveHudSurvivesResolutionAndAspectChanges：同一战斗连续1920×1080→1366×768→1920×1080→1920×1200→1600×1000→2560×1440→1366×768→1920×1080，不重载场景。绘制回调持续断言 HUD 根等于视口，包含每次切换后的首个绘制帧；每步等待5帧后检查资源卡／次序／目标／报价／按钮边界、按钮射线首命中和菜单同排，并实际注入鼠标点击术法、移动、结束行动及撤离菜单，验证对应候选／状态，随后取消。结束后撤离重入，检查退订与重新启用。
+既有两项回归覆盖普通、长明及尺度阳照装配，双固定尺寸下建角存读档、展开／取消／收势报价、AP=0结束入口和撤离模态等。五张 after/ 截图来自同一场战斗切换后的运行画面，不是方案渲染；事件由 Input System／EventSystem 注入，不宣称真人操作录像。
+独立只读代码检查确认回调时序、订退、探索恢复和测试覆盖；独立视觉复核1366×768、1920×1080、1920×1200、2560×1440，确认中央缩小、上下裁切及消失问题不再出现，未发现必须修复的适配缺陷。适配范围为上列五种实际尺寸及16:9／16:10，未将其宣称为所有极端窗口／设备验证。普通点格提交与计划步骤3统一确认的边界保持原样。
+
+取证说明
+首次探针直接 yield WaitForEndOfFrame 被批处理测试器拒绝，改用真实 Canvas 绘制回调取证后复现成功；未改生产逻辑来绕过失败。负向测试结束时保护脚本曾报告 FuYuan_Battle_Idle.png 被用户映射占用，导致恢复中断；核对仅额外出现 ProjectSettings.asset 两处空白变化并定向还原，原有无关改动保留。最终3/3运行及工作区保护恢复正常。
+
+手动复现
+进入正式 Adventure 战斗后，直接在 Game View 的尺寸下拉菜单依次切 Full HD、WXGA、16:10，再反向切回；无需退出战斗或重新加载场景。观察左上资源卡、顶部次序、右上目标／菜单、报价和底栏均留在当前游戏画面内；点击技能／移动／结束与菜单确认命中对应入口。

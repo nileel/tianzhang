@@ -34,6 +34,119 @@ namespace TianZhang.Tests.PlayMode
         private readonly string output = Path.GetFullPath("Logs/d12-hud");
 
         [UnityTest, Timeout(240000)]
+        public IEnumerator ActiveHudSurvivesResolutionAndAspectChanges()
+        {
+            string folder = Path.GetFullPath("Logs/d12-resize"); Directory.CreateDirectory(folder);
+            background = InputSystem.settings.backgroundBehavior;
+            editorInput = InputSystem.settings.editorInputBehaviorInPlayMode;
+            InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+            InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+            mouse = InputSystem.AddDevice<Mouse>(); keyboard = InputSystem.AddDevice<Keyboard>();
+            var stale = Find<GameBootstrap>(); if (stale != null) { Object.Destroy(stale.gameObject); yield return null; }
+            GuanzhongCombatEquipmentPlayModeTests.SetGameSize(1920, 1080);
+            yield return SceneManager.LoadSceneAsync(GameplaySceneNames.StartMenu); yield return null;
+            Set(GameBootstrap.RequireInstance(), "slotStore", new GameSaveSlotStore(Path.Combine(Application.temporaryCachePath, "D12Resize-" + Guid.NewGuid().ToString("N"))));
+            var creation = Find<CharacterCreationController>(); creation.Open();
+            Assert.IsTrue(creation.SelectOrigin("origin_minor_clan")); creation.Submit("resize", "适配测试");
+            yield return ReadyScene(GameplaySceneNames.World);
+            Assert.IsTrue(Find<WorldMapController>().SelectNode("guanzhong_hub"));
+            Find<WorldMapController>().EnterSelectedLocation(); yield return ReadyScene(GameplaySceneNames.Settlement);
+            yield return EnterAdventure();
+            yield return Click(GameObject.Find("TerrainRehearsalButton").GetComponent<Button>());
+            yield return Ready();
+            var canvas = GameObject.Find("UICanvas").GetComponent<Canvas>();
+            var hud = (RectTransform)canvas.transform.Find("CombatHudRoot");
+            var samples = new List<string>(); var failures = new List<string>();
+            var sizes = new[] { new Vector2Int(1920,1080), new Vector2Int(1366,768), new Vector2Int(1920,1080),
+                new Vector2Int(1920,1200), new Vector2Int(1600,1000), new Vector2Int(2560,1440), new Vector2Int(1366,768), new Vector2Int(1920,1080) };
+            Canvas.WillRenderCanvases drawProbe = () =>
+            {
+                samples.Add(ResizeSample(canvas, hud, "drawn"));
+                Rect drawn = ScreenRect(hud);
+                if (Mathf.Abs(drawn.xMin) > 1 || Mathf.Abs(drawn.yMin) > 1 || Mathf.Abs(drawn.width - Screen.width) > 1 || Mathf.Abs(drawn.height - Screen.height) > 1)
+                    failures.Add("render frame " + Time.frameCount + " HUD=" + drawn + " screen=" + Screen.width + "x" + Screen.height);
+            };
+            Canvas.willRenderCanvases += drawProbe;
+            try
+            {
+                for (int step = 0; step < sizes.Length; step++)
+                {
+                    Vector2Int size = sizes[step]; GuanzhongCombatEquipmentPlayModeTests.SetGameSize(size.x, size.y);
+                    for (int frame = 0; frame < 5; frame++)
+                    {
+                        yield return null;
+                        samples.Add(ResizeSample(canvas, hud, step + "/" + frame + " before-render"));
+                    }
+                    Assert.AreEqual(size.x, Screen.width); Assert.AreEqual(size.y, Screen.height);
+                    var bar = Find<CombatActionBarView>();
+                    var buttons = bar.BasicAttackButton.transform.parent.GetComponentsInChildren<Button>()
+                        .Where(b => b.gameObject.activeInHierarchy).Concat(new[] { bar.WaitButton });
+                    foreach (Button button in buttons) CheckResizeButton(button);
+                    foreach (string name in new[] { "CombatResourceCard", "CombatTimelineRoot", "CombatBountyTrackerRoot" })
+                        CheckInsideScreen(ScreenRect((RectTransform)hud.Find(name)), name);
+                    var menu = canvas.GetComponentsInChildren<Button>().Single(b => b.name == "ReturnButton");
+                    var log = hud.Find("ToggleLogButton").GetComponent<Button>();
+                    CheckResizeButton(menu); CheckResizeButton(log);
+                    Assert.That(ScreenRect((RectTransform)menu.transform).center.y, Is.EqualTo(ScreenRect((RectTransform)log.transform).center.y).Within(1));
+                    yield return Click(bar.ArtButton);
+                    Assert.IsNotNull(Find<CombatCommandInput>().Candidate);
+                    CheckInsideScreen(ScreenRect((RectTransform)hud.Find("CombatActionPreviewRoot")), "quote");
+                    ScreenCapture.CaptureScreenshot(Path.Combine(folder, step + "-" + size.x + "x" + size.y + ".png"));
+                    yield return null;
+                    yield return PressKey(Key.Escape);
+                    yield return Click(bar.MoveButton);
+                    Assert.IsTrue(Find<CombatMovementView>().IsSelecting);
+                    yield return PressKey(Key.Escape);
+                    yield return Click(bar.WaitButton);
+                    Assert.IsTrue(Find<CombatActionPreviewView>().ConfirmButton.interactable);
+                    yield return PressKey(Key.Escape);
+                    yield return Click(menu);
+                    Assert.IsTrue(canvas.GetComponentsInChildren<Button>().Any(b => b.name == "ContinueCombatButton" && b.interactable));
+                    Find<AdventureController>().CancelWithdrawal(); yield return null;
+                }
+            }
+            finally { Canvas.willRenderCanvases -= drawProbe; File.WriteAllLines(Path.Combine(folder, "resize-proof.txt"), samples); }
+            Assert.IsEmpty(failures, string.Join("\n", failures));
+            yield return Withdraw();
+            yield return EnterAdventure();
+            yield return Click(GameObject.Find("TerrainRehearsalButton").GetComponent<Button>());
+            yield return Ready();
+            CheckSlots("ordinary-reentered-1920");
+        }
+
+        private static Rect ScreenRect(RectTransform rect)
+        {
+            var corners = new Vector3[4]; rect.GetWorldCorners(corners);
+            Vector2 min = RectTransformUtility.WorldToScreenPoint(null, corners[0]);
+            Vector2 max = RectTransformUtility.WorldToScreenPoint(null, corners[2]);
+            return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
+        }
+        private static void CheckInsideScreen(Rect rect, string name)
+        {
+            Assert.Greater(rect.width, 0, name); Assert.Greater(rect.height, 0, name);
+            Assert.GreaterOrEqual(rect.xMin, -.5f, name); Assert.GreaterOrEqual(rect.yMin, -.5f, name);
+            Assert.LessOrEqual(rect.xMax, Screen.width + .5f, name); Assert.LessOrEqual(rect.yMax, Screen.height + .5f, name);
+        }
+        private static void CheckResizeButton(Button button)
+        {
+            Rect rect = ScreenRect((RectTransform)button.transform); CheckInsideScreen(rect, button.name);
+            var hits = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current) { position = rect.center }, hits);
+            Assert.IsTrue(hits.Count > 0 && hits[0].gameObject.GetComponentInParent<Button>() == button, button.name + " hit blocked after resize");
+        }
+
+        private static string ResizeSample(Canvas canvas, RectTransform hud, string phase)
+        {
+            var corners = new Vector3[4]; hud.GetWorldCorners(corners);
+            return phase + " frame=" + Time.frameCount + " Screen=" + Screen.width + "x" + Screen.height +
+                " canvas=" + canvas.name + "/" + canvas.renderMode + " camera=" + canvas.worldCamera +
+                " pixelRect=" + canvas.pixelRect + " canvasScale=" + canvas.scaleFactor +
+                " root=" + hud.parent.name + "/" + hud.name + " local=" + hud.rect + " localScale=" + hud.localScale +
+                " drawn=" + Rect.MinMaxRect(corners[0].x, corners[0].y, corners[2].x, corners[2].y) +
+                " vignette=" + hud.Find("CombatVignette").GetComponent<Image>().sprite.name;
+        }
+
+        [UnityTest, Timeout(240000)]
         public IEnumerator OrdinaryAndScaleYangUseEquipmentDrivenBarAtBothSizes()
         {
             Directory.CreateDirectory(output);

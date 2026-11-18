@@ -37,7 +37,19 @@ namespace TianZhang.Features.CombatPresentation
             quoteText = ordinaryQuote.Find("CompactQuote").GetComponent<Text>();
             quoteTitle = ordinaryQuote.Find("ActionPreviewHeading").GetComponent<Text>();
         }
-        private void OnEnable() { lastWidth = 0; }
+        private void OnEnable()
+        {
+            lastWidth = 0;
+            Canvas.willRenderCanvases += ApplyCanvasScale;
+        }
+        private void OnDisable() => Canvas.willRenderCanvases -= ApplyCanvasScale;
+        private void ApplyCanvasScale()
+        {
+            // CanvasScaler updates in preWillRenderCanvases, after LateUpdate.
+            // Use that frame's final scale so resizing cannot cache an old conversion.
+            float scale = Mathf.Clamp(Screen.width * .0104f, 18, 20) / 20;
+            hud.localScale = Vector3.one * (scale / canvas.scaleFactor);
+        }
         private void LateUpdate()
         {
             int count = slots.Count(button => button.gameObject.activeSelf);
@@ -49,7 +61,6 @@ namespace TianZhang.Features.CombatPresentation
             lastCostWidth = costWidth;
             lastTitleWidth = titleWidth;
             float scale = Mathf.Clamp(Screen.width * .0104f, 18, 20) / 20;
-            hud.localScale = Vector3.one * (scale / canvas.scaleFactor);
             hud.sizeDelta = new Vector2(Screen.width, Screen.height) / scale;
             bool small = Screen.width <= 1450;
             bool ordinary = !jindan.HasAbilities;

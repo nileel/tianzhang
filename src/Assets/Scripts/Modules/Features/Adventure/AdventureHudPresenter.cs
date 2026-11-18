@@ -23,11 +23,24 @@ namespace TianZhang.Features.Adventure
         [SerializeField] private Text returnReason;
         [SerializeField] private Sprite combatReturnSprite;
         private Sprite explorationReturnSprite;
+        private bool returnEntryInCombat;
         [SerializeField] private GameObject withdrawalConfirmation;
         [SerializeField] private Button confirmWithdrawalButton;
         [SerializeField] private Button continueCombatButton;
 
         public const string WithdrawalMessage = "撤离不计胜负，不推进本场悬赏，也不获得本场掉落。已使用的道具不返还，已确认的换装保留；本场生命与灵力变化不带回城镇。返回后仍需在城镇保存。";
+
+        private void OnEnable() => Canvas.willRenderCanvases += ApplyReturnEntryScale;
+        private void OnDisable() => Canvas.willRenderCanvases -= ApplyReturnEntryScale;
+        private void ApplyReturnEntryScale()
+        {
+            if (!returnEntryInCombat || returnEntry == null) return;
+            // Match the HUD after CanvasScaler has handled the current render size.
+            var rect = (RectTransform)returnEntry.transform;
+            float scale = Mathf.Clamp(Screen.width * .0104f, 18, 20) / 20 / returnEntry.GetComponentInParent<Canvas>().scaleFactor;
+            rect.localScale = Vector3.one * scale;
+            rect.anchoredPosition = new Vector2(0, -68 * scale);
+        }
 
         public void ConfigureWithdrawal(Action request, Action confirm, Action cancel)
         {
@@ -43,13 +56,12 @@ namespace TianZhang.Features.Adventure
         public void ApplyReturnEntryLayout(bool inCombat)
         {
             if (returnEntry == null || explorationPanel == null) return;
+            returnEntryInCombat = inCombat;
             var rect = (RectTransform)returnEntry.transform;
-            float scale = Mathf.Clamp(Screen.width * .0104f, 18, 20) / 20;
-            var canvas = returnEntry.GetComponentInParent<Canvas>();
-            rect.localScale = Vector3.one * (inCombat ? scale / canvas.scaleFactor : 1);
+            if (!inCombat) rect.localScale = Vector3.one;
             rect.anchorMin = rect.anchorMax = inCombat ? new Vector2(.98f, .94f) : explorationPanel.anchorMax;
             rect.pivot = inCombat ? Vector2.one : Vector2.up;
-            rect.anchoredPosition = inCombat ? new Vector2(0, -68 * scale / canvas.scaleFactor) : new Vector2(24, 0);
+            if (!inCombat) rect.anchoredPosition = new Vector2(24, 0);
             rect.sizeDelta = inCombat ? new Vector2(44, 40) : new Vector2(explorationPanel.rect.width, 144);
             if (returnButton != null)
             {
