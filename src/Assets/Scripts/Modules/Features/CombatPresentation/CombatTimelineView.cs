@@ -15,6 +15,7 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private Text tickText;
         [SerializeField] private Text focusText;
         [SerializeField] private RectTransform chargeTrack;
+        [SerializeField] private bool horizontal;
         [SerializeField] private RectTransform[] entryRoots = new RectTransform[MaximumEntries];
         [SerializeField] private Button[] entryButtons = new Button[MaximumEntries];
         [SerializeField] private Text[] entryLabels = new Text[MaximumEntries];
@@ -166,7 +167,9 @@ namespace TianZhang.Features.CombatPresentation
                 if (entryRoots[index] != null)
                 {
                     // Entries already carry the authoritative current / ready / future order.
-                    entryRoots[index].anchoredPosition = new Vector2(0, -index * chargeTrack.rect.height / MaximumEntries);
+                    entryRoots[index].anchoredPosition = horizontal
+                        ? new Vector2(index * chargeTrack.rect.width / MaximumEntries, 0)
+                        : new Vector2(0, -index * chargeTrack.rect.height / MaximumEntries);
                 }
                 if (entryCtLabels[index] != null)
                     entryCtLabels[index].text = Mathf.CeilToInt(displayedRemainingTicks[index]).ToString(CultureInfo.InvariantCulture);
@@ -288,8 +291,9 @@ namespace TianZhang.Features.CombatPresentation
                 entry.TicksUntilReady + "\n速度 " + entry.Speed + "\n" + state;
         }
 
-        private static string FormatEntry(CombatTimelineEntrySnapshot entry, int index) =>
-            entry.IsCurrent ? "当前" : "第" + (index + 1) + "位";
+        private string FormatEntry(CombatTimelineEntrySnapshot entry, int index) => horizontal
+            ? (entry.IsCurrent ? "当前 · " : (index + 1) + " · ") + entry.DisplayName
+            : entry.IsCurrent ? "当前" : "第" + (index + 1) + "位";
 
         private void RefreshMarkers(int index, CombatTimelineEntrySnapshot entry)
         {

@@ -186,18 +186,27 @@ namespace TianZhang.Features.CombatPresentation
         private bool acceptsCommands;
         private CombatHudSnapshot snapshot;
         private CombatArtActionSnapshot selectingArt;
+        public event Action SelectionStarted;
 
         public void Configure(ICombatCommandHandler commandHandler, CombatActionBarView bar, CombatMovementView movement = null)
         {
             handler = commandHandler ?? throw new ArgumentNullException(nameof(commandHandler));
             actionBar = bar;
             movementView = movement;
-            if (movementView != null) movementView.SelectionStarted = CancelCandidate;
+            if (movementView != null) movementView.SelectionStarted = () => { CancelCandidate(); SelectionStarted?.Invoke(); };
             Bind(actionBar?.MoveButton, () => movementView?.BeginSelection());
             Bind(actionBar?.BasicAttackButton, () => BeginSelection(CombatActionKind.BasicAttack));
             Bind(actionBar?.ArtButton, () => RequestArt(0));
             Bind(actionBar?.SecondArtButton, () => RequestArt(1));
             Bind(actionBar?.ThirdArtButton, () => RequestArt(2));
+            Bind(actionBar?.FourthArtButton, () => RequestArt(3));
+            Bind(actionBar?.FifthArtButton, () => RequestArt(4));
+            Bind(actionBar?.SecondDivineButton, () =>
+            {
+                string profile = snapshot?.DivineProfileIds.Count > 1 ? snapshot.DivineProfileIds[1] : null;
+                var choice = profile == null ? null : snapshot.FindPreferredAction(CombatActionKind.Divine, profile)?.Candidate;
+                if (choice != null) Choose(CombatActionKind.Divine, choice.TargetId, choice.ProfileId);
+            });
             Bind(actionBar?.DivineButton, () =>
             {
                 var choice = snapshot?.FindPreferredAction(CombatActionKind.Divine, divineProfileId)?.Candidate;
@@ -325,7 +334,8 @@ namespace TianZhang.Features.CombatPresentation
             button.onClick.RemoveAllListeners();
             button.onClick.AddListener(() =>
             {
-                if (isActiveAndEnabled && acceptsCommands && button.gameObject.activeInHierarchy && button.IsInteractable()) action();
+                if (isActiveAndEnabled && acceptsCommands && button.gameObject.activeInHierarchy && button.IsInteractable())
+                { SelectionStarted?.Invoke(); action(); }
             });
         }
     }

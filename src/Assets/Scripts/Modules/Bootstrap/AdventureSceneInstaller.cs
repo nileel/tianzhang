@@ -106,6 +106,14 @@ namespace TianZhang.Bootstrap
 
         private void Update()
         {
+            if (jindanDemoView?.SelectedKey != null && encounterCoordinator.AcceptsPlayerCommand &&
+                (Mouse.current?.rightButton.wasPressedThisFrame == true || Keyboard.current?.escapeKey.wasPressedThisFrame == true))
+            {
+                jindan.HandleAction("cancel_targeting");
+                jindanDemoView.CloseCombatSelection();
+                combatTargetInput.enabled = true;
+                return;
+            }
             if (jindan == null || !jindan.IsSelecting || !encounterCoordinator.AcceptsPlayerCommand) return;
             var mouse = Mouse.current;
             if (combatMovementView.IsSelecting || combatCommandInput.Preview != null ||
@@ -143,6 +151,10 @@ namespace TianZhang.Bootstrap
             jindanVisibilityView.PresentSupports(yangSeat?.ActiveVisibility != null, yangSeat?.LastEndReason == "jindan_support_destroyed",
                 yinSeat?.ActiveVisibility != null, yinSeat?.LastEndReason == "jindan_support_destroyed");
             jindan.Refresh();
+            var jindanHud = jindan.Hud;
+            jindanDemoView.PresentHud(jindanHud);
+            combatBountyTrackerView.SetObjective(jindanHud?.Objective);
+            combatActionBar.PauseInput(visibility?.IsPaused == true || jindan.PreparationOpen || controller.IsWithdrawalConfirmationOpen);
             combatTargetInput.enabled = !jindan.IsSelecting;
             if (jindan.PreparationOpen) jindanDemoView.PresentPreparation(jindan.PreparationDetails);
             else if (encounterCoordinator.CurrentSession?.Jindan != null)
@@ -303,6 +315,11 @@ namespace TianZhang.Bootstrap
                         string.IsNullOrEmpty(runtime.JindanDemoPresetId) ? null : runtime.Player.Identity.DisplayName);
                     jindanRehearsalButton.onClick.AddListener(OpenJindanPreparation);
                     jindanDemoView.ActionRequested += HandleJindanAction;
+                    combatCommandInput.SelectionStarted += () =>
+                    {
+                        jindan.HandleAction("cancel_targeting");
+                        jindanDemoView.CloseCombatSelection();
+                    };
                 }
             }
             catch (InvalidOperationException exception)

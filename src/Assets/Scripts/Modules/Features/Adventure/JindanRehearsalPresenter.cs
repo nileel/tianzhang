@@ -57,6 +57,8 @@ namespace TianZhang.Features.Adventure
         public string PreparationDetails { get; private set; } = string.Empty;
         public string CombatDetails { get; private set; } = string.Empty;
         public string QuoteDetails { get; private set; } = string.Empty;
+        public TianZhang.Gameplay.Contracts.JindanHudSnapshot Hud => JindanHudPresentation.Project(
+            encounter.CurrentSession, encounter.ControlledActorId, Local(catalog.segments[segmentIndex].displayNameKey));
         public TianZhang.Gameplay.Contracts.CombatSurfacePresentationSnapshot SurfacePresentation =>
             JindanTidePresentation.Project(encounter.CurrentSession, frozenQuote, frozenCommand);
         public bool CanConfirm => frozenQuote != null && frozenQuote.IsLegal && encounter.AcceptsPlayerCommand &&
@@ -99,7 +101,7 @@ namespace TianZhang.Features.Adventure
                 return;
             }
             if (encounter.CurrentSession?.Jindan == null) return;
-            if (key is "flight_tab" or "earth_tab" or "scale_tab" or "tide_tab" or "visibility_tab")
+            if (key is "flight_tab" or "earth_tab" or "scale_tab" or "tide_tab" or "visibility_tab" or "fire_tab")
             { earthPage = key == "earth_tab"; tidePage = key == "tide_tab"; ClearTargeting(); Refresh(); return; }
             if (key == "cancel_targeting")
             { ClearTargeting(); message = "已取消，未扣费。"; Refresh(); return; }

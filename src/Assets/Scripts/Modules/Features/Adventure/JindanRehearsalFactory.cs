@@ -75,7 +75,7 @@ namespace TianZhang.Features.Adventure
                 names.Add(actor.Id, actor.Id == "player" ? player.Identity.DisplayName : text(preset.displayNameKey));
             }
             return new AdventureSpawnSet(players[0], enemies[0], null, players[0].BasicAttackProfileId,
-                enemies[0].BasicAttackProfileId, players[0].EquippedArtProfileIds.ToArray(), enemies.Skip(1).ToArray(),
+                enemies[0].BasicAttackProfileId, player?.AbilityLoadout.EquippedSkills ?? Array.Empty<string>(), enemies.Skip(1).ToArray(),
                 additionalPlayers: players.Skip(1).ToArray(), rehearsalNames: names);
         }
 

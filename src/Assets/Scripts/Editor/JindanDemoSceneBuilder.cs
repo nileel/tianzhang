@@ -51,6 +51,7 @@ namespace TianZhang.Editor
             SettlementSceneBuilder.ApplyButtonSkin(entry);
             SceneBuildSupport.SetObject(installer, "jindanRehearsalButton", entry);
 
+            D12CombatHudBuilder.RemoveRelocatedJindanUi(canvas);
             Remove(canvas, "JindanDemoPreparationRoot");
             Remove(canvas, "JindanDemoCombatRoot");
             Remove(canvas, "JindanConflictRoot");
@@ -132,6 +133,7 @@ namespace TianZhang.Editor
             SceneBuildSupport.SetObject(installer, "jindanDemoCatalog", catalog);
             // The existing withdrawal dialog remains above every combat panel and receives its clicks.
             canvas.Find("AdventureWithdrawalConfirmation")?.SetAsLastSibling();
+            D12CombatHudBuilder.Apply();
             EditorSceneManager.MarkSceneDirty(scene);
         }
 

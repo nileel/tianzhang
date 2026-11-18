@@ -1,0 +1,14 @@
+MoveButton rect=(x:285.87, y:27.73, width:85.33, height:105.24) textHeight=28.125/34 label=移动
+ shortcut=M rect=(x:0.00, y:0.00, width:40.00, height:36.00) preferredHeight=28.125
+BasicAttackButton rect=(x:378.31, y:27.73, width:85.33, height:105.24) textHeight=52.03125/76 label=铁剑普攻/40 AP
+ shortcut=1 rect=(x:0.00, y:0.00, width:40.00, height:36.00) preferredHeight=28.125
+ArtButton rect=(x:470.76, y:27.73, width:85.33, height:105.24) textHeight=52.03125/76 label=贯石击/50 AP
+ shortcut=2 rect=(x:0.00, y:0.00, width:40.00, height:36.00) preferredHeight=28.125
+SecondArtButton rect=(x:563.20, y:27.73, width:85.33, height:105.24) textHeight=52.03125/76 label=聚灵术/25 AP
+ shortcut=3 rect=(x:0.00, y:0.00, width:40.00, height:36.00) preferredHeight=28.125
+ThirdArtButton rect=(x:655.64, y:27.73, width:85.33, height:105.24) textHeight=52.03125/76 label=飞星指/50 AP
+ shortcut=4 rect=(x:0.00, y:0.00, width:40.00, height:36.00) preferredHeight=28.125
+GuardButton rect=(x:748.09, y:27.73, width:85.33, height:105.24) textHeight=52.03125/76 label=防御/50 AP
+ shortcut=G rect=(x:0.00, y:0.00, width:40.00, height:36.00) preferredHeight=28.125
+BagButton rect=(x:840.53, y:27.73, width:85.33, height:105.24) textHeight=42.1875/76 label=行囊/换术 / 装备
+ shortcut=I rect=(x:0.00, y:0.00, width:40.00, height:36.00) preferredHeight=28.125

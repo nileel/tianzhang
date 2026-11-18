@@ -2,6 +2,8 @@ using System;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using System.Linq;
+using TianZhang.Gameplay.Contracts;
 
 namespace TianZhang.Features.CombatPresentation
 {
@@ -28,6 +30,15 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private GameObject earthActions;
         [SerializeField] private GameObject tideActions;
         [SerializeField] private GameObject visibilityActions;
+        [SerializeField] private GameObject fireActions;
+        [SerializeField] private GameObject statusRoot;
+        [SerializeField] private Text statusText;
+        [SerializeField] private GameObject detailsRoot;
+        [SerializeField] private CombatActionBarView actionBar;
+        private JindanHudSnapshot hud;
+        private string selectedKey;
+        public string SelectedKey => selectedKey;
+        public string PersistentStatus => statusText == null ? string.Empty : statusText.text;
         [SerializeField] private ActionButton[] buttons = Array.Empty<ActionButton>();
         private bool bound;
         private bool collapsed;
@@ -57,21 +68,74 @@ namespace TianZhang.Features.CombatPresentation
 
         private void Request(string key)
         {
-            if (key is "flight_tab" or "scale_tab" or "earth_tab" or "tide_tab" or "visibility_tab")
+            if (key is "flight_tab" or "scale_tab" or "earth_tab" or "tide_tab" or "visibility_tab" or "fire_tab")
             {
-                flightActions.SetActive(key == "flight_tab"); scaleActions.SetActive(key == "scale_tab");
-                earthActions.SetActive(key=="earth_tab");
-                tideActions.SetActive(key=="tide_tab");
-                visibilityActions.SetActive(key == "visibility_tab");
+                selectedKey = key;
+                actionBar?.SelectJindan(GetButton(key));
+                ApplySelection();
                 ActionRequested?.Invoke(key); return;
             }
             if (key == "toggle_panel")
             {
-                collapsed = !collapsed;
-                ApplyCollapse();
+                detailsRoot.SetActive(!detailsRoot.activeSelf);
                 return;
             }
+            if (key == "cancel_targeting") CloseCombatSelection();
             ActionRequested?.Invoke(key);
+        }
+
+        public void CloseCombatSelection()
+        {
+            selectedKey = null;
+            actionBar?.SelectJindan(null);
+            combatRoot.SetActive(false);
+        }
+
+        public void PresentHud(JindanHudSnapshot snapshot)
+        {
+            if (hud?.ActorId != snapshot?.ActorId) CloseCombatSelection();
+            hud = snapshot;
+            foreach (string key in new[] { "flight_tab", "scale_tab", "earth_tab", "tide_tab", "visibility_tab", "fire_tab" })
+            {
+                Button button = GetButton(key);
+                if (button == null) continue;
+                var ability = hud?.Abilities.FirstOrDefault(value => value.Key == key);
+                button.gameObject.SetActive(ability != null);
+                if (ability == null) continue;
+                string shortName = ability.Name.Length > 5 ? ability.Name.Substring(0, 4) + "…" : ability.Name;
+                button.GetComponentInChildren<Text>().text = shortName + "\n" + ability.Status;
+                Text cooldown = button.transform.Find("Cooldown")?.GetComponent<Text>();
+                if (cooldown != null) cooldown.text = ability.Cooldown > 0 ? "CD " + ability.Cooldown : string.Empty;
+            }
+            if (selectedKey != null && !hud.Abilities.Any(value => value.Key == selectedKey)) CloseCombatSelection();
+            statusText.text = hud?.PersistentStatus ?? string.Empty;
+            var statusRect = (RectTransform)statusRoot.transform;
+            float top = statusRect.anchoredPosition.y + statusRect.rect.height * (1 - statusRect.pivot.y);
+            float height = Mathf.Min(284, statusText.preferredHeight + 24);
+            statusRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, height);
+            statusRect.anchoredPosition = new Vector2(statusRect.anchoredPosition.x, top - height * (1 - statusRect.pivot.y));
+            statusRoot.SetActive(!string.IsNullOrEmpty(statusText.text));
+            GetButton("toggle_panel").gameObject.SetActive(hud != null);
+            if (hud == null) detailsRoot.SetActive(false);
+            ApplySelection();
+        }
+
+        private void ApplySelection()
+        {
+            flightActions.SetActive(selectedKey == "flight_tab");
+            scaleActions.SetActive(selectedKey == "scale_tab");
+            earthActions.SetActive(selectedKey == "earth_tab");
+            tideActions.SetActive(selectedKey == "tide_tab");
+            visibilityActions.SetActive(selectedKey == "visibility_tab");
+            fireActions.SetActive(selectedKey == "fire_tab");
+            var ability = hud?.Abilities.FirstOrDefault(value => value.Key == selectedKey);
+            bool manifest = ability?.EffectId == "EARTH_MANIFEST";
+            foreach (string key in new[] { "earth_wall", "earth_ramp" }) GetButton(key).gameObject.SetActive(manifest);
+            foreach (string key in new[] { "earth_heavy", "earth_light", "earth_anchor", "earth_next_target" })
+                GetButton(key).gameObject.SetActive(!manifest);
+            GetButton("earth_swap").gameObject.SetActive(ability?.CanSwap == true);
+            GetButton("swap_effect").gameObject.SetActive(false);
+            GetButton("break_object").gameObject.SetActive(false); // Equipped demolition is already in the ordinary art slots.
         }
 
         public Button GetButton(string key)
@@ -99,13 +163,15 @@ namespace TianZhang.Features.CombatPresentation
             HidePreparation();
             combatDetails.text = details ?? string.Empty;
             combatQuote.text = quote ?? string.Empty;
-            combatRoot.SetActive(true);
+            combatRoot.SetActive(selectedKey != null);
             foreach (ActionButton binding in buttons)
             {
                 if (!binding.button.transform.IsChildOf(combatBody.transform)) continue;
                 binding.button.interactable = binding.key == "confirm" ? canInput && canConfirm : canInput;
             }
-            ApplyCollapse();
+            foreach (var ability in hud?.Abilities ?? Array.Empty<JindanHudAbility>())
+                GetButton(ability.Key).interactable = canInput && ability.Enabled;
+            combatBody.SetActive(true);
         }
 
         private void ApplyCollapse()
@@ -119,6 +185,8 @@ namespace TianZhang.Features.CombatPresentation
             preparationRoot.SetActive(false);
             combatRoot.SetActive(false);
             collapsed = false;
+            PresentHud(null);
+            CloseCombatSelection();
         }
     }
 }

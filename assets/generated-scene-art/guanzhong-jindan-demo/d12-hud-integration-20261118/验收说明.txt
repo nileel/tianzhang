@@ -1,0 +1,28 @@
+D12 集成步骤2：按角色装配生成统一战斗 HUD
+日期：2026-11-18
+
+结果与范围
+在唯一正式 AdventureScene 接通普通、长明、尺度与阳照的同栏入口。左上沿真实快照显示姓名、生命、灵力、AP；顶部显示公开行动顺序；右侧显示当前段落；底栏显示移动、普攻、已装配术法、本人金丹能力、防御与行囊。空槽与无来源能力省略；术法展示支持5槽、普通神通支持2槽，后两个术法及第二普通神通本轮未做满装配实机验收。复用已有头像、图集和命令，不新增战斗系统或美术源资产。
+能力方向/展开/收势继续走原金丹选项与冻结报价。普通按钮和移动开始会清掉金丹旧选择、报价；金丹按钮清掉普通预览。常驻状态与当前动作独立，长明区分主域、中心、燃烧数量、维护时点和余烬。施放当回合明确显示不维护；重力期限读取真实目标状态。
+修正 JindanRehearsalFactory 第6实参原先把 EquippedArtProfileIds 传成 PlayerDivineProfileIds 的错误；本人普通神通读取 EquippedSkills，固定演员没有普通神通时为空，避免飞星指/贯石击重复成神通入口。
+
+运行与证据
+Unity 6000.3.18f1，正式场景，1920×1080、1366×768，Input System 鼠标/键盘事件经过实际 EventSystem 射线命中与按钮事件，不是浏览器方案图，也不宣称真人操作录像。
+命令：
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1 -TestFilter "TianZhang.Tests.PlayMode.D12UnifiedHudPlayModeTests|TianZhang.Tests.PlayMode.D12PlayerStartPlayModeTests.CreateLoadEnterDeployWithdrawAndReenterAtBothResolutions" -EnableGraphics -ResultXmlPath "D:/天章游戏开发/src/Logs/d12-hud-acceptance.xml"
+最终2/2通过，副本 playmode-results.xml。
+1. 普通三术同栏、无金丹入口；飞星指选中、Tab焦点、M移动、Esc取消、冷却文字、AP=0仍能打开结束确认。撤离确认期间M不启动移动。
+2. 长明自建/保存读取/本人入场/合法移动；冻结展开报价→选择飞星指未扣费且旧报价清除；重新展开仅扣1000MP；选择普攻时中心600/600、火0/3、施放当回合不维护仍可读；撤离重入临时领域清空。长明没有水、飞行或重复普通神通入口。
+3. 固定尺度与阳照合法装配：贯石击、定尺、日坛昭明、御风同栏；无土、水、火入口；显隐预演切回普通术法清除旧确认。此角色尚不是新增建角选项。
+六张关键帧为 ordinary/scale-yang/changming 的双分辨率截图。完整中间图仍在 src/Logs/d12-hud/。六份 *-bounds.txt 记录实际按钮矩形、文字/角标高度与顺序；全部按钮在屏内且互不重叠，实际射线首命中对应按钮。1366宽典型按钮为85.33×105.24像素；角标实测28.125/36设计高度，未再裁切。所选边框及下划线区别于键盘焦点框。
+
+所有者与持久性
+UICanvas(Screen Space Overlay，1920×1080参考，Expand) / CombatHudRoot / CombatHotbar / CombatActionBar / ActionViewport / ActionContent 是同栏父链。D12CombatHudBuilder只迁移已有UI和保存序列化引用；横向LayoutGroup根据当前可见槽布局，角标/选中态由CombatActionBarView刷新；普通数据由EncounterCoordinator→CombatHudPresenter→CombatCommandInput投影。金丹事实由JindanRehearsalPresenter→JindanHudPresentation→JindanHudSnapshot→Installer→JindanDemoView传递。未新增程序集依赖。
+专用构建入口：TianZhang.Editor.D12CombatHudBuilder.Rebuild，或菜单“天章/场景/D12 统一战斗HUD”。已多次在保存后的场景重新应用，保存重开与最终运行通过，行囊顺序不漂移。纯 RebuildCombatLayout 已路由到D12；旧 RebuildCombatMovement / RebuildCombatActionPreview 的局部重建仍以旧层级为前提，未纳入本次支持与验收，不用它们覆盖D12场景。未执行重建五包场景资源的旧总入口。
+独立只读检查核对了能力归属、切换清理、维护时点、Factory参数与重复构建；指出的问题已修正。实现者完成实机和画面复核，二者不是同一项独立运行审核。
+
+验证限制与下一步
+本次只完成V3步骤2。普通攻击/术法/移动仍沿原点格提交，金丹仍有自己的预演确认面板；统一确认区、战况变化/目标死亡清除旧报价、冲突全过程返回、五包正式View、其他合法开局、三段两解法与整段录像留D12后续。原场景橙色火面/空间箭头不是本轮新资源最终集成画面。未重跑BattleSim或全量测试，未改CSV、数值、存档协议或AI。
+程序集白名单脚本 check-unity-assembly-boundaries.ps1 失败：TianZhang.Bootstrap 的既有 TianZhang.Spatial / Unity.InputSystem 不在旧expected列表。已用HEAD核实这两项在本轮前就存在，本轮无asmdef变化；不宣称该脚本通过，也未扩大为修复旧白名单。
+References loaded: unity-agent-workflows（runtime-owner-proof、ui-and-visual-assets、runtime-visible-output/targets、screenshot-text-owner、serialized-persistence、shared-caller-blast-radius、project-structure-discovery、modular-architecture、ai-workflows、unity-validation），game-ui-design/checklist，ui-ugui/scrollview-setup。
+Project maps loaded: UNITY_STRUCTURE.md、UNITY_STRUCTURE.ui.md、UNITY_STRUCTURE.assemblies.md；归属及依赖以本轮实际源码核实。无关系统未改，原有RockCluster、VisibilityAssetSample及角色原画等改动保留。

@@ -3,6 +3,8 @@ using System.Linq;
 using TianZhang.Gameplay.Contracts;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 
 namespace TianZhang.Features.CombatPresentation
 {
@@ -14,6 +16,7 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private Sprite guanshijiIcon;
         [SerializeField] private Sprite julingshuIcon;
         [SerializeField] private Sprite feixingzhiIcon;
+        [SerializeField] private Sprite defaultAbilityIcon;
         [SerializeField] private Button basicAttackButton;
         [SerializeField] private Button artButton;
         [SerializeField] private Button divineButton;
@@ -25,6 +28,32 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private Text secondArtLabel;
         [SerializeField] private Button thirdArtButton;
         [SerializeField] private Text thirdArtLabel;
+        [SerializeField] private Button fourthArtButton;
+        [SerializeField] private Button fifthArtButton;
+        [SerializeField] private Button secondDivineButton;
+        [SerializeField] private Transform slotContainer;
+        [SerializeField] private Button bagButton;
+        [SerializeField] private GameObject bagRoot;
+        [SerializeField] private Text slotDetails;
+        [SerializeField] private CombatCommandInput commandInput;
+        [SerializeField] private CombatMovementView movementView;
+        private CombatHudSnapshot current;
+        private Button jindanSelection;
+        private Button[] slots;
+        private string[] shortcuts;
+        private bool inputPaused;
+        public Button FourthArtButton => fourthArtButton;
+        public Button FifthArtButton => fifthArtButton;
+        public Button SecondDivineButton => secondDivineButton;
+        public Button SelectedButton { get; private set; }
+        public void SelectJindan(Button button) => jindanSelection = button;
+        public void PauseInput(bool paused) => inputPaused = paused;
+
+        private void Awake()
+        {
+            if (slotContainer != null) slots = slotContainer.GetComponentsInChildren<Button>(true);
+            if (bagButton != null) bagButton.onClick.AddListener(() => bagRoot.SetActive(!bagRoot.activeSelf));
+        }
         [SerializeField] private Text actionStatusLabel;
         [SerializeField] private Text waitLabel;
         private Func<string, string> displayReason = value => value;
@@ -77,6 +106,7 @@ namespace TianZhang.Features.CombatPresentation
 
         public void Present(CombatHudSnapshot snapshot)
         {
+            current = snapshot;
             bool visible = snapshot != null && snapshot.AcceptsCommands && !snapshot.IsPresenting;
             bool canAct = visible;
             root?.SetActive(snapshot != null);
@@ -96,6 +126,9 @@ namespace TianZhang.Features.CombatPresentation
             string divineId = snapshot != null && snapshot.DivineProfileIds.Count > 0 ? snapshot.DivineProfileIds[0] : null;
             if (divineButton != null) divineButton.gameObject.SetActive(!string.IsNullOrWhiteSpace(divineId));
             string divineReason = PresentAction(snapshot?.FindPreferredAction(CombatActionKind.Divine, divineId), divineButton, canAct);
+            string secondDivine = snapshot?.DivineProfileIds.Count > 1 ? snapshot.DivineProfileIds[1] : null;
+            if (secondDivineButton != null) secondDivineButton.gameObject.SetActive(secondDivine != null);
+            PresentAction(secondDivine == null ? null : snapshot.FindPreferredAction(CombatActionKind.Divine, secondDivine), secondDivineButton, canAct);
 
             CombatArtActionSnapshot first = snapshot != null && snapshot.ArtActions.Count > 0 ? snapshot.ArtActions[0] : null;
             CombatArtActionSnapshot second = snapshot != null && snapshot.ArtActions.Count > 1 ? snapshot.ArtActions[1] : null;
@@ -103,9 +136,13 @@ namespace TianZhang.Features.CombatPresentation
             string firstReason = PresentArt(first, artButton, artLabel, canAct);
             string secondReason = PresentArt(second, secondArtButton, secondArtLabel, canAct);
             string thirdReason = PresentArt(third, thirdArtButton, thirdArtLabel, canAct);
+            PresentArt(snapshot?.ArtActions.Count > 3 ? snapshot.ArtActions[3] : null, fourthArtButton,
+                fourthArtButton == null ? null : fourthArtButton.GetComponentInChildren<Text>(), canAct);
+            PresentArt(snapshot?.ArtActions.Count > 4 ? snapshot.ArtActions[4] : null, fifthArtButton,
+                fifthArtButton == null ? null : fifthArtButton.GetComponentInChildren<Text>(), canAct);
             if (actionStatusLabel != null)
             {
-                actionStatusLabel.fontSize = 22;
+                actionStatusLabel.fontSize = 20;
                 actionStatusLabel.text = snapshot == null ? string.Empty :
                     (snapshot.IsPresenting ? "演出中，请稍候" : !visible ? snapshot.TurnText :
                     string.Join("；", Array.FindAll(new[] { basicReason, guardReason, waitReason, divineReason, firstReason, secondReason, thirdReason, equipmentReason, itemReason },
@@ -116,6 +153,7 @@ namespace TianZhang.Features.CombatPresentation
 
         private string PresentArt(CombatArtActionSnapshot art, Button button, Text label, bool canAct)
         {
+            if (button != null) button.gameObject.SetActive(art != null);
             CombatActionPreviewSnapshot quote = art?.EntryQuote;
             SetEnabled(button, canAct && quote?.CanOpen == true);
             SetIcon(button, art?.ProfileId switch
@@ -128,8 +166,8 @@ namespace TianZhang.Features.CombatPresentation
             PresentCooldown(button, quote?.RemainingCooldownTicks ?? 0);
             if (label != null)
                 label.text = art == null ? "术法" : CompactName(art.DisplayName) + "\n" +
-                    (quote == null ? string.Empty : CombatActionPreviewView.FormatActionPoints(quote.ActionPointCostUnits) +
-                    " AP\n" + quote.SpiritCost + " MP");
+                    (quote?.CanOpen == false ? "不可用" : quote == null ? string.Empty :
+                    CombatActionPreviewView.FormatActionPoints(quote.ActionPointCostUnits) + " AP");
             if (art == null) return string.Empty;
             return quote?.CanOpen == true ? string.Empty : quote?.Reason ?? string.Empty;
         }
@@ -145,8 +183,7 @@ namespace TianZhang.Features.CombatPresentation
             Text label = button == null ? null : button.GetComponentInChildren<Text>();
             if (label != null)
             {
-                string cost = CombatActionPreviewView.FormatActionPoints(quote.ActionPointCostUnits) + " AP" +
-                    (quote.SpiritCost > 0 ? "\n" + quote.SpiritCost + " MP" : string.Empty);
+                string cost = CombatActionPreviewView.FormatActionPoints(quote.ActionPointCostUnits) + " AP";
                 label.text = quote.Candidate.Kind switch
                 {
                     CombatActionKind.SwapEquipment when quote.EquipmentOwned.HasValue => CompactName(quote.ActionName) + "\n" + cost + "\n" +
@@ -154,7 +191,7 @@ namespace TianZhang.Features.CombatPresentation
                     CombatActionKind.UseItem => CompactName(quote.ActionName) + " ×" + quote.ItemAvailableQuantity + "\n" + cost,
                     CombatActionKind.EndTurn or CombatActionKind.Wait => quote.ActionName,
                     CombatActionKind.Guard => quote.ActionName + "\n" + cost,
-                    _ => CompactName(quote.ActionName) + "\n" + cost,
+                    _ => CompactName(quote.ActionName) + "\n" + (!quote.CanOpen ? "不可用" : cost),
                 };
             }
             return quote.CanConfirm || quote.Candidate.Kind == CombatActionKind.BasicAttack && quote.CanOpen ? string.Empty : quote.Reason;
@@ -165,18 +202,88 @@ namespace TianZhang.Features.CombatPresentation
             bool canInput = snapshot != null && snapshot.AcceptsCommands && !snapshot.IsPresenting;
             SetEnabled(moveButton, canInput && snapshot.Movement != null && snapshot.Movement.Options.Count > 0);
             if (movementLabel != null) movementLabel.text = snapshot?.Movement == null ? string.Empty :
-                (!canInput ? "暂不可移动" : selecting ? (preview == null ? "点击地格" :
-                    "消耗 " + CombatActionPreviewView.FormatActionPoints(preview.Cost) + " AP") : "按路径报价") +
-                "\nCT +" + snapshot.PendingCtPenalty;
+                (!canInput ? "暂不可用" : selecting ? (preview == null ? "选择地格" :
+                    CombatActionPreviewView.FormatActionPoints(preview.Cost) + " AP") : "路径报价");
         }
 
-        private static string CompactName(string value) => value != null && value.Length > 10
-            ? value.Substring(0, 9) + "…" : value;
+        private static string CompactName(string value) => value != null && value.Length > 5
+            ? value.Substring(0, 4) + "…" : value;
 
-        private static void SetIcon(Button button, Sprite sprite)
+        private void LateUpdate()
+        {
+            if (slots == null || current == null || root?.activeInHierarchy != true) return;
+            Button selected = jindanSelection;
+            if (movementView?.IsSelecting == true) selected = moveButton;
+            else if (commandInput?.Candidate != null)
+            {
+                var candidate = commandInput.Candidate;
+                selected = candidate.Kind == CombatActionKind.BasicAttack ? basicAttackButton :
+                    candidate.Kind == CombatActionKind.Guard ? guardButton :
+                    candidate.Kind is CombatActionKind.EndTurn or CombatActionKind.Wait ? waitButton : null;
+                if (candidate.Kind == CombatActionKind.Art)
+                {
+                    var artButtons = new[] { artButton, secondArtButton, thirdArtButton, fourthArtButton, fifthArtButton };
+                    for (int i = 0; i < current.ArtActions.Count && i < artButtons.Length; i++)
+                        if (current.ArtActions[i].ProfileId == candidate.ProfileId) selected = artButtons[i];
+                }
+            }
+            SelectedButton = selected;
+            var active = slots.Where(b => b.gameObject.activeInHierarchy).ToArray();
+            shortcuts = new string[active.Length];
+            int number = 1;
+            for (int i = 0; i < active.Length; i++)
+            {
+                Button b = active[i];
+                string key = b == moveButton ? "M" : b == guardButton ? "G" : b == bagButton ? "I" :
+                    number <= 9 ? (number++).ToString() : "F" + (number++ - 9);
+                shortcuts[i] = key;
+                Text hint = b.transform.Find("Shortcut")?.GetComponent<Text>();
+                if (hint != null) hint.text = key;
+                b.transform.Find("SelectedFrame")?.gameObject.SetActive(b == selected);
+                b.transform.Find("SelectedUnderline")?.gameObject.SetActive(b == selected);
+                b.transform.Find("FocusFrame")?.gameObject.SetActive(EventSystem.current?.currentSelectedGameObject == b.gameObject);
+            }
+            PresentSlotDetails(active);
+            var keyboard = Keyboard.current;
+            if (keyboard == null || inputPaused) return;
+            if (keyboard.tabKey.wasPressedThisFrame)
+            {
+                var focusable = active.Concat(new[] { waitButton }).Where(b => b != null && b.IsInteractable()).ToArray();
+                if (focusable.Length > 0)
+                {
+                    int index = Array.FindIndex(focusable, b => EventSystem.current?.currentSelectedGameObject == b.gameObject);
+                    int step = keyboard.shiftKey.isPressed ? -1 : 1;
+                    EventSystem.current?.SetSelectedGameObject(focusable[(index + step + focusable.Length) % focusable.Length].gameObject);
+                }
+            }
+            if (!current.AcceptsCommands || current.IsPresenting) return;
+            for (int i = 0; i < active.Length; i++)
+                if (Enum.TryParse(shortcuts[i].Length == 1 && char.IsDigit(shortcuts[i][0]) ? "Digit" + shortcuts[i] : shortcuts[i], out Key key) &&
+                    keyboard[key].wasPressedThisFrame && active[i].IsInteractable()) active[i].onClick.Invoke();
+        }
+
+        private void PresentSlotDetails(Button[] active)
+        {
+            if (slotDetails == null) return;
+            Vector2 pointer = Mouse.current?.position.ReadValue() ?? new Vector2(-1, -1);
+            Button hovered = active.FirstOrDefault(b => RectTransformUtility.RectangleContainsScreenPoint((RectTransform)b.transform, pointer));
+            Button focus = active.FirstOrDefault(b => EventSystem.current?.currentSelectedGameObject == b.gameObject);
+            Button target = hovered ?? focus;
+            var artButtons = new[] { artButton, secondArtButton, thirdArtButton, fourthArtButton, fifthArtButton };
+            int index = Array.IndexOf(artButtons, target);
+            var quote = index >= 0 && index < current.ArtActions.Count ? current.ArtActions[index].EntryQuote :
+                target == basicAttackButton ? current.FindPreferredAction(CombatActionKind.BasicAttack) :
+                target == guardButton ? current.FindAction(CombatActionKind.Guard) : null;
+            slotDetails.text = quote == null ? string.Empty : quote.ActionName + " · " +
+                CombatActionPreviewView.FormatActionPoints(quote.ActionPointCostUnits) + " AP / " + quote.SpiritCost +
+                " MP · CD " + quote.RemainingCooldownTicks + (string.IsNullOrEmpty(quote.Reason) ? "" : " · " + quote.Reason);
+            slotDetails.transform.parent.gameObject.SetActive(!string.IsNullOrEmpty(slotDetails.text));
+        }
+
+        private void SetIcon(Button button, Sprite sprite)
         {
             Image icon = button == null ? null : button.transform.Find("ActionIcon")?.GetComponent<Image>();
-            if (icon != null && sprite != null) icon.sprite = sprite;
+            if (icon != null) icon.sprite = sprite ?? defaultAbilityIcon;
         }
 
         private static void PresentCooldown(Button button, int ticks)

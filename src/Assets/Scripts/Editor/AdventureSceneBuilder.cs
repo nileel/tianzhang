@@ -328,6 +328,8 @@ namespace TianZhang.Editor
 
         private static void BuildCombatLayout(GameObject root, Canvas canvas)
         {
+            if (canvas.GetComponentsInChildren<Transform>(true).Any(value => value.name == "FourthArtButton"))
+            { D12CombatHudBuilder.Apply(); return; }
             // Only this Adventure layout owns these rectangles. Shared builders and the camera stay unchanged.
             RectTransform hud = LayoutObject(canvas.transform, "CombatHudRoot");
             RemoveLayout(hud);
@@ -542,6 +544,7 @@ namespace TianZhang.Editor
             // The rail's current/selected/predicted units keep their existing runtime writer.
             LayoutObject(canvas.transform, "CombatTimelineRoot/TimelineFocus").gameObject.SetActive(false);
             hud.gameObject.SetActive(false);
+            D12CombatHudBuilder.Apply();
         }
 
         private static void BuildResourceBar(Transform parent, CombatHudView view, string objectName,

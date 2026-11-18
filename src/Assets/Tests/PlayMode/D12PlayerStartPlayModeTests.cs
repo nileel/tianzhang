@@ -33,7 +33,7 @@ namespace TianZhang.Tests.PlayMode
         private string saves;
         private InputSettings.BackgroundBehavior background;
         private InputSettings.EditorInputBehaviorInPlayMode editorInput;
-        private readonly string output = Path.GetFullPath("Logs/d12-player-start");
+        private readonly string output = Path.GetFullPath("Logs/d12-hud/changming");
         private static T Asset<T>(string path) where T : Object
         {
 #if UNITY_EDITOR
@@ -141,6 +141,12 @@ namespace TianZhang.Tests.PlayMode
                     Assert.IsNull(seat.FireDomain?.Main);
                     Assert.IsNull(session.Flight.Find("player"));
                     Assert.IsNotNull(session.ExternalResources);
+                    D12UnifiedHudPlayModeTests.CheckSlots("changming-" + size.x);
+                    Assert.IsTrue(view.GetButton("fire_tab").gameObject.activeInHierarchy);
+                    Assert.IsFalse(view.GetButton("tide_tab").gameObject.activeInHierarchy);
+                    Assert.IsFalse(view.GetButton("flight_tab").gameObject.activeInHierarchy);
+                    Assert.IsFalse(Find<CombatActionBarView>().DivineButton.gameObject.activeInHierarchy);
+                    Assert.IsFalse(Find<CombatActionBarView>().SecondArtButton.gameObject.activeInHierarchy);
                     if (entry == 0)
                     {
                         // The fixed fire spawn occupies the center; vacate it through a real legal move first.
@@ -150,11 +156,29 @@ namespace TianZhang.Tests.PlayMode
                         Assert.IsTrue(encounter.ConfirmJindan(move, moveQuote).Succeeded);
                         for (float end = Time.realtimeSinceStartup + 30; !encounter.AcceptsPlayerCommand && Time.realtimeSinceStartup < end;) yield return null;
                         int mana = actor.CurrentSpirit;
-                        yield return Click(view.GetButton("tide_tab"));
+                        yield return Click(view.GetButton("fire_tab"));
+                        yield return Click(view.GetButton("fire_preview"));
+                        Assert.IsTrue(view.GetButton("confirm").interactable);
+                        int ap = actor.ActionPointsRemainingUnits;
+                        yield return Click(Find<CombatActionBarView>().ArtButton);
+                        Assert.IsNull(view.SelectedKey, "Ordinary selection must cancel a frozen self-cast quote.");
+                        Assert.IsFalse(view.GetButton("confirm").gameObject.activeInHierarchy);
+                        Assert.AreEqual("spell_feixingzhi", Find<CombatCommandInput>().Candidate.ProfileId);
+                        Assert.AreEqual(ap, actor.ActionPointsRemainingUnits);
+                        Assert.AreEqual(mana, actor.CurrentSpirit);
+                        yield return Capture(size.x + "-spell-after-cancel");
+                        yield return Click(view.GetButton("fire_tab"));
                         yield return Click(view.GetButton("fire_preview"));
                         yield return Click(view.GetButton("confirm"));
                         Assert.IsNotNull(seat.FireDomain?.Main);
                         Assert.AreEqual(mana - 1000, actor.CurrentSpirit);
+                        for (float end = Time.realtimeSinceStartup + 30; !encounter.AcceptsPlayerCommand && Time.realtimeSinceStartup < end;) yield return null;
+                        yield return Click(Find<CombatActionBarView>().BasicAttackButton);
+                        StringAssert.Contains("中心 600/600", view.PersistentStatus);
+                        StringAssert.Contains("200 MP", view.PersistentStatus);
+                        StringAssert.Contains("本回合不维护", view.PersistentStatus);
+                        Assert.AreEqual(Find<CombatActionBarView>().BasicAttackButton, Find<CombatActionBarView>().SelectedButton);
+                        yield return Capture(size.x + "-ordinary-with-domain");
                     }
                     yield return Capture(size.x + "-entry-" + entry);
                     var controller = Find<AdventureController>();
@@ -186,7 +210,11 @@ namespace TianZhang.Tests.PlayMode
 
         private IEnumerator Click(Button button)
         {
+            yield return null; // Let LateUpdate publish the newly returned command authority to the HUD.
             Canvas.ForceUpdateCanvases(); Assert.IsNotNull(button);
+            var encounter = Find<EncounterCoordinator>();
+            File.AppendAllText(Path.Combine(output, "click-state.txt"), button.name + " active=" + button.gameObject.activeInHierarchy +
+                " enabled=" + button.interactable + " authority=" + (encounter?.AcceptsPlayerCommand == true) + "\n");
             Assert.IsTrue(button.interactable && button.gameObject.activeInHierarchy, button.name);
             var rect = (RectTransform)button.transform;
             Vector2 point = RectTransformUtility.WorldToScreenPoint(null, rect.TransformPoint(rect.rect.center));
