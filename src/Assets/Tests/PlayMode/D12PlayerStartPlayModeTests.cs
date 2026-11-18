@@ -141,6 +141,7 @@ namespace TianZhang.Tests.PlayMode
                     Assert.IsNull(seat.FireDomain?.Main);
                     Assert.IsNull(session.Flight.Find("player"));
                     Assert.IsNotNull(session.ExternalResources);
+                    yield return Capture(size.x + "-initial-hud");
                     D12UnifiedHudPlayModeTests.CheckSlots("changming-" + size.x);
                     Assert.IsTrue(view.GetButton("fire_tab").gameObject.activeInHierarchy);
                     Assert.IsFalse(view.GetButton("tide_tab").gameObject.activeInHierarchy);
@@ -179,6 +180,15 @@ namespace TianZhang.Tests.PlayMode
                         StringAssert.Contains("本回合不维护", view.PersistentStatus);
                         Assert.AreEqual(Find<CombatActionBarView>().BasicAttackButton, Find<CombatActionBarView>().SelectedButton);
                         yield return Capture(size.x + "-ordinary-with-domain");
+                        yield return Click(view.GetButton("close_tab"));
+                        yield return Click(view.GetButton("fire_close"));
+                        Assert.IsTrue(view.GetButton("confirm").interactable, "Active fire offers its own close quote.");
+                        yield return Capture(size.x + "-close-quote");
+                        yield return Click(view.GetButton("close_tab"));
+                        Assert.IsFalse(view.GetButton("confirm").interactable, "Opening close options clears the prior frozen quote.");
+                        yield return Click(view.GetButton("cancel_targeting"));
+                        Assert.IsNotNull(seat.FireDomain?.Main, "Cancelling close keeps the domain.");
+                        Assert.AreEqual(mana - 1000, actor.CurrentSpirit, "Close preview/cancel never spends MP.");
                     }
                     yield return Capture(size.x + "-entry-" + entry);
                     var controller = Find<AdventureController>();
@@ -228,7 +238,7 @@ namespace TianZhang.Tests.PlayMode
             InputSystem.QueueStateEvent(mouse, new MouseState { position = point }); yield return null; yield return null;
         }
         private IEnumerator Capture(string name)
-        { yield return new WaitForEndOfFrame(); ScreenCapture.CaptureScreenshot(Path.Combine(output, name + ".png")); yield return null; }
+        { yield return new WaitForEndOfFrame(); D12UnifiedHudPlayModeTests.CaptureLayout(name); ScreenCapture.CaptureScreenshot(Path.Combine(output, name + ".png")); yield return null; }
         private static IEnumerator SceneReady(string name)
         { for (int i = 0; i < 300 && SceneManager.GetActiveScene().name != name; i++) yield return null; yield return null; yield return null; Assert.AreEqual(name, SceneManager.GetActiveScene().name); }
         private static T Find<T>() where T : Object => Object.FindFirstObjectByType<T>();

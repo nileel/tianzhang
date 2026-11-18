@@ -100,7 +100,7 @@ namespace TianZhang.Features.CombatPresentation
             Preview = new CombatActionPreviewSnapshot(new CombatActionCandidate(selection.Kind,
                 actorId, null, selection.ProfileId, snapshot.CommandContextVersion), actionName, "当前角色", "待选目标", false,
                 reason, 0, false, 0, 0, 0, minimumRange: minimumRange, maximumRange: maximumRange);
-            previewView?.Present(Preview, CurrentActionPoints);
+            previewView?.Present(Preview, CurrentActionPoints, snapshot);
             timeline?.PresentPrediction(null);
             PresentSelectionHighlights();
         }
@@ -158,7 +158,7 @@ namespace TianZhang.Features.CombatPresentation
                     basic ? CombatActionKind.BasicAttack : CombatActionKind.Art, actorId, null,
                     basic ? null : selectingArt.ProfileId, snapshot.CommandContextVersion,
                     attackDirection: directional ? direction : (int?)null, targetCell: cell));
-                previewView?.Present(Preview, CurrentActionPoints);
+                previewView?.Present(Preview, CurrentActionPoints, snapshot);
                 timeline?.PresentPrediction(Preview);
                 PresentSelectionHighlights();
             }

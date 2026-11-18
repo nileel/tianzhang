@@ -57,6 +57,22 @@ namespace TianZhang.Features.Adventure
         public string PreparationDetails { get; private set; } = string.Empty;
         public string CombatDetails { get; private set; } = string.Empty;
         public string QuoteDetails { get; private set; } = string.Empty;
+        public string QuoteTitle => frozenCommand == null ? "能力" : frozenCommand.Kind == CombatCommandKind.CloseJindan ? "收势" :
+            frozenCommand.Kind == CombatCommandKind.Flight ? "御风" : frozenCommand.ProfileId switch
+            { "FIRE_MANIFEST" => "长明", "SPACE_SCALE" => "定尺", "YANG_RADIANCE" => "阳照", "YIN_CONCEAL" => "藏真", "WATER_TIDE" => "蓄澜", _ => "厚载" };
+        public string CompactQuote
+        {
+            get
+            {
+                if (frozenQuote == null) return "选择操作，取得报价";
+                string cost = Ap(frozenQuote.ActionPointCostUnits) + " AP · " + frozenQuote.SpiritCost + " MP";
+                if (!frozenQuote.IsLegal) return cost + "\n<size=16>" + Explain(frozenQuote.RejectionReason) + "</size>";
+                var session = encounter.CurrentSession;
+                if (session == null || !session.Combatants.TryGet(frozenCommand.ActorId, out var actor)) return cost;
+                return cost + "\n<size=16>AP " + Ap(actor.ActionPointsRemainingUnits) + " → " +
+                    Ap(actor.ActionPointsRemainingUnits - frozenQuote.ActionPointCostUnits) + "</size>";
+            }
+        }
         public TianZhang.Gameplay.Contracts.JindanHudSnapshot Hud => JindanHudPresentation.Project(
             encounter.CurrentSession, encounter.ControlledActorId, Local(catalog.segments[segmentIndex].displayNameKey));
         public TianZhang.Gameplay.Contracts.CombatSurfacePresentationSnapshot SurfacePresentation =>
@@ -101,7 +117,7 @@ namespace TianZhang.Features.Adventure
                 return;
             }
             if (encounter.CurrentSession?.Jindan == null) return;
-            if (key is "flight_tab" or "earth_tab" or "scale_tab" or "tide_tab" or "visibility_tab" or "fire_tab")
+            if (key is "flight_tab" or "earth_tab" or "scale_tab" or "tide_tab" or "visibility_tab" or "fire_tab" or "close_tab")
             { earthPage = key == "earth_tab"; tidePage = key == "tide_tab"; ClearTargeting(); Refresh(); return; }
             if (key == "cancel_targeting")
             { ClearTargeting(); message = "已取消，未扣费。"; Refresh(); return; }
@@ -118,7 +134,7 @@ namespace TianZhang.Features.Adventure
                     message = tideEye ? "点击无源时的合法潮眼格，再预演。" : "点击一个合法潮源，再预演；青色显示变化格，箭头显示实际落点。"; break;
                 case "tide_charge": tideCharged = !tideCharged; ClearQuote(); message = tideCharged ? "一档蓄力：先付费，1全局tick后完成时重验。" : "普通潮汐：确认即结算。"; break;
                 case "tide_preview": Preview(CombatCommandKind.JindanAbility); break;
-                case "tide_close": Preview(CombatCommandKind.CloseJindan); break;
+                case "tide_close": earthPage = false; tidePage = true; Preview(CombatCommandKind.CloseJindan); break;
                 case "fire_preview": Preview(CombatCommandKind.JindanAbility, true); break;
                 case "fire_close": Preview(CombatCommandKind.CloseJindan, true); break;
                 case "earth_tab": earthPage=true; ClearTargeting(); break;
@@ -140,7 +156,8 @@ namespace TianZhang.Features.Adventure
                     selection = SelectionMode.Origin; ClearQuote();
                     message = "点击当前视野内空格作遥施原点；点自身改回自身。"; break;
                 case "preview": case "earth_preview": Preview(CombatCommandKind.JindanAbility); break;
-                case "close_effect": case "earth_close": Preview(CombatCommandKind.CloseJindan); break;
+                case "close_effect": case "earth_close":
+                    earthPage = key == "earth_close"; tidePage = false; Preview(CombatCommandKind.CloseJindan); break;
                 case "swap_effect": case "earth_swap": Preview(CombatCommandKind.SwapJindan); break;
                 case "confirm": Confirm(); break;
                 case "flight_takeoff": PreviewFlight(CombatFlightAction.Takeoff); break;

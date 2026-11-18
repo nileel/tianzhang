@@ -23,7 +23,8 @@ namespace TianZhang.Gameplay.Contracts
         public int Cooldown { get; }
         public bool Enabled { get; }
         public bool CanSwap { get; }
-        public JindanHudAbility(string key, string effectId, string name, string status, int cooldown, bool enabled, bool canSwap = false)
-        { Key = key; EffectId = effectId; Name = name; Status = status; Cooldown = cooldown; Enabled = enabled; CanSwap = canSwap; }
+        public bool HasActiveInstance { get; }
+        public JindanHudAbility(string key, string effectId, string name, string status, int cooldown, bool enabled, bool canSwap = false, bool hasActiveInstance = false)
+        { Key = key; EffectId = effectId; Name = name; Status = status; Cooldown = cooldown; Enabled = enabled; CanSwap = canSwap; HasActiveInstance = hasActiveInstance; }
     }
 }

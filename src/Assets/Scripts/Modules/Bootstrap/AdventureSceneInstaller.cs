@@ -159,7 +159,7 @@ namespace TianZhang.Bootstrap
             if (jindan.PreparationOpen) jindanDemoView.PresentPreparation(jindan.PreparationDetails);
             else if (encounterCoordinator.CurrentSession?.Jindan != null)
                 jindanDemoView.PresentCombat(jindan.CombatDetails, jindan.QuoteDetails,
-                    encounterCoordinator.AcceptsPlayerCommand, jindan.CanConfirm);
+                    encounterCoordinator.AcceptsPlayerCommand, jindan.CanConfirm, jindan.QuoteTitle, jindan.CompactQuote);
             else jindanDemoView.HideAll();
             var scale = encounterCoordinator.CurrentSession?.Jindan?.Seats.FirstOrDefault(value => value.ActiveScale != null)?.ActiveScale;
             jindanScaleView.Present(scale?.Path.Select(value => new TianZhang.Gameplay.Contracts.CombatUnitPresentationHex(value.Q, value.R)).ToArray()

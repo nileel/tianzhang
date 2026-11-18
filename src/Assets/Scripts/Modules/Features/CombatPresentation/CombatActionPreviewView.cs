@@ -25,6 +25,16 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private Button cancelButton;
         [SerializeField] private Button swapSlotButton;
         [SerializeField] private Button swapCandidateButton;
+        [SerializeField] private Text compactQuote;
+        [SerializeField] private Text boardPrompt;
+        [SerializeField] private Text actionHint;
+        [SerializeField] private GameObject detailsRoot;
+        [SerializeField] private Button detailsButton;
+        private void Awake()
+        {
+            if (detailsButton != null) detailsButton.onClick.AddListener(() =>
+            { if (IsVisible) detailsRoot.SetActive(!detailsRoot.activeSelf); });
+        }
         public Button SwapSlotButton => swapSlotButton;
         public Button SwapCandidateButton => swapCandidateButton;
         public Button ConfirmButton => confirmButton;
@@ -43,6 +53,7 @@ namespace TianZhang.Features.CombatPresentation
                 summary.text = string.Empty;
                 SetText(heading, string.Empty);
                 SetText(legend, string.Empty);
+                detailsRoot?.SetActive(false);
                 return;
             }
             root.SetActive(true);
@@ -52,6 +63,12 @@ namespace TianZhang.Features.CombatPresentation
             swapCandidateButton?.gameObject.SetActive(false);
             if (cancelButton != null) cancelButton.gameObject.SetActive(true);
             SetText(heading, "移动预览");
+            SetText(heading, "移动");
+            if (boardPrompt != null) boardPrompt.gameObject.SetActive(true);
+            SetText(compactQuote, hovered == null ? "按路径报价\n<size=16>选择可达地格</size>" :
+                FormatActionPoints(hovered.Cost) + " AP · 0 MP\n<size=16>AP " + FormatActionPoints(movement.RemainingPoints) +
+                " → " + FormatActionPoints(movement.RemainingPoints - hovered.Cost) + "</size>");
+            SetText(actionHint, pointerOnBoard && hovered == null ? "此处不可到达" : "指向预览 · 左键点格移动 · Esc 取消");
             SetText(legend, MovementLegend);
             if (movement == null)
             {
@@ -93,6 +110,7 @@ namespace TianZhang.Features.CombatPresentation
             if (root == null || summary == null || confirmButton == null) return;
             root.SetActive(value != null);
             bool attack = value?.Candidate.Kind is CombatActionKind.BasicAttack or CombatActionKind.Art or CombatActionKind.Divine;
+            PresentCompact(value, currentActionPointUnits, context, attack);
             confirmButton.gameObject.SetActive(!attack);
             confirmButton.interactable = !attack && value != null && value.CanConfirm;
             bool swapping = value?.Candidate.Kind == CombatActionKind.SwapSpell;
@@ -106,10 +124,12 @@ namespace TianZhang.Features.CombatPresentation
                 summary.text = string.Empty;
                 SetText(heading, string.Empty);
                 SetText(legend, string.Empty);
+                detailsRoot?.SetActive(false);
                 return;
             }
             bool targeting = value.Candidate.Kind is CombatActionKind.BasicAttack or CombatActionKind.Art or CombatActionKind.Divine;
-            SetText(heading, swapping ? "换术" : value.ActionName + (targeting ? " · 选择地块" : string.Empty));
+            SetText(heading, swapping ? "换术" : value.Candidate.Kind == CombatActionKind.BasicAttack ? "普攻" :
+                value.Candidate.Kind is CombatActionKind.EndTurn or CombatActionKind.Wait ? "结束" : value.ActionName);
             SetText(legend, value.Candidate.Kind == CombatActionKind.Art
                 ? SpellTargetingLegend : targeting ? TargetingLegend : string.Empty);
             if (swapping)
@@ -239,6 +259,22 @@ namespace TianZhang.Features.CombatPresentation
             else text.Append('\n').Append("不可施行：").Append(value.Reason);
             if (balance.Length > 0) text.Append('\n').Append(balance);
             summary.text = text.ToString();
+        }
+
+        private void PresentCompact(CombatActionPreviewSnapshot value, int ap, CombatHudSnapshot context, bool attack)
+        {
+            if (boardPrompt != null) boardPrompt.gameObject.SetActive(attack);
+            if (value == null) return;
+            bool target = value.Candidate.TargetCell.HasValue || !string.IsNullOrEmpty(value.Candidate.TargetId) || value.AttackArea != null;
+            var quoted = attack && !target ? context?.FindPreferredAction(value.Candidate.Kind, value.Candidate.ProfileId) ?? value : value;
+            string cost = FormatActionPoints(quoted.ActionPointCostUnits) + " AP · " + quoted.SpiritCost + " MP";
+            string balance = ap < 0 ? string.Empty : "AP " + FormatActionPoints(ap) + " → " + FormatActionPoints(ap - quoted.ActionPointCostUnits);
+            SetText(compactQuote, cost + "\n<size=16><color=#bdd4cf>" + balance + "</color></size>");
+            string hint = attack && !target ? "指向预览 · 左键点格施行 · Esc 取消" :
+                !value.CanConfirm ? value.Reason : attack ? value.TargetName + " · 左键点格施行" : "确认后执行 · Esc 取消";
+            SetText(actionHint, hint);
+            if (confirmButton != null) confirmButton.GetComponentInChildren<Text>().text = "确认" +
+                (value.Candidate.Kind is CombatActionKind.EndTurn or CombatActionKind.Wait ? "结束" : value.Candidate.Kind == CombatActionKind.Guard ? "防御" : "施行");
         }
 
         /// <summary>Current AP and the balance after the quoted cost, always derived from authority.</summary>

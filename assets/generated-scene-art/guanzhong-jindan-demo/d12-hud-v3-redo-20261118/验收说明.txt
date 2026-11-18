@@ -1,0 +1,33 @@
+D12 集成步骤2：按已确认的 V3 重做战斗 HUD
+日期：2026-11-18
+
+结果与根因
+用户指出上一版 UI 与设计图不一致，并明确要求重做。上一版 6cc79fc0 只证明装配、命令和状态接通，却复用了旧面板、图标和大块布局；固定 1920 Canvas 整体缩放也没有实现 V3 的 rem 与断点规则。撤回原视觉完成结论，旧记录保留为当时的功能证据，本目录替代其视觉交付。
+事实源为 ../d12-ui-proposal-v1-20261029/v3-20261030/ 的 README.md、hud.css、hud.js 和双尺寸 visuals。此次重做步骤2的 HUD 表现，不把步骤3统一确认或步骤4正式场景 View 算作完成。
+
+实施
+1. 从 hud.js 提取原 SVG 图标，按 hud.css 的渐变、颜色、边框输出 CombatV3 专用贴图；export-v3-assets.cjs 可用 Sharp 重新导出。旧 CombatCompactUiAssets 共享资源未修改。新增 D12CombatHudAssets 只负责本 HUD 的导入、贴图和按钮样式。
+2. 现有 CombatHudRoot 使用 D12CombatHudLayout 实现 clamp(18px,1.04vw,20px) 的局部缩放、1450px 断点、内容宽底栏与32px底部留白；不修改探索 Canvas。资源卡、紧凑公开次序、独立状态行、窄报价、选中／焦点边框、短名、构筑标记及暗角按 V3 重排。长详情由“目”查看，战报由“录”查看。
+3. 运行时文本探针确认旧按钮仍有左右各16px内边距，造成 Esc、录、菜单及长费用裁切；专用样式统一为2px，报价按真实标题／余额宽度伸缩。保留真实小数 AP，不截断或伪造数据来贴合静态稿。
+4. 收势只列本人能力；切换收势清空冻结报价，关闭按钮按自身 key 选择能力模式。重复局部 Rebuild 清理已迁入 HUD 的金丹根节点。探索返回入口恢复原样式。
+
+运行时所有者与数值证据
+正式入口 AdventureSceneInstaller → CombatHudPresenter／CombatCommandInput → CombatActionBarView、CombatActionPreviewView；金丹链为 JindanRehearsalPresenter → JindanHudPresentation → JindanHudSnapshot → JindanDemoView。D12CombatHudBuilder 保存层级和引用；D12CombatHudLayout 在 LateUpdate 写局部缩放、底栏与报价尺寸，HorizontalLayoutGroup 写实际可见槽位置，视图继续写文字、状态和可交互性。
+父链：UICanvas（Screen Space Overlay、参考1920×1080、Expand）/CombatHudRoot/CombatHotbar/CombatActionBar/ActionViewport/ActionContent。probe 使用 GetWorldCorners → WorldToScreenPoint（overlay camera=null），日志坐标原点在左下。before/ 保留修改前同场景采样；layout/ 保留最终采样、文本 preferred 尺寸和按钮射线证据。
+长明1366：底栏宽1095.11→716.40px，V3为716.23px；底部19.91→32px；资源卡396.14×119.34px，V3为396.13×119.33px；普通报价高度196.27→70.20px，V3为69.83px。
+长明1920：底栏867.61×139.78px，V3为867.45×139.77px；资源卡439.30×136.78px，V3为439.28×136.75px。报价因真实 AP 354.168→104.168 比静态整数文案更宽，保留完整值。
+固定尺度与阳照配置实际只装配贯石击，少于设计示例一个术法，因此是9槽；1366／1920对应底栏867.6／1055.31px，按同一 V3 槽宽与间距计算。没有为凑宽度增加角色能力。公开次序也按实际参战人数伸缩。
+
+验证
+Unity 6000.3.18f1。D12CombatHudBuilder.Rebuild 局部构建、保存并重开完成，最终 C# 编译通过。最小定向图形 PlayMode 最终2/2通过，详见 playmode-results.xml：
+pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-unity-playmode-tests.ps1 -TestFilter 'TianZhang.Tests.PlayMode.D12PlayerStartPlayModeTests.CreateLoadEnterDeployWithdrawAndReenterAtBothResolutions|TianZhang.Tests.PlayMode.D12UnifiedHudPlayModeTests.OrdinaryAndScaleYangUseEquipmentDrivenBarAtBothSizes' -EnableGraphics -ResultXmlPath 'D:/天章游戏开发/src/Logs/d12-redo-final.xml'
+两项均覆盖1920×1080与1366×768：普通／长明／尺度阳照按装配同栏；建角、存读档、入场撤离重入；普通／金丹切换与取消；真实1000MP展开且只扣一次；普攻时领域状态保留；收势报价取消、旧报价失效；冷却、Tab焦点、M／Esc、AP=0结束入口和撤离模态。布局、标签 preferred 宽高、屏内按钮与射线命中均有运行时断言。
+操作为 Input System／EventSystem 自动化事件和正式命令，不是浏览器图，也不是真人试玩录像。最终十张 PNG 为运行时截图：changming、ordinary、scale-yang、close、zero-ap 各两种分辨率；主智能体已查看全部主要构筑画面。独立只读视觉复核确认文字、目标对比度、构筑标记和主要布局无必须修复问题；独立代码复核确认冻结报价、关闭模式和重复构建根节点清理已修复。
+
+尚存差异与任务边界
+字体使用项目已有 GuanzhongChinese，未导入浏览器稿的系统字体；不宣称逐像素一致。长明截图在施放当回合，真实显示火0/3、当回合不维护，与设计主对照的首次维护后帧不同。固定尺度预设装配与参与人数按实际数据呈现。
+普通攻击、普通术法和移动仍是现有点格提交，界面如实显示“点格施行”；左键锁定候选后同区确认属于步骤3，未伪造确认按钮。已存在的结束／防御／自施法及金丹确认继续走真实命令。
+棋盘火域、支点、显隐等正式 View 接入及完整连续原速试玩仍属步骤4和 D12 总项，未因 HUD 重做标为完成。本次未改战斗核心、存档格式、角色装配 CSV 或程序集依赖，未扩展 BattleSim。
+
+复现
+打开 src 工程，运行正式 AdventureScene；普通开局检查普通栏，长明试玩建角并入场第二段检查同场普通／金丹切换，固定尺度阳照挑战检查多入口。需要重建时只调用 TianZhang.Editor.D12CombatHudBuilder.Rebuild。不得让批处理与打开同一工程的 Unity 编辑器并行。

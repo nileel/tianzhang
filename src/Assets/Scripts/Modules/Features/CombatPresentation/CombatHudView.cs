@@ -16,6 +16,7 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private Text spiritLabel;
         [SerializeField] private Image actionPointFill;
         [SerializeField] private Text actionPointLabel;
+        [SerializeField] private bool separateResourceNames;
 
         public void Present(CombatHudSnapshot snapshot)
         {
@@ -37,11 +38,11 @@ namespace TianZhang.Features.CombatPresentation
             root?.SetActive(false);
         }
 
-        private static void PresentResource(Image fill, Text label, string name, int current, int maximum,
+        private void PresentResource(Image fill, Text label, string name, int current, int maximum,
             bool actionPoints = false)
         {
             if (fill != null) fill.fillAmount = maximum > 0 ? Mathf.Clamp01((float)current / maximum) : 0f;
-            if (label != null) label.text = name + " " +
+            if (label != null) label.text = (separateResourceNames ? string.Empty : name + " ") +
                 (actionPoints ? CombatActionPreviewView.FormatActionPoints(current) : current.ToString()) + "/" +
                 (actionPoints ? CombatActionPreviewView.FormatActionPoints(maximum) : maximum.ToString());
         }

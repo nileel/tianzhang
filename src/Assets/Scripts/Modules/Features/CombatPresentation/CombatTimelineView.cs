@@ -32,7 +32,7 @@ namespace TianZhang.Features.CombatPresentation
         public void PresentPrediction(CombatActionPreviewSnapshot value)
         {
             Prediction = value != null && value.CanConfirm ? value : null;
-            if (predictionRoot != null) predictionRoot.SetActive(Prediction != null);
+            if (predictionRoot != null) predictionRoot.SetActive(Prediction != null && !horizontal);
             if (predictionText != null) predictionText.text = Prediction == null ? string.Empty :
                 "◇ 若此动作\n完成并结束\n+" + value.TicksUntilReady + " 刻\n顺位未定";
         }
@@ -168,8 +168,9 @@ namespace TianZhang.Features.CombatPresentation
                 {
                     // Entries already carry the authoritative current / ready / future order.
                     entryRoots[index].anchoredPosition = horizontal
-                        ? new Vector2(index * chargeTrack.rect.width / MaximumEntries, 0)
+                        ? new Vector2((chargeTrack.rect.width - (count * 48 + (count - 1) * 29)) / 2 + index * 77, 0)
                         : new Vector2(0, -index * chargeTrack.rect.height / MaximumEntries);
+                    entryRoots[index].Find("OrderArrow")?.gameObject.SetActive(horizontal && index < count - 1);
                 }
                 if (entryCtLabels[index] != null)
                     entryCtLabels[index].text = Mathf.CeilToInt(displayedRemainingTicks[index]).ToString(CultureInfo.InvariantCulture);
@@ -292,7 +293,7 @@ namespace TianZhang.Features.CombatPresentation
         }
 
         private string FormatEntry(CombatTimelineEntrySnapshot entry, int index) => horizontal
-            ? (entry.IsCurrent ? "当前 · " : (index + 1) + " · ") + entry.DisplayName
+            ? entry.Faction == CombatUnitDisplayFaction.Player ? "你" : "敌"
             : entry.IsCurrent ? "当前" : "第" + (index + 1) + "位";
 
         private void RefreshMarkers(int index, CombatTimelineEntrySnapshot entry)

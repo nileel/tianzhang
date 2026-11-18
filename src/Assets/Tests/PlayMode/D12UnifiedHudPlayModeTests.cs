@@ -63,6 +63,7 @@ namespace TianZhang.Tests.PlayMode
                 Assert.IsFalse(bar.FourthArtButton.gameObject.activeInHierarchy);
                 Assert.IsFalse(view.GetButton("fire_tab").gameObject.activeInHierarchy);
                 Assert.IsFalse(bar.DivineButton.gameObject.activeInHierarchy);
+                yield return Capture("ordinary-initial-" + width);
                 CheckSlots("ordinary-" + width);
                 yield return Click(bar.ThirdArtButton);
                 Assert.AreEqual("spell_feixingzhi", Find<CombatCommandInput>().Candidate.ProfileId);
@@ -101,6 +102,7 @@ namespace TianZhang.Tests.PlayMode
                 Assert.IsFalse(bar.DivineButton.gameObject.activeInHierarchy, "An equipped art must not be duplicated as a divine ability.");
                 foreach (string key in new[] { "scale_tab", "visibility_tab", "flight_tab" }) Assert.IsTrue(view.GetButton(key).gameObject.activeInHierarchy, key);
                 foreach (string key in new[] { "earth_tab", "fire_tab", "tide_tab" }) Assert.IsFalse(view.GetButton(key).gameObject.activeInHierarchy, key);
+                yield return Capture("scale-initial-" + width);
                 CheckSlots("scale-yang-" + width);
                 yield return Click(view.GetButton("scale_tab"));
                 Assert.AreEqual("scale_tab", view.SelectedKey);
@@ -120,6 +122,8 @@ namespace TianZhang.Tests.PlayMode
         public static void CheckSlots(string name)
         {
             Canvas.ForceUpdateCanvases();
+            CaptureLayout(name);
+            CheckV3Bounds(name);
             var bar = Find<CombatActionBarView>();
             var row = bar.BasicAttackButton.transform.parent;
             var slots = row.GetComponentsInChildren<Button>().Where(b => b.gameObject.activeInHierarchy).ToArray();
@@ -144,11 +148,70 @@ namespace TianZhang.Tests.PlayMode
                 if (hint != null) proof.Add(" shortcut=" + hint.text + " rect=" + hint.rectTransform.rect + " preferredHeight=" + hint.preferredHeight);
                 string probeFolder = Path.GetFullPath("Logs/d12-hud"); Directory.CreateDirectory(probeFolder);
                 File.WriteAllLines(Path.Combine(probeFolder, name + "-bounds.txt"), proof);
-                Assert.LessOrEqual(label.preferredHeight, label.rectTransform.rect.height + 1, button.name + " label clips");
+                Assert.LessOrEqual(label.preferredHeight, label.rectTransform.rect.height, button.name + " label clips");
                 if (hint != null) Assert.LessOrEqual(hint.preferredHeight, hint.rectTransform.rect.height, button.name + " shortcut clips");
             }
             string folder = Path.GetFullPath("Logs/d12-hud"); Directory.CreateDirectory(folder);
             File.WriteAllLines(Path.Combine(folder, name + "-bounds.txt"), proof);
+        }
+
+        private static void CheckV3Bounds(string name)
+        {
+            var canvas = SceneManager.GetActiveScene().GetRootGameObjects().Single(go => go.name == "UICanvas");
+            RectTransform dock = canvas.GetComponentsInChildren<RectTransform>(true).Single(r => r.name == "CombatHotbar");
+            var corners = new Vector3[4]; dock.GetWorldCorners(corners);
+            float width = corners[2].x - corners[0].x;
+            bool small = Screen.width == 1366;
+            // Measured from the approved browser design, not from the Unity layout constants.
+            float expected = name.StartsWith("ordinary") ? (small ? 835.08f : 944.31f) :
+                // The current fixed scale preset owns only Guanshiji: omit V3's extra Feixingzhi slot and gap.
+                name.StartsWith("scale") ? (small ? 867.38f : 1055.11f) : (small ? 716.23f : 867.45f);
+            Assert.That(width, Is.EqualTo(expected).Within(2), "Dock must match V3's content width.");
+            Assert.That((corners[0].x + corners[2].x) / 2, Is.EqualTo(Screen.width / 2f).Within(1));
+            Assert.That(corners[0].y, Is.EqualTo(32).Within(1));
+            Assert.That(corners[2].y - corners[0].y, Is.EqualTo(small ? 126 : 139.77f).Within(1));
+            RectTransform card = canvas.GetComponentsInChildren<RectTransform>(true).Single(r => r.name == "CombatResourceCard");
+            card.GetWorldCorners(corners);
+            Assert.That(corners[0].x, Is.EqualTo(Screen.width * .02f).Within(1));
+            Assert.That(corners[2].y, Is.EqualTo(Screen.height * .95f).Within(1));
+            Assert.That(corners[2].x - corners[0].x, Is.EqualTo(small ? 396.13f : 439.28f).Within(1));
+        }
+
+        public static void CaptureLayout(string name)
+        {
+            var canvas = SceneManager.GetActiveScene().GetRootGameObjects().SingleOrDefault(go => go.name == "UICanvas")?.GetComponent<Canvas>();
+            if (canvas == null) return;
+            Canvas.ForceUpdateCanvases();
+            var proof = new List<string> { "screen=" + Screen.width + "x" + Screen.height + " canvas=" + canvas.name +
+                " renderMode=" + canvas.renderMode + " scaleFactor=" + canvas.scaleFactor + " camera=" + canvas.worldCamera,
+                "conversion=RectTransform.GetWorldCorners -> RectTransformUtility.WorldToScreenPoint (overlay camera=null); screen origin=bottom-left" };
+            string[] names = { "CombatHudRoot", "CombatResourceCard", "CombatHotbar", "ActionContent", "CombatTimelineRoot", "TimelineEntry0",
+                "CombatBountyTrackerRoot", "JindanStatusRoot", "CombatActionPreviewRoot", "JindanDemoCombatRoot", "CombatSlotDetailsRoot", "ReturnButton" };
+            foreach (RectTransform rect in canvas.GetComponentsInChildren<RectTransform>(true).Where(r => names.Contains(r.name)))
+            {
+                string path = rect.name;
+                for (Transform p = rect.parent; p != null; p = p.parent) path = p.name + "/" + path;
+                var corners = new Vector3[4]; rect.GetWorldCorners(corners);
+                Vector2 min = RectTransformUtility.WorldToScreenPoint(canvas.worldCamera, corners[0]);
+                Vector2 max = RectTransformUtility.WorldToScreenPoint(canvas.worldCamera, corners[2]);
+                var drawn = Rect.MinMaxRect(min.x, min.y, max.x, max.y);
+                var image = rect.GetComponent<Image>();
+                proof.Add(path + " active=" + rect.gameObject.activeInHierarchy + " local=" + rect.rect + " anchors=" + rect.anchorMin + "/" + rect.anchorMax +
+                    " pivot=" + rect.pivot + " position=" + rect.anchoredPosition + " scale=" + rect.lossyScale + " finalScreen=" + drawn +
+                    " sprite=" + (image != null && image.sprite != null ? image.sprite.name : "none") + " color=" + (image != null ? image.color.ToString() : "none"));
+            }
+            foreach (Text label in canvas.GetComponentsInChildren<Text>(true).Where(t => t.gameObject.activeInHierarchy &&
+                (new[] { "CompactQuote", "ActionPreviewHeading", "ActionHint", "BoardActionPrompt", "StatusLine", "JindanQuoteTitle" }.Contains(t.name) ||
+                 t.transform.parent.name is "CancelActionButton" or "ConfirmActionButton" or "ReturnButton" or "ToggleLogButton" or "MoveButton")))
+            {
+                proof.Add("TEXT " + label.transform.parent.name + "/" + label.name + " rect=" + label.rectTransform.rect +
+                    " preferred=" + label.preferredWidth + "x" + label.preferredHeight + " font=" + label.font.name + " size=" + label.fontSize +
+                    " overflow=" + label.horizontalOverflow + "/" + label.verticalOverflow + " text=" + label.text.Replace('\n', '/'));
+                Assert.LessOrEqual(label.preferredHeight, label.rectTransform.rect.height, label.transform.parent.name + "/" + label.name + " clips vertically");
+                Assert.LessOrEqual(label.preferredWidth, label.rectTransform.rect.width, label.transform.parent.name + "/" + label.name + " clips horizontally");
+            }
+            string folder = Path.GetFullPath("Logs/d12-hud/layout"); Directory.CreateDirectory(folder);
+            File.WriteAllLines(Path.Combine(folder, name + ".txt"), proof);
         }
 
         private IEnumerator EnterAdventure()
@@ -177,7 +240,7 @@ namespace TianZhang.Tests.PlayMode
             InputSystem.QueueStateEvent(keyboard, new KeyboardState()); yield return null; yield return null;
         }
         private IEnumerator Capture(string name)
-        { yield return new WaitForEndOfFrame(); ScreenCapture.CaptureScreenshot(Path.Combine(output, name + ".png")); yield return null; }
+        { yield return new WaitForEndOfFrame(); CaptureLayout(name); ScreenCapture.CaptureScreenshot(Path.Combine(output, name + ".png")); yield return null; }
         private static IEnumerator ReadyScene(string name)
         { for (int i = 0; i < 300 && SceneManager.GetActiveScene().name != name; i++) yield return null; yield return null; yield return null; Assert.AreEqual(name, SceneManager.GetActiveScene().name); }
         private static void Refresh(EncounterCoordinator encounter) => typeof(EncounterCoordinator).GetMethod("Present", BindingFlags.Instance | BindingFlags.NonPublic)

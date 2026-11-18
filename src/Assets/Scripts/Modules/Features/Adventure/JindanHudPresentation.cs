@@ -27,7 +27,7 @@ namespace TianZhang.Features.Adventure
                     (session.Surfaces?.OwnedCount(seat.Definition.AbilityInstanceId) ?? 0) > 0;
                 abilities.Add(new JindanHudAbility(key, seat.EffectId, JindanRehearsalPresenter.Effect(seat.EffectId),
                     !definition.Enabled ? "未接入" : active ? "生效中" : "选择能力", actor.GetCooldown(seat.EffectId),
-                    definition.Enabled, seat.Definition.Candidates.Count > 1));
+                    definition.Enabled, seat.Definition.Candidates.Count > 1, active));
             }
             var flight = session.Flight?.Find(actorId);
             if (flight != null)

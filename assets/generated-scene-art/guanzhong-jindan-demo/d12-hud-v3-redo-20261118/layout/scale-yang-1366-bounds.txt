@@ -1,0 +1,18 @@
+MoveButton rect=(x:272.60, y:42.80, width:68.40, height:102.60) textHeight=23.90625/26 label=移动
+ shortcut=M rect=(x:0.00, y:0.00, width:28.00, height:22.00) preferredHeight=18.28125
+BasicAttackButton rect=(x:348.20, y:42.80, width:68.40, height:102.60) textHeight=47.8125/49 label=普攻/<size=14><color=#bdcbc5>250 AP</color></size>
+ shortcut=1 rect=(x:0.00, y:0.00, width:28.00, height:22.00) preferredHeight=18.28125
+ArtButton rect=(x:423.80, y:42.80, width:68.40, height:102.60) textHeight=47.8125/49 label=贯石击/<size=14><color=#bdcbc5>50 AP</color></size>
+ shortcut=2 rect=(x:0.00, y:0.00, width:28.00, height:22.00) preferredHeight=18.28125
+scale_tab rect=(x:499.40, y:42.80, width:68.40, height:102.60) textHeight=47.8125/49 label=定尺/<size=14><color=#bdcbc5>选择能力</color></size>
+ shortcut=3 rect=(x:0.00, y:0.00, width:28.00, height:22.00) preferredHeight=18.28125
+visibility_tab rect=(x:575.00, y:42.80, width:68.40, height:102.60) textHeight=47.8125/49 label=阳照/<size=14><color=#bdcbc5>选择能力</color></size>
+ shortcut=4 rect=(x:0.00, y:0.00, width:28.00, height:22.00) preferredHeight=18.28125
+flight_tab rect=(x:650.60, y:42.80, width:68.40, height:102.60) textHeight=47.8125/49 label=御风/<size=14><color=#bdcbc5>地面</color></size>
+ shortcut=5 rect=(x:0.00, y:0.00, width:28.00, height:22.00) preferredHeight=18.28125
+GuardButton rect=(x:726.20, y:42.80, width:68.40, height:102.60) textHeight=47.8125/49 label=防御/<size=14><color=#bdcbc5>50 AP</color></size>
+ shortcut=G rect=(x:0.00, y:0.00, width:28.00, height:22.00) preferredHeight=18.28125
+close_tab rect=(x:801.80, y:42.80, width:68.40, height:102.60) textHeight=47.8125/49 label=收势/<size=14><color=#bdcbc5>无主实例</color></size>
+ shortcut=X rect=(x:0.00, y:0.00, width:28.00, height:22.00) preferredHeight=18.28125
+BagButton rect=(x:877.40, y:42.80, width:68.40, height:102.60) textHeight=47.8125/49 label=行囊/<size=14>换术 / 装备</size>
+ shortcut=I rect=(x:0.00, y:0.00, width:28.00, height:22.00) preferredHeight=18.28125

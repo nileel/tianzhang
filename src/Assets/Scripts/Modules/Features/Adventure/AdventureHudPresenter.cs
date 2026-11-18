@@ -21,6 +21,8 @@ namespace TianZhang.Features.Adventure
         [SerializeField] private Button returnButton;
         [SerializeField] private Text returnLabel;
         [SerializeField] private Text returnReason;
+        [SerializeField] private Sprite combatReturnSprite;
+        private Sprite explorationReturnSprite;
         [SerializeField] private GameObject withdrawalConfirmation;
         [SerializeField] private Button confirmWithdrawalButton;
         [SerializeField] private Button continueCombatButton;
@@ -29,6 +31,7 @@ namespace TianZhang.Features.Adventure
 
         public void ConfigureWithdrawal(Action request, Action confirm, Action cancel)
         {
+            explorationReturnSprite = returnButton.image.sprite;
             if (returnButton == null || withdrawalConfirmation == null || confirmWithdrawalButton == null ||
                 continueCombatButton == null || returnEntry == null || explorationPanel == null || returnLabel == null || returnReason == null)
                 throw new InvalidOperationException("adventure_withdrawal_ui_missing");
@@ -41,24 +44,30 @@ namespace TianZhang.Features.Adventure
         {
             if (returnEntry == null || explorationPanel == null) return;
             var rect = (RectTransform)returnEntry.transform;
-            // Both are direct children of the Overlay canvas. Combat uses V4 design coordinates.
-            rect.anchorMin = rect.anchorMax = inCombat ? Vector2.up : explorationPanel.anchorMax;
-            rect.pivot = Vector2.up;
-            rect.anchoredPosition = inCombat ? new Vector2(1296, -24) : new Vector2(24, 0);
-            rect.sizeDelta = inCombat ? new Vector2(592, 60) : new Vector2(explorationPanel.rect.width, 144);
+            float scale = Mathf.Clamp(Screen.width * .0104f, 18, 20) / 20;
+            var canvas = returnEntry.GetComponentInParent<Canvas>();
+            rect.localScale = Vector3.one * (inCombat ? scale / canvas.scaleFactor : 1);
+            rect.anchorMin = rect.anchorMax = inCombat ? new Vector2(.98f, .94f) : explorationPanel.anchorMax;
+            rect.pivot = inCombat ? Vector2.one : Vector2.up;
+            rect.anchoredPosition = inCombat ? new Vector2(0, -68 * scale / canvas.scaleFactor) : new Vector2(24, 0);
+            rect.sizeDelta = inCombat ? new Vector2(44, 40) : new Vector2(explorationPanel.rect.width, 144);
             if (returnButton != null)
             {
                 var button = (RectTransform)returnButton.transform;
                 button.anchorMin = button.anchorMax = button.pivot = Vector2.zero;
-                button.anchoredPosition = inCombat ? new Vector2(400, 0) : new Vector2(16, 68);
-                button.sizeDelta = inCombat ? new Vector2(192, 60) : new Vector2(rect.rect.width - 32, 60);
+                button.anchoredPosition = inCombat ? Vector2.zero : new Vector2(16, 68);
+                button.sizeDelta = inCombat ? new Vector2(44, 40) : new Vector2(rect.rect.width - 32, 60);
+                returnButton.image.sprite = inCombat ? combatReturnSprite : explorationReturnSprite;
+                returnButton.transition = inCombat ? Selectable.Transition.ColorTint : Selectable.Transition.SpriteSwap;
+                returnLabel.rectTransform.offsetMin = new Vector2(inCombat ? 2 : 16, 4);
+                returnLabel.rectTransform.offsetMax = new Vector2(inCombat ? -2 : -16, -4);
             }
             if (returnReason != null)
             {
                 var reason = returnReason.rectTransform;
                 reason.anchorMin = reason.anchorMax = reason.pivot = Vector2.zero;
-                reason.anchoredPosition = inCombat ? new Vector2(0, 12) : new Vector2(16, 12);
-                reason.sizeDelta = inCombat ? new Vector2(384, 36) : new Vector2(rect.rect.width - 32, 48);
+                reason.anchoredPosition = inCombat ? new Vector2(-256, -32) : new Vector2(16, 12);
+                reason.sizeDelta = inCombat ? new Vector2(300, 30) : new Vector2(rect.rect.width - 32, 48);
             }
         }
 
@@ -66,7 +75,7 @@ namespace TianZhang.Features.Adventure
         {
             ApplyReturnEntryLayout(inCombat);
             returnEntry?.SetActive(visible);
-            if (returnLabel != null) returnLabel.text = label;
+            if (returnLabel != null) { returnLabel.text = inCombat ? "☰" : label; returnLabel.fontSize = inCombat ? 18 : 28; }
             if (returnReason != null) returnReason.text = reason ?? string.Empty;
             if (returnButton != null) returnButton.interactable = available;
             bool showConfirmation = visible && confirming;

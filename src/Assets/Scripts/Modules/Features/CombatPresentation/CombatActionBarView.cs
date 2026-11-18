@@ -37,6 +37,7 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private Text slotDetails;
         [SerializeField] private CombatCommandInput commandInput;
         [SerializeField] private CombatMovementView movementView;
+        [SerializeField] private CombatActionPreviewView previewView;
         private CombatHudSnapshot current;
         private Button jindanSelection;
         private Button[] slots;
@@ -142,11 +143,10 @@ namespace TianZhang.Features.CombatPresentation
                 fifthArtButton == null ? null : fifthArtButton.GetComponentInChildren<Text>(), canAct);
             if (actionStatusLabel != null)
             {
-                actionStatusLabel.fontSize = 20;
+                actionStatusLabel.fontSize = 16;
                 actionStatusLabel.text = snapshot == null ? string.Empty :
                     (snapshot.IsPresenting ? "演出中，请稍候" : !visible ? snapshot.TurnText :
-                    string.Join("；", Array.FindAll(new[] { basicReason, guardReason, waitReason, divineReason, firstReason, secondReason, thirdReason, equipmentReason, itemReason },
-                        reason => !string.IsNullOrEmpty(reason)).Distinct()));
+                    string.Empty);
                 actionStatusLabel.transform.parent.gameObject.SetActive(!string.IsNullOrEmpty(actionStatusLabel.text));
             }
         }
@@ -165,9 +165,9 @@ namespace TianZhang.Features.CombatPresentation
             });
             PresentCooldown(button, quote?.RemainingCooldownTicks ?? 0);
             if (label != null)
-                label.text = art == null ? "术法" : CompactName(art.DisplayName) + "\n" +
+                label.text = art == null ? "术法" : Caption(CompactName(art.DisplayName),
                     (quote?.CanOpen == false ? "不可用" : quote == null ? string.Empty :
-                    CombatActionPreviewView.FormatActionPoints(quote.ActionPointCostUnits) + " AP");
+                    CombatActionPreviewView.FormatActionPoints(quote.ActionPointCostUnits) + " AP"));
             if (art == null) return string.Empty;
             return quote?.CanOpen == true ? string.Empty : quote?.Reason ?? string.Empty;
         }
@@ -189,9 +189,10 @@ namespace TianZhang.Features.CombatPresentation
                     CombatActionKind.SwapEquipment when quote.EquipmentOwned.HasValue => CompactName(quote.ActionName) + "\n" + cost + "\n" +
                         (quote.EquipmentOwned.Value ? "已持有" : "未持有"),
                     CombatActionKind.UseItem => CompactName(quote.ActionName) + " ×" + quote.ItemAvailableQuantity + "\n" + cost,
-                    CombatActionKind.EndTurn or CombatActionKind.Wait => quote.ActionName,
-                    CombatActionKind.Guard => quote.ActionName + "\n" + cost,
-                    _ => CompactName(quote.ActionName) + "\n" + (!quote.CanOpen ? "不可用" : cost),
+                    CombatActionKind.EndTurn or CombatActionKind.Wait => quote.ActionName + "\n<size=13>主动结束</size>",
+                    CombatActionKind.Guard => Caption(quote.ActionName, cost),
+                    CombatActionKind.BasicAttack => Caption("普攻", !quote.CanOpen ? "不可用" : cost),
+                    _ => Caption(CompactName(quote.ActionName), !quote.CanOpen ? "不可用" : cost),
                 };
             }
             return quote.CanConfirm || quote.Candidate.Kind == CombatActionKind.BasicAttack && quote.CanOpen ? string.Empty : quote.Reason;
@@ -208,6 +209,7 @@ namespace TianZhang.Features.CombatPresentation
 
         private static string CompactName(string value) => value != null && value.Length > 5
             ? value.Substring(0, 4) + "…" : value;
+        public static string Caption(string title, string sub) => title + "\n<size=14><color=#bdcbc5>" + sub + "</color></size>";
 
         private void LateUpdate()
         {
@@ -234,7 +236,7 @@ namespace TianZhang.Features.CombatPresentation
             for (int i = 0; i < active.Length; i++)
             {
                 Button b = active[i];
-                string key = b == moveButton ? "M" : b == guardButton ? "G" : b == bagButton ? "I" :
+                string key = b == moveButton ? "M" : b == guardButton ? "G" : b == bagButton ? "I" : b.name == "close_tab" ? "X" :
                     number <= 9 ? (number++).ToString() : "F" + (number++ - 9);
                 shortcuts[i] = key;
                 Text hint = b.transform.Find("Shortcut")?.GetComponent<Text>();
@@ -265,6 +267,8 @@ namespace TianZhang.Features.CombatPresentation
         private void PresentSlotDetails(Button[] active)
         {
             if (slotDetails == null) return;
+            if (SelectedButton != null || previewView?.IsVisible == true || movementView?.IsSelecting == true)
+            { slotDetails.transform.parent.gameObject.SetActive(false); return; }
             Vector2 pointer = Mouse.current?.position.ReadValue() ?? new Vector2(-1, -1);
             Button hovered = active.FirstOrDefault(b => RectTransformUtility.RectangleContainsScreenPoint((RectTransform)b.transform, pointer));
             Button focus = active.FirstOrDefault(b => EventSystem.current?.currentSelectedGameObject == b.gameObject);
@@ -286,11 +290,11 @@ namespace TianZhang.Features.CombatPresentation
             if (icon != null) icon.sprite = sprite ?? defaultAbilityIcon;
         }
 
-        private static void PresentCooldown(Button button, int ticks)
+        internal static void PresentCooldown(Button button, int ticks)
         {
             if (button == null) return;
             Text label = button.transform.Find("Cooldown")?.GetComponent<Text>();
-            if (label != null) label.text = ticks > 0 ? "CD " + ticks : string.Empty;
+            if (label != null) label.text = ticks > 0 ? ticks + " tick" : string.Empty;
             button.transform.Find("CooldownShade")?.gameObject.SetActive(ticks > 0);
             button.transform.Find("ActionIcon")?.gameObject.SetActive(ticks <= 0);
         }
@@ -299,9 +303,8 @@ namespace TianZhang.Features.CombatPresentation
         {
             if (button == null) return;
             button.interactable = enabled;
-            if (button.image != null) button.image.color = Color.white;
             Image icon = button.transform.Find("ActionIcon")?.GetComponent<Image>();
-            if (icon != null) icon.color = new Color(1, 1, 1, enabled ? 1 : .5f);
+            if (icon != null) { Color tint = icon.color; tint.a = enabled ? 1 : .45f; icon.color = tint; }
             Text label = button.GetComponentInChildren<Text>();
             if (label != null) label.color = enabled ? new Color32(239, 233, 211, 255) : new Color32(164, 181, 179, 255);
         }
