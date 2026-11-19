@@ -64,12 +64,14 @@ namespace TianZhang.Tests.PlayMode
             var quote = encounter.PreviewJindan(attack); Assert.IsTrue(quote.IsLegal, quote.RejectionReason);
             Assert.AreEqual(2, session.SpatialQuery.QueryRange(Actor(Player).Pose, target.Pose, 1, 1).DistanceUnits);
             Record("compressed two topology edges to range1; old move/attack rejected without payment");
-            yield return Press("toggle_panel");
             int healthBefore = Actor(Enemy).CurrentHealth;
             yield return Click(Find<CombatActionBarView>().BasicAttackButton); yield return Click(Point(target.Position));
+            Assert.AreEqual(healthBefore, Actor(Enemy).CurrentHealth);
+            Assert.AreEqual(ap, Actor(Player).ActionPointsRemainingUnits);
+            yield return Press("confirm");
             yield return Ready(); Assert.Less(Actor(Enemy).CurrentHealth, healthBefore);
-            yield return Capture("01-compressed-real-attack"); yield return Press("toggle_panel");
-            yield return Press("close_effect"); yield return Press("confirm"); yield return Ready();
+            yield return Capture("01-compressed-real-attack");
+            yield return Press("close_tab"); yield return Press("close_effect"); yield return Press("confirm"); yield return Ready();
             Assert.IsFalse(encounter.PreviewJindan(attack).IsLegal);
             // A fresh entry isolates the expansion witness and avoids refreshing the same source's CD.
             yield return Withdraw(); yield return EnterAdventure(); yield return Enter();
@@ -79,12 +81,15 @@ namespace TianZhang.Tests.PlayMode
             yield return Scale(true, new HexCoord(6, 14), new HexCoord(7, 14));
             Assert.IsFalse(encounter.PreviewJindan(attack).IsLegal);
             Record("expanded adjacent edge to range2; adjacent basic attack unavailable"); yield return Capture("02-expanded-adjacent");
+            yield return Press("cancel_targeting");
+            yield return Press("toggle_panel");
             var details = GameObject.Find("CombatDetails").GetComponent<Text>();
             Assert.IsTrue(details.text.Contains("扩张2") && details.text.Contains("内100/100"));
             var scroll = details.GetComponentInParent<ScrollRect>();
             Canvas.ForceUpdateCanvases(); scroll.verticalNormalizedPosition = 0; yield return null;
             Assert.Less(scroll.verticalNormalizedPosition, .01f); yield return Capture("02b-scale-ledger-scrolled");
-            yield return Press("close_effect"); yield return Press("confirm"); yield return Ready();
+            yield return Press("toggle_panel");
+            yield return Press("close_tab"); yield return Press("close_effect"); yield return Press("confirm"); yield return Ready();
             Assert.IsTrue(encounter.PreviewJindan(attack).IsLegal); Record("closing restores adjacent attack");
             yield return Capture("03-restored");
         }
@@ -164,13 +169,14 @@ namespace TianZhang.Tests.PlayMode
             if (preview?.CanConfirm != true) yield return Capture("strike-unavailable");
             Assert.IsTrue(preview?.CanConfirm == true, preview?.Reason);
             yield return Click(Point(GateTo));
+            yield return Press("confirm");
             yield return Ready();
         }
         private IEnumerator Scale(bool expand, params HexCoord[] path)
         {
             yield return Press("scale_tab"); yield return Press(expand ? "expand" : "compress"); yield return Press("pick_edges");
-            yield return Press("toggle_panel"); foreach (var cell in path) yield return Click(Point(cell)); yield return Press("toggle_panel");
-            yield return Press("preview"); Assert.IsTrue(view.GetButton("confirm").interactable);
+            foreach (var cell in path) yield return Click(Point(cell));
+            Assert.IsTrue(view.GetButton("confirm").interactable);
             yield return Press("confirm"); yield return Ready();
         }
         private IEnumerator Move(HexCoord cell)
@@ -219,7 +225,7 @@ namespace TianZhang.Tests.PlayMode
                 if (Time.realtimeSinceStartup >= update)
                 {
                     File.WriteAllText(Path.Combine(output, "pending.json"), JsonUtility.ToJson(new Pending {
-                        instruction = "点击贯石击，再点击支点格直接施行；耐久200→170", cell = Point(GateTo), width = Screen.width, height = Screen.height,
+                        instruction = "点击贯石击，左键锁定支点格，再点击确认施行，核对耐久200→170", cell = Point(GateTo), width = Screen.width, height = Screen.height,
                         buttons = Object.FindObjectsByType<Button>(FindObjectsInactive.Exclude, FindObjectsSortMode.None).Where(b => b.interactable)
                             .Select(b => new ButtonPoint { name = b.name, position = Center(b) }).ToArray() }, true)); update = Time.realtimeSinceStartup + 1;
                 }

@@ -103,7 +103,8 @@ namespace TianZhang.Features.CombatPresentation
             ((RectTransform)ordinaryQuote.Find("PreviewActions/ConfirmActionButton")).anchoredPosition = new Vector2((small ? 223 : 240) + extra, 16);
             ((RectTransform)ordinaryQuote.Find("PreviewActions/CancelActionButton")).anchoredPosition = new Vector2((small ? 357 : 380) + extra, 16);
             ((RectTransform)ordinaryQuote.Find("BoardActionPrompt")).anchoredPosition = new Vector2((small ? 223 : 240) + extra, 16);
-            jindanQuote.anchoredPosition = new Vector2(0, 32 / scale + 182 + options);
+            // The option grids hang below their root; keep them just above the shared quote.
+            jindanQuote.anchoredPosition = ordinaryQuote.anchoredPosition + Vector2.up * (ordinaryQuote.rect.height + options + 8);
             LayoutRebuilder.MarkLayoutForRebuild(row);
         }
     }

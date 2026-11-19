@@ -4,7 +4,7 @@ using TianZhang.Spatial;
 
 namespace TianZhang.Combat
 {
-    internal static class CombatScaleRules
+    public static class CombatScaleRules
     {
         internal static string Validate(CombatSession session, CombatantSnapshot actor,
             CombatJindanRequest request, CombatJindanAbilityDefinition definition)
@@ -13,17 +13,13 @@ namespace TianZhang.Combat
             if (request.EdgePath.Count < 2 || request.EdgePath.Count > definition.Capacity + 1 ||
                 request.EdgePath.Distinct().Count() != request.EdgePath.Count ||
                 !definition.MetricModes.Contains(request.MetricDistanceUnits)) return "jindan_scale_selection_invalid";
-            var policy = new SpatialAttackPolicy(SpatialMovementMode.Ground | SpatialMovementMode.Fly,
-                SpatialMovementMode.Ground, definition.VerticalReach);
+            var policy = TargetPolicy(definition);
             if ((actor.MovementMode & policy.SourceModeMask) == 0) return SpatialQueryReasons.SourceModeNotAllowed;
             HexCoord origin = request.RemoteOrigin ?? actor.Position;
             if (request.RemoteOrigin.HasValue)
             {
-                if (session.Combatants.All.Any(value => value.IsAlive && value.OccupiedCells.Contains(origin)) ||
-                    board.InspectPlacement(Pose(origin)) != SpatialQueryReasons.Ok)
-                    return "jindan_remote_origin_not_empty";
-                var sight = board.QueryContact(actor.Pose, Pose(origin), 0, definition.VisionRange, policy);
-                if (!sight.IsInRange || !sight.HasLineOfSight) return "jindan_remote_origin_not_visible";
+                string reason = CheckRemoteOrigin(session, actor, origin, definition);
+                if (reason != string.Empty) return reason;
             }
             if (!board.TryGetCell(actor.Position, out var sourceRules)) return "cell_not_configured";
             foreach (HexCoord cell in request.EdgePath)
@@ -55,6 +51,20 @@ namespace TianZhang.Combat
             catch (ArgumentException) { return "jindan_scale_selection_invalid"; }
             return string.Empty;
         }
+        public static string CheckRemoteOrigin(CombatSession session, CombatantSnapshot actor,
+            HexCoord origin, CombatJindanAbilityDefinition definition)
+        {
+            var board = session.SceneObjects.Board;
+            if (session.Combatants.All.Any(value => value.IsAlive && value.OccupiedCells.Contains(origin)) ||
+                board.InspectPlacement(Pose(origin)) != SpatialQueryReasons.Ok)
+                return "jindan_remote_origin_not_empty";
+            var sight = board.QueryContact(actor.Pose, Pose(origin), 0, definition.VisionRange, TargetPolicy(definition));
+            return sight.IsInRange && sight.HasLineOfSight ? string.Empty : "jindan_remote_origin_not_visible";
+        }
+
+        private static SpatialAttackPolicy TargetPolicy(CombatJindanAbilityDefinition definition) =>
+            new SpatialAttackPolicy(SpatialMovementMode.Ground | SpatialMovementMode.Fly,
+                SpatialMovementMode.Ground, definition.VerticalReach);
         private static SpatialPose Pose(HexCoord cell) => new SpatialPose(cell, 0, SpatialFootprintKind.Single, 1);
     }
 }

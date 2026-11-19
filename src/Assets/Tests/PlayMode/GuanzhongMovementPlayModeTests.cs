@@ -66,7 +66,7 @@ namespace TianZhang.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator FormalSceneOpensMovePopupAndCommitsOncePerLegalClickAtBothResolutions()
+        public IEnumerator FormalSceneLocksMoveAndCommitsOnceOnConfirmationAtBothResolutions()
         {
             GameBootstrap staleBootstrap = Object.FindFirstObjectByType<GameBootstrap>(FindObjectsInactive.Include);
             if (staleBootstrap != null) { Object.Destroy(staleBootstrap.gameObject); yield return null; }
@@ -157,7 +157,7 @@ namespace TianZhang.Tests.PlayMode
                 Canvas.ForceUpdateCanvases();
                 string summary = Get<Text>(preview, "summary").text;
                 StringAssert.Contains("可达", summary);
-                StringAssert.Contains("左键点击高亮地块立即移动", summary);
+                StringAssert.Contains("左键锁定高亮地块", summary);
 
                 // A larger board can place option centers behind the shared preview popup, and hovering
                 // may grow that popup. Try legal options until one actually previews under the pointer.
@@ -207,8 +207,13 @@ namespace TianZhang.Tests.PlayMode
                 // The popup's cancel button is the only remaining cancellation entry.
                 bar.MoveButton.onClick.Invoke();
                 Canvas.ForceUpdateCanvases();
-                yield return Click(mouse, RectTransformUtility.WorldToScreenPoint(null, preview.CancelButton.transform.position),
-                    MouseButton.Left);
+                var cancelRect = (RectTransform)preview.CancelButton.transform;
+                Vector2 cancelPoint = RectTransformUtility.WorldToScreenPoint(null, cancelRect.TransformPoint(cancelRect.rect.center));
+                var hits = new List<RaycastResult>();
+                EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current) { position = cancelPoint }, hits);
+                Assert.That(hits.First().gameObject.GetComponentInParent<Button>(), Is.SameAs(preview.CancelButton),
+                    "The center of the cancel button must be clickable.");
+                yield return Click(mouse, cancelPoint, MouseButton.Left);
                 Assert.IsFalse(movement.IsSelecting, "The popup cancel button must close movement selection.");
                 Assert.IsFalse(preview.IsVisible);
                 Assert.AreEqual(original, player.Position);
@@ -260,7 +265,7 @@ namespace TianZhang.Tests.PlayMode
                 Assert.AreEqual(original, player.Position);
                 Assert.AreEqual(originalPoints, player.ActionPointsRemainingUnits);
 
-                // A single left click on a highlighted cell commits exactly once.
+                // Locking a destination preserves its path and price while the pointer moves to the HUD.
                 yield return Point(mouse, destinationPoint);
                 Assert.AreSame(option, movement.Selected);
                 string selectionEvidence = "scene=" + SceneManager.GetActiveScene().name +
@@ -277,14 +282,18 @@ namespace TianZhang.Tests.PlayMode
                 yield return null; yield return null;
 
                 yield return Click(mouse, destinationPoint, MouseButton.Left);
-                Assert.IsFalse(movement.IsSelecting, "A legal click must commit and close the popup immediately.");
+                Assert.IsTrue(movement.IsLocked);
+                Assert.AreEqual(original, player.Position);
+                Assert.AreEqual(originalPoints, player.ActionPointsRemainingUnits);
+                yield return GuanzhongBasicAttackPlayModeTests.ConfirmLockedTarget();
+                Assert.IsFalse(movement.IsSelecting, "Confirming must close the popup.");
                 Assert.IsFalse(preview.IsVisible);
                 Assert.IsNull(movement.Selected);
                 Assert.IsFalse(movement.Highlights.Values.Any(ring => ring.gameObject.activeSelf));
                 Assert.AreEqual(option.Destination.Q, player.Position.Q);
                 Assert.AreEqual(option.Destination.R, player.Position.R);
                 Assert.AreEqual(originalPoints - option.Cost, player.ActionPointsRemainingUnits,
-                    "One click may only spend the quoted AP once.");
+                    "A confirmed move must spend the quoted AP once.");
                 Assert.IsTrue(encounter.IsPresenting, "The committed move must enter its presentation lock.");
                 Assert.IsFalse(bar.MoveButton.interactable);
 
@@ -322,10 +331,10 @@ namespace TianZhang.Tests.PlayMode
                 Assert.IsTrue(movement.IsSelecting);
                 encounter.RequestEndTurn("player");
                 Assert.IsFalse(movement.IsSelecting, "A turn change must clear the uncommitted movement selection.");
-                Assert.IsFalse(preview.IsVisible);
+                StringAssert.Contains("战况已变", Get<Text>(preview, "actionHint").text);
                 Assert.IsFalse(movement.Highlights.Values.Any(ring => ring.gameObject.activeSelf));
             }
-            TestContext.WriteLine("S3 movement: popup, hover, single-click commit, cancellation over UI, illegal clicks, and stale rejection verified at 1920x1080 and 1366x768.");
+            TestContext.WriteLine("S3 movement: popup, hover, lock, confirmation, cancellation over UI, illegal clicks, and stale rejection verified at 1920x1080 and 1366x768.");
         }
 
         /// <summary>

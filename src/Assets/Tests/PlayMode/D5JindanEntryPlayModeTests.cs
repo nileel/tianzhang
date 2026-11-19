@@ -156,7 +156,7 @@ namespace TianZhang.Tests.PlayMode
                 yield return Press("compress"); yield return Press("pick_edges");
                 yield return Click(Point(4, 14)); yield return Click(Point(5, 14));
                 yield return Press("preview");
-                Assert.IsTrue(view.GetButton("confirm").interactable, Get<Text>(view, "combatQuote").text);
+                Assert.IsTrue(view.GetButton("confirm").interactable, GameObject.Find("CompactQuote").GetComponent<Text>().text);
                 yield return Press("confirm");
             }
             yield return Ready(ScaleActor);

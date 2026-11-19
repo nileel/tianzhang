@@ -24,7 +24,6 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private GameObject combatRoot;
         [SerializeField] private GameObject combatBody;
         [SerializeField] private Text combatDetails;
-        [SerializeField] private Text combatQuote;
         [SerializeField] private Text toggleLabel;
         [SerializeField] private GameObject flightActions;
         [SerializeField] private GameObject scaleActions;
@@ -33,7 +32,6 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private GameObject visibilityActions;
         [SerializeField] private GameObject fireActions;
         [SerializeField] private GameObject closeActions;
-        [SerializeField] private Text quoteTitle;
         [SerializeField] private Text statusTemplate;
         [SerializeField] private CombatActionPreviewView ordinaryPreview;
         [SerializeField] private Text buildLabel;
@@ -101,12 +99,12 @@ namespace TianZhang.Features.CombatPresentation
                 if (ordinaryPreview?.IsVisible != true) detailsRoot.SetActive(!detailsRoot.activeSelf);
                 return;
             }
-            if (key == "cancel_targeting") CloseCombatSelection();
             ActionRequested?.Invoke(key);
         }
 
         public void CloseCombatSelection()
         {
+            if (selectedKey != null) ordinaryPreview.Present(null);
             selectedKey = null;
             actionBar?.SelectJindan(null);
             combatRoot.SetActive(false);
@@ -188,6 +186,8 @@ namespace TianZhang.Features.CombatPresentation
         public Button GetButton(string key)
         {
             BindButtons();
+            if (key == "confirm") return ordinaryPreview.ConfirmButton;
+            if (key == "cancel_targeting") return ordinaryPreview.CancelButton;
             foreach (ActionButton binding in buttons)
                 if (binding.key == key) return binding.button;
             return null;
@@ -204,18 +204,19 @@ namespace TianZhang.Features.CombatPresentation
 
         public void HidePreparation() => preparationRoot.SetActive(false);
 
-        public void PresentCombat(string details, string quote, bool canInput, bool canConfirm, string title = "能力", string compact = "")
+        public void PresentCombat(string details, string quote, bool canInput, bool canConfirm, string title,
+            string compact, string hint)
         {
             BindButtons();
             HidePreparation();
             combatDetails.text = (details ?? string.Empty) + "\n" + quote;
-            combatQuote.text = compact;
-            quoteTitle.text = title;
             combatRoot.SetActive(selectedKey != null);
+            if (selectedKey != null)
+                ordinaryPreview.PresentJindan(title, compact, hint, combatDetails.text, canInput && canConfirm);
             foreach (ActionButton binding in buttons)
             {
                 if (!binding.button.transform.IsChildOf(combatBody.transform)) continue;
-                binding.button.interactable = binding.key == "confirm" ? canInput && canConfirm : canInput;
+                binding.button.interactable = canInput;
             }
             foreach (var ability in hud?.Abilities ?? Array.Empty<JindanHudAbility>())
                 GetButton(ability.Key).interactable = canInput && ability.Enabled;

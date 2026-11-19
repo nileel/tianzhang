@@ -333,11 +333,8 @@ namespace TianZhang.Tests.PlayMode
                 yield return Click(action);
                 if (action == bar.BasicAttackButton)
                     yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session, click: true);
-                else
-                {
-                    Assert.IsTrue(preview.ConfirmButton.interactable);
-                    yield return Click(preview.ConfirmButton);
-                }
+                Assert.IsTrue(preview.ConfirmButton.interactable);
+                yield return Click(preview.ConfirmButton);
                 confirmed++;
             }
             if (SceneManager.GetActiveScene().name == GameplaySceneNames.Adventure)
@@ -510,12 +507,9 @@ namespace TianZhang.Tests.PlayMode
                 yield return Click(action);
                 if (action == bar.BasicAttackButton)
                     yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session, click: true);
-                else
-                {
-                    Assert.IsTrue(preview.IsVisible);
-                    Assert.IsTrue(preview.ConfirmButton.interactable);
-                    yield return Click(preview.ConfirmButton);
-                }
+                Assert.IsTrue(preview.IsVisible);
+                Assert.IsTrue(preview.ConfirmButton.interactable);
+                yield return Click(preview.ConfirmButton);
                 commands++;
                 yield return null;
             }

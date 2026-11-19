@@ -254,6 +254,8 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(move, Find<CombatMovementView>().Selected);
             yield return Capture("movement-" + q + "-" + r);
             yield return Pointer(destinationPoint);
+            Assert.IsTrue(movement.IsLocked);
+            yield return Click(preview.ConfirmButton);
             Assert.IsTrue(session.Combatants.TryGet("player", out var player));
             Assert.AreEqual(q, player.Position.Q); Assert.AreEqual(r, player.Position.R);
             yield return Ready();
@@ -330,7 +332,7 @@ namespace TianZhang.Tests.PlayMode
                     yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, target, click: true);
                 }
             }
-            else if (button != bar.ArtButton && button != bar.SecondArtButton && button != bar.DivineButton)
+            if (preview.ConfirmButton.gameObject.activeInHierarchy && preview.ConfirmButton.interactable)
             {
                 Assert.IsTrue(preview.IsVisible);
                 yield return Click(preview.ConfirmButton);

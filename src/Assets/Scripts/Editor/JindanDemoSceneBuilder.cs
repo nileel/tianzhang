@@ -199,7 +199,6 @@ namespace TianZhang.Editor
             GameObject body = Panel(root.transform, "JindanCombatBody");
             Place(body.GetComponent<RectTransform>(), 0, 0, 620, 580);
             Text details = ScrollText(body.transform, "CombatDetails", 16, 330, 588, 238, 22);
-            Text quote = ScrollText(body.transform, "CombatQuote", 16, 242, 588, 80, 22);
             var scale = new GameObject("ScaleActions", typeof(RectTransform)); scale.transform.SetParent(body.transform, false);
             Place(scale.GetComponent<RectTransform>(), 0, 0, 620, 240);
             AddButton(scale.transform, bindings, "compress", "压缩边（1）", 16, 184, 286, 50);
@@ -251,12 +250,9 @@ namespace TianZhang.Editor
             SceneBuildSupport.SetObject(view, "tideActions", tide);
             SceneBuildSupport.SetObject(view, "flightActions", flight);
             SceneBuildSupport.SetObject(view, "scaleActions", scale);
-            AddButton(body.transform, bindings, "confirm", "确认施放", 218, 68, 184, 50);
-            AddButton(body.transform, bindings, "cancel_targeting", "取消选格", 420, 68, 184, 50);
             SceneBuildSupport.SetObject(view, "combatRoot", root);
             SceneBuildSupport.SetObject(view, "combatBody", body);
             SceneBuildSupport.SetObject(view, "combatDetails", details);
-            SceneBuildSupport.SetObject(view, "combatQuote", quote);
             SceneBuildSupport.SetObject(view, "toggleLabel", toggle.GetComponentInChildren<Text>());
             root.SetActive(false);
         }

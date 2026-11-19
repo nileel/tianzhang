@@ -165,7 +165,7 @@ namespace TianZhang.Tests.PlayMode
             yield return RecordG3Sweep("multi-sweep-" + width);
             int ap = spawned.Player.ActionPointsRemainingUnits;
             int cost = input.Preview.ActionPointCostUnits;
-            yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+            yield return GuanzhongBasicAttackPlayModeTests.ConfirmPointedAttack();
             AssertG3Targets();
             Assert.IsNull(input.Candidate);
             Assert.AreEqual(ap - cost, spawned.Player.ActionPointsRemainingUnits);

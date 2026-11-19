@@ -155,44 +155,49 @@ namespace TianZhang.Tests.PlayMode
                     if (entry == 0)
                     {
                         // The fixed fire spawn occupies the center; vacate it through a real legal move first.
-                        var move = new CombatCommand(CombatCommandKind.Move, "player", destination: new TianZhang.Spatial.HexCoord(7, 12));
-                        var moveQuote = encounter.PreviewJindan(move);
-                        Assert.IsTrue(moveQuote.IsLegal, moveQuote.RejectionReason);
-                        Assert.IsTrue(encounter.ConfirmJindan(move, moveQuote).Succeeded);
-                        for (float end = Time.realtimeSinceStartup + 30; !encounter.AcceptsPlayerCommand && Time.realtimeSinceStartup < end;) yield return null;
+                        yield return MoveOffFireCenter(encounter, actor);
+                        var shared = Find<CombatActionPreviewView>();
                         int mana = actor.CurrentSpirit;
                         yield return Click(view.GetButton("fire_tab"));
                         yield return Click(view.GetButton("fire_preview"));
-                        Assert.IsTrue(view.GetButton("confirm").interactable);
+                        Assert.IsTrue(shared.ConfirmButton.interactable);
                         int ap = actor.ActionPointsRemainingUnits;
                         yield return Click(Find<CombatActionBarView>().ArtButton);
                         Assert.IsNull(view.SelectedKey, "Ordinary selection must cancel a frozen self-cast quote.");
-                        Assert.IsFalse(view.GetButton("confirm").gameObject.activeInHierarchy);
                         Assert.AreEqual("spell_feixingzhi", Find<CombatCommandInput>().Candidate.ProfileId);
                         Assert.AreEqual(ap, actor.ActionPointsRemainingUnits);
                         Assert.AreEqual(mana, actor.CurrentSpirit);
                         yield return Capture(size.x + "-spell-after-cancel");
                         yield return Click(view.GetButton("fire_tab"));
                         yield return Click(view.GetButton("fire_preview"));
-                        yield return Click(view.GetButton("confirm"));
+                        Assert.AreEqual(mana, actor.CurrentSpirit);
+                        Assert.AreEqual(ap, actor.ActionPointsRemainingUnits);
+                        AssertPrice(500000, 1000);
+                        yield return Capture(size.x + "-fire-confirm");
+                        yield return Click(shared.ConfirmButton);
                         Assert.IsNotNull(seat.FireDomain?.Main);
                         Assert.AreEqual(mana - 1000, actor.CurrentSpirit);
-                        for (float end = Time.realtimeSinceStartup + 30; !encounter.AcceptsPlayerCommand && Time.realtimeSinceStartup < end;) yield return null;
+                        Assert.AreEqual(ap - 500000, actor.ActionPointsRemainingUnits);
+                        yield return CommandReady(encounter);
                         yield return Click(Find<CombatActionBarView>().BasicAttackButton);
                         StringAssert.Contains("中心 600/600", view.PersistentStatus);
                         StringAssert.Contains("200 MP", view.PersistentStatus);
                         StringAssert.Contains("本回合不维护", view.PersistentStatus);
                         Assert.AreEqual(Find<CombatActionBarView>().BasicAttackButton, Find<CombatActionBarView>().SelectedButton);
                         yield return Capture(size.x + "-ordinary-with-domain");
+                        yield return ConfirmBasicAttack(encounter, actor);
+                        Assert.IsNotNull(seat.FireDomain?.Main);
                         yield return Click(view.GetButton("close_tab"));
                         yield return Click(view.GetButton("fire_close"));
-                        Assert.IsTrue(view.GetButton("confirm").interactable, "Active fire offers its own close quote.");
+                        Assert.IsTrue(shared.ConfirmButton.interactable, "Active fire offers its own close quote.");
                         yield return Capture(size.x + "-close-quote");
                         yield return Click(view.GetButton("close_tab"));
-                        Assert.IsFalse(view.GetButton("confirm").interactable, "Opening close options clears the prior frozen quote.");
-                        yield return Click(view.GetButton("cancel_targeting"));
+                        Assert.IsFalse(shared.ConfirmButton.gameObject.activeInHierarchy && shared.ConfirmButton.interactable,
+                            "Opening close options clears the prior frozen quote.");
                         Assert.IsNotNull(seat.FireDomain?.Main, "Cancelling close keeps the domain.");
                         Assert.AreEqual(mana - 1000, actor.CurrentSpirit, "Close preview/cancel never spends MP.");
+                        yield return D12UnifiedHudPlayModeTests.CheckFullLoadoutLayout(size.x);
+                        yield return EndAtZeroAp(encounter, actor);
                     }
                     yield return Capture(size.x + "-entry-" + entry);
                     var controller = Find<AdventureController>();
@@ -250,9 +255,28 @@ namespace TianZhang.Tests.PlayMode
                 Assert.AreEqual(ap, actor.ActionPointsRemainingUnits);
                 Assert.AreEqual(mp, actor.CurrentSpirit);
                 yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
-                for (float end = Time.realtimeSinceStartup + 30; !encounter.AcceptsPlayerCommand && Time.realtimeSinceStartup < end;)
+                var shared = Find<CombatActionPreviewView>();
+                AssertPrice(50000, 10);
+                Assert.IsTrue(shared.ConfirmButton.interactable);
+                yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+                Assert.AreEqual(ap, actor.ActionPointsRemainingUnits, "A second board click must not commit.");
+                Assert.AreEqual(mp, actor.CurrentSpirit);
+                if (entry == "新建")
+                {
+                    InputSystem.QueueStateEvent(mouse, new MouseState { position = point }.WithButton(MouseButton.Right));
                     yield return null;
-                Assert.IsTrue(encounter.AcceptsPlayerCommand);
+                    InputSystem.QueueStateEvent(mouse, new MouseState { position = point });
+                    yield return null;
+                }
+                else yield return Click(shared.CancelButton);
+                Assert.IsTrue(input.IsSelectingAttack, "Cancel the locked tile before leaving the spell.");
+                Assert.AreEqual(ap, actor.ActionPointsRemainingUnits);
+                Assert.AreEqual(mp, actor.CurrentSpirit);
+                yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(point, click: true);
+                AssertPrice(50000, 10);
+                yield return Capture(Screen.width + "-star-locked");
+                yield return Click(shared.ConfirmButton);
+                yield return CommandReady(encounter);
                 Assert.IsFalse(input.IsSelectingAttack);
                 Assert.AreEqual(ap - 50000, actor.ActionPointsRemainingUnits);
                 Assert.AreEqual(mp - 10, actor.CurrentSpirit);
@@ -260,6 +284,92 @@ namespace TianZhang.Tests.PlayMode
                 yield break;
             }
             Assert.Fail("飞星指施放范围内未找到可由鼠标点中的空格。");
+        }
+
+        private IEnumerator MoveOffFireCenter(EncounterCoordinator encounter, CombatantSnapshot actor)
+        {
+            var origin = actor.Position;
+            int ap = actor.ActionPointsRemainingUnits, mp = actor.CurrentSpirit;
+            yield return Click(Find<CombatActionBarView>().MoveButton);
+            var option = Find<CombatHudPresenter>().Snapshot.Movement.Options.Single(o => o.Destination.Q == 7 && o.Destination.R == 12);
+            Assert.IsTrue(TryGroundPoint(option.Destination, out var point), "The adjacent landing must be pickable.");
+            yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(point, click: true);
+            AssertPrice(option.Cost, 0);
+            Assert.AreEqual(origin, actor.Position);
+            Assert.AreEqual(ap, actor.ActionPointsRemainingUnits);
+            yield return Click(Find<CombatActionPreviewView>().ConfirmButton);
+            yield return CommandReady(encounter);
+            Assert.AreEqual(new TianZhang.Spatial.HexCoord(7, 12), actor.Position);
+            Assert.AreEqual(ap - option.Cost, actor.ActionPointsRemainingUnits);
+            Assert.AreEqual(mp, actor.CurrentSpirit);
+        }
+
+        private IEnumerator ConfirmBasicAttack(EncounterCoordinator encounter, CombatantSnapshot actor)
+        {
+            int ap = actor.ActionPointsRemainingUnits, mp = actor.CurrentSpirit;
+            var input = Find<CombatCommandInput>();
+            for (int direction = 0; direction < 6; direction++)
+            {
+                var adjacent = actor.Position.Step(direction);
+                var cell = new CombatUnitPresentationHex(adjacent.Q, adjacent.R);
+                if (!TryGroundPoint(cell, out var point)) continue;
+                yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(point);
+                if (input.Candidate?.TargetCell?.Equals(cell) != true || input.Preview?.CanConfirm != true) continue;
+                int cost = input.Preview.ActionPointCostUnits;
+                Assert.Greater(cost, 0);
+                yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+                Assert.AreEqual(ap, actor.ActionPointsRemainingUnits);
+                AssertPrice(cost, 0);
+                yield return Click(Find<CombatActionPreviewView>().ConfirmButton);
+                yield return CommandReady(encounter);
+                Assert.AreEqual(ap - cost, actor.ActionPointsRemainingUnits);
+                Assert.AreEqual(mp, actor.CurrentSpirit);
+                yield break;
+            }
+            Assert.Fail("No legal adjacent basic attack could be selected while the fire domain was active.");
+        }
+
+        private static bool TryGroundPoint(CombatUnitPresentationHex cell, out Vector2 point)
+        {
+            var movement = Find<CombatMovementView>();
+            Vector3 center = CombatBattlefieldSurface.Horizontal(cell.Q, cell.R);
+            point = default;
+            return Find<CombatBattlefieldSurface>().TryHeight(center, out center.y) &&
+                GuanzhongMovementPlayModeTests.TryFindCellPoint(movement, Camera.main, center, new Vector2Int(cell.Q, cell.R), out point);
+        }
+
+        private IEnumerator EndAtZeroAp(EncounterCoordinator encounter, CombatantSnapshot actor)
+        {
+            // Prepare the zero-AP boundary without advancing the turn. The player must end it through the HUD.
+            typeof(CombatantSnapshot).GetMethod("SpendActionPoints", BindingFlags.NonPublic | BindingFlags.Instance)
+                .Invoke(actor, new object[] { actor.ActionPointsRemainingUnits });
+            D12UnifiedHudPlayModeTests.Refresh(encounter);
+            yield return null;
+            var session = encounter.CurrentSession;
+            long turn = session.TurnSequence;
+            yield return Click(Find<CombatActionBarView>().WaitButton);
+            Assert.AreEqual(0, actor.ActionPointsRemainingUnits);
+            Assert.AreEqual(turn, session.TurnSequence);
+            yield return Click(Find<CombatActionPreviewView>().ConfirmButton);
+            for (float end = Time.realtimeSinceStartup + 30; session.TurnSequence == turn && Time.realtimeSinceStartup < end;)
+                yield return null;
+            Assert.Greater(session.TurnSequence, turn, "The zero-AP player ended their turn.");
+            yield return CommandReady(encounter);
+        }
+
+        internal static void AssertPrice(int ap, int mp)
+        {
+            string price = GameObject.Find("CompactQuote").GetComponent<Text>().text;
+            StringAssert.Contains(CombatActionPreviewView.FormatActionPoints(ap) + " AP", price);
+            StringAssert.Contains(mp + " MP", price);
+        }
+
+        private static IEnumerator CommandReady(EncounterCoordinator encounter)
+        {
+            for (float end = Time.realtimeSinceStartup + 30; !encounter.AcceptsPlayerCommand && Time.realtimeSinceStartup < end;)
+                yield return null;
+            Assert.IsTrue(encounter.AcceptsPlayerCommand);
+            yield return null;
         }
 
         private IEnumerator Click(Button button)

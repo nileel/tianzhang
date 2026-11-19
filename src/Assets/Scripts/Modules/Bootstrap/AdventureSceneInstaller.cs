@@ -6,6 +6,7 @@ using TianZhang.Entity;
 using TianZhang.Features.Adventure;
 using TianZhang.Features.CombatPresentation;
 using TianZhang.Features.Settlement;
+using TianZhang.Gameplay.Contracts;
 using TianZhang.Infrastructure.UnityContent;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -101,31 +102,58 @@ namespace TianZhang.Bootstrap
             combatCommandInput.CancelCandidate();
             combatMovementView.Cancel();
             jindan.HandleAction(key);
-            combatTargetInput.enabled = !jindan.IsSelecting;
+            PresentJindanTargets();
+            combatTargetInput.enabled = jindanDemoView.SelectedKey == null;
+        }
+
+        private void ConfirmSelection()
+        {
+            if (controller.IsWithdrawalConfirmationOpen || encounterCoordinator.CurrentSession?.Visibility?.IsPaused == true) return;
+            if (jindanDemoView?.SelectedKey == null)
+                combatCommandInput.ConfirmCandidate();
+            else if (jindan.CanConfirm) HandleJindanAction("confirm");
+        }
+
+        private void CancelSelection()
+        {
+            if (jindanDemoView?.SelectedKey == null)
+                combatCommandInput.CancelSelectionLayer();
+            else
+            {
+                if (!jindan.CancelLayer()) jindanDemoView.CloseCombatSelection();
+                PresentJindanTargets();
+                combatTargetInput.enabled = jindanDemoView.SelectedKey == null;
+            }
+        }
+
+        private void PresentJindanTargets()
+        {
+            var cells = jindan.SelectedEndpoints.Select(cell => new CombatUnitPresentationHex(cell.Q, cell.R)).ToList();
+            if (jindan.TargetCell is { } target) cells.Add(new CombatUnitPresentationHex(target.Q, target.R));
+            combatMovementView.PresentAttackArea(null, targetCells: cells);
         }
 
         private void Update()
         {
-            if (jindanDemoView?.SelectedKey != null && encounterCoordinator.AcceptsPlayerCommand &&
-                (Mouse.current?.rightButton.wasPressedThisFrame == true || Keyboard.current?.escapeKey.wasPressedThisFrame == true))
-            {
-                jindan.HandleAction("cancel_targeting");
-                jindanDemoView.CloseCombatSelection();
-                combatTargetInput.enabled = true;
-                return;
-            }
-            if (jindan == null || !jindan.IsSelecting || !encounterCoordinator.AcceptsPlayerCommand) return;
+            if (jindanDemoView?.SelectedKey == null || controller.IsWithdrawalConfirmationOpen ||
+                encounterCoordinator.CurrentSession?.Visibility?.IsPaused == true) return;
             var mouse = Mouse.current;
-            if (combatMovementView.IsSelecting || combatCommandInput.Preview != null ||
-                mouse?.rightButton.wasPressedThisFrame == true || Keyboard.current?.escapeKey.wasPressedThisFrame == true)
+            if (mouse?.rightButton.wasPressedThisFrame == true || Keyboard.current?.escapeKey.wasPressedThisFrame == true)
             {
-                jindan.HandleAction("cancel_targeting");
-                combatTargetInput.enabled = true;
+                CancelSelection();
                 return;
             }
-            if (mouse != null && mouse.leftButton.wasPressedThisFrame &&
-                combatMovementView.TryPickCell(mouse.position.ReadValue(), out var cell))
-                jindan.PickCell(cell.Q, cell.R);
+            if (!jindan.IsSelecting || !encounterCoordinator.AcceptsPlayerCommand) return;
+            if (mouse != null && combatMovementView.TryPickCell(mouse.position.ReadValue(), out var cell))
+            {
+                jindan.HoverCell(cell.Q, cell.R);
+                if (mouse.leftButton.wasPressedThisFrame)
+                {
+                    jindan.PickCell(cell.Q, cell.R);
+                    PresentJindanTargets();
+                }
+            }
+            else jindan.HoverCell(null, null);
         }
 
         private void LateUpdate()
@@ -150,16 +178,22 @@ namespace TianZhang.Bootstrap
             var yinSeat = visibilitySession?.Jindan?.Seats.FirstOrDefault(value => value.EffectId == "YIN_CONCEAL");
             jindanVisibilityView.PresentSupports(yangSeat?.ActiveVisibility != null, yangSeat?.LastEndReason == "jindan_support_destroyed",
                 yinSeat?.ActiveVisibility != null, yinSeat?.LastEndReason == "jindan_support_destroyed");
-            jindan.Refresh();
+            bool lostSelection = jindan.Refresh();
             var jindanHud = jindan.Hud;
             jindanDemoView.PresentHud(jindanHud);
+            if (lostSelection)
+            {
+                PresentJindanTargets();
+                if (jindanHud != null && jindanDemoView.SelectedKey == null)
+                    combatCommandInput.ShowInvalidated();
+            }
             combatBountyTrackerView.SetObjective(jindanHud?.Objective);
             combatActionBar.PauseInput(visibility?.IsPaused == true || jindan.PreparationOpen || controller.IsWithdrawalConfirmationOpen);
-            combatTargetInput.enabled = !jindan.IsSelecting;
+            combatTargetInput.enabled = jindanDemoView.SelectedKey == null;
             if (jindan.PreparationOpen) jindanDemoView.PresentPreparation(jindan.PreparationDetails);
             else if (encounterCoordinator.CurrentSession?.Jindan != null)
                 jindanDemoView.PresentCombat(jindan.CombatDetails, jindan.QuoteDetails,
-                    encounterCoordinator.AcceptsPlayerCommand, jindan.CanConfirm, jindan.QuoteTitle, jindan.CompactQuote);
+                    encounterCoordinator.AcceptsPlayerCommand, jindan.CanConfirm, jindan.QuoteTitle, jindan.CompactQuote, jindan.InteractionHint);
             else jindanDemoView.HideAll();
             var scale = encounterCoordinator.CurrentSession?.Jindan?.Seats.FirstOrDefault(value => value.ActiveScale != null)?.ActiveScale;
             jindanScaleView.Present(scale?.Path.Select(value => new TianZhang.Gameplay.Contracts.CombatUnitPresentationHex(value.Q, value.R)).ToArray()
@@ -270,7 +304,8 @@ namespace TianZhang.Bootstrap
                 combatHudPresenter.ConfigureTimeline(combatTimelineView, explorationPanel);
                 combatMovementView.Configure(encounterCoordinator, combatActionBar, combatActionPreviewView);
                 combatCommandInput.Configure(encounterCoordinator, combatActionBar, combatMovementView);
-                combatCommandInput.ConfigurePreview(encounterCoordinator, combatActionPreviewView, combatTimelineView);
+                combatCommandInput.ConfigurePreview(encounterCoordinator, combatActionPreviewView, combatTimelineView,
+                    ConfirmSelection, CancelSelection);
                 combatTargetView.Configure(hudCanvas);
                 combatHudPresenter.ConfigureTargets(combatTargetView, static3DUnitPresentationProvider, combatMovementView);
                 combatTargetInput.Configure(battlefieldCamera, static3DUnitPresentationProvider, combatHudPresenter);

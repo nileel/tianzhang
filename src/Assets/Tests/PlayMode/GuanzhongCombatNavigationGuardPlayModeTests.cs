@@ -360,7 +360,7 @@ namespace TianZhang.Tests.PlayMode
             yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(combat, spawned.Enemy.Id);
             Assert.IsTrue(commands.Preview.CanConfirm, commands.Preview.Reason);
             int spiritBeforeCast = spawned.Player.CurrentSpirit;
-            yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack(); yield return PlayerReady();
+            yield return GuanzhongBasicAttackPlayModeTests.ConfirmPointedAttack(); yield return PlayerReady();
             Assert.Less(spawned.Player.CurrentSpirit, spiritBeforeCast);
             encounter.RequestEndTurn("player"); yield return null; yield return PlayerReady();
             actions.SwapEquipmentButton.onClick.Invoke(); Assert.IsTrue(commands.Preview.CanConfirm, commands.Preview.Reason);
@@ -530,7 +530,7 @@ namespace TianZhang.Tests.PlayMode
             actions.ArtButton.onClick.Invoke();
             yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(combat, spawned.Enemy.Id);
             Assert.IsTrue(commands.Preview.CanConfirm, commands.Preview.Reason);
-            yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+            yield return GuanzhongBasicAttackPlayModeTests.ConfirmPointedAttack();
             Assert.IsFalse(spawned.Enemy.IsAlive); Assert.IsTrue(encounter.IsPresenting);
             Assert.IsFalse(encounter.CanWithdraw(out string reason)); Assert.AreEqual("胜负已定，等待结算", reason);
             adventure.RequestReturn(); Assert.IsFalse(adventure.IsWithdrawalConfirmationOpen);

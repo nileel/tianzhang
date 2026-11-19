@@ -21,15 +21,22 @@ namespace TianZhang.Features.CombatPresentation
         public CombatActionPreviewSnapshot Preview { get; private set; }
         public CombatActionCandidate Candidate => Preview?.Candidate;
         public bool IsSelectingAttack { get; private set; }
+        private bool attackLocked;
+        private bool showingInvalidation;
+        public bool IsTargetLocked => attackLocked || movementView?.IsLocked == true;
+        public bool HasPendingSelection => Preview != null || movementView?.IsSelecting == true || showingInvalidation;
         private CombatUnitPresentationHex? pointedCell;
 
-        public void ConfigurePreview(ICombatActionPreviewHandler previews, CombatActionPreviewView view, CombatTimelineView axis)
+        public void ConfigurePreview(ICombatActionPreviewHandler previews, CombatActionPreviewView view, CombatTimelineView axis,
+            Action onConfirm = null, Action onCancel = null)
         {
             previewHandler = previews ?? throw new ArgumentNullException(nameof(previews));
             previewView = view;
             timeline = axis;
-            Bind(view.ConfirmButton, ConfirmCandidate);
-            Bind(view.CancelButton, CancelCandidate);
+            view.ConfirmButton.onClick.RemoveAllListeners();
+            view.ConfirmButton.onClick.AddListener(() => (onConfirm ?? ConfirmCandidate)());
+            view.CancelButton.onClick.RemoveAllListeners();
+            view.CancelButton.onClick.AddListener(() => (onCancel ?? CancelSelectionLayer)());
             Bind(view.SwapSlotButton, SelectNextSwapSlot);
             Bind(view.SwapCandidateButton, SelectNextSwapCandidate);
         }
@@ -37,6 +44,8 @@ namespace TianZhang.Features.CombatPresentation
         public void CancelCandidate()
         {
             IsSelectingAttack = false;
+            attackLocked = false;
+            showingInvalidation = false;
             selectingArt = null;
             pointedCell = null;
             Preview = null;
@@ -48,8 +57,22 @@ namespace TianZhang.Features.CombatPresentation
 
         public void ConfirmCandidate()
         {
-            if (IsSelectingAttack) return;
+            if (movementView?.IsSelecting == true) { movementView.Confirm(); return; }
+            if (IsSelectingAttack && !attackLocked) return;
             CommitCandidate();
+        }
+
+        public void CancelSelectionLayer()
+        {
+            if (movementView?.IsSelecting == true) { movementView.CancelSelectionLayer(); return; }
+            if (attackLocked)
+            {
+                attackLocked = false;
+                PresentPointerPrompt("指向预览，左键锁定", actionName: selectingArt?.DisplayName ?? "普攻",
+                    minimumRange: selectingArt?.MinimumRange ?? 0, maximumRange: selectingArt?.MaximumRange ?? 0);
+                return;
+            }
+            CancelCandidate();
         }
 
         private void CommitCandidate()
@@ -67,11 +90,6 @@ namespace TianZhang.Features.CombatPresentation
             movementView?.Cancel();
             Preview = previewHandler.PreviewAction(new CombatActionCandidate(kind, actorId, target, profile,
                 snapshot.CommandContextVersion, slotIndex: slot, attackDirection: direction));
-            if (kind == CombatActionKind.Divine && Preview?.CanConfirm == true)
-            {
-                CommitCandidate();
-                return;
-            }
             previewView?.Present(Preview, CurrentActionPoints, snapshot);
             timeline?.PresentPrediction(Preview);
             movementView?.PresentAttackArea(Preview?.AttackArea);
@@ -86,8 +104,8 @@ namespace TianZhang.Features.CombatPresentation
             selectingArt = art;
             var selection = new CombatActionCandidate(kind, actorId, null, art?.ProfileId, snapshot.CommandContextVersion);
             PresentPointerPrompt(art == null
-                    ? "鼠标指向地块预览，左键施行；右键或 Esc 取消"
-                    : !string.IsNullOrEmpty(art.EntryQuote?.Reason) ? art.EntryQuote.Reason : "左键点击可施放地块；右键或 Esc 取消",
+                    ? "指向预览，左键锁定，右键或 Esc 取消"
+                    : !string.IsNullOrEmpty(art.EntryQuote?.Reason) ? art.EntryQuote.Reason : "左键锁定可施放地块，右键或 Esc 取消",
                 selection, art?.DisplayName ?? "普攻", art?.MinimumRange ?? 0, art?.MaximumRange ?? 0);
         }
 
@@ -97,10 +115,14 @@ namespace TianZhang.Features.CombatPresentation
             selection ??= Candidate;
             if (actionName == null) actionName = Preview?.ActionName ?? "攻击";
             pointedCell = null;
+            CombatActionPreviewSnapshot price = selectingArt?.EntryQuote ?? snapshot.FindPreferredAction(selection.Kind, selection.ProfileId);
+            bool fixedPrice = price != null && (selectingArt == null || selectingArt.Targets.All(target =>
+                target.SpiritCost == price.SpiritCost && (target.Quote == null || target.Quote.ActionPointCostUnits == price.ActionPointCostUnits)));
             Preview = new CombatActionPreviewSnapshot(new CombatActionCandidate(selection.Kind,
                 actorId, null, selection.ProfileId, snapshot.CommandContextVersion), actionName, "当前角色", "待选目标", false,
-                reason, 0, false, 0, 0, 0, minimumRange: minimumRange, maximumRange: maximumRange);
-            previewView?.Present(Preview, CurrentActionPoints, snapshot);
+                reason, price?.SpiritCost ?? 0, false, 0, 0, 0, price?.ActionPointCostUnits ?? 0,
+                minimumRange: minimumRange, maximumRange: maximumRange);
+            previewView?.Present(Preview, CurrentActionPoints, snapshot, selectingTarget: true, priceKnown: fixedPrice);
             timeline?.PresentPrediction(null);
             PresentSelectionHighlights();
         }
@@ -123,21 +145,22 @@ namespace TianZhang.Features.CombatPresentation
 
         private void LateUpdate()
         {
+            Mouse mouse = Mouse.current;
+            if (HasPendingSelection && (mouse?.rightButton.wasPressedThisFrame == true || Keyboard.current?.escapeKey.wasPressedThisFrame == true))
+            { CancelSelectionLayer(); return; }
             if (!IsSelectingAttack) return;
             if (!CanAct || snapshot?.Movement == null) { CancelCandidate(); return; }
-            Mouse mouse = Mouse.current;
-            if (mouse?.rightButton.wasPressedThisFrame == true || Keyboard.current?.escapeKey.wasPressedThisFrame == true)
-            { CancelCandidate(); return; }
+            if (attackLocked) return;
             if (mouse == null || !TryPickAttackCell(mouse.position.ReadValue(), out var cell))
             {
                 if (pointedCell.HasValue)
                     PresentPointerPrompt(selectingArt == null
-                        ? "请指向棋盘内的地块，左键施行"
-                        : "请指向可施放地块，左键施行", null, selectingArt?.DisplayName,
+                        ? "请指向棋盘内的地块，左键锁定"
+                        : "请指向可施放地块，左键锁定", null, selectingArt?.DisplayName,
                         selectingArt?.MinimumRange ?? 0, selectingArt?.MaximumRange ?? 0);
                 return;
             }
-            // Requote on the committing click even when the pointer has not moved.
+            // Freeze the authoritative quote on the locking click, even if the pointer has not moved.
             if (!pointedCell.HasValue || !pointedCell.Value.Equals(cell) || mouse.leftButton.wasPressedThisFrame)
             {
                 pointedCell = cell;
@@ -158,13 +181,10 @@ namespace TianZhang.Features.CombatPresentation
                     basic ? CombatActionKind.BasicAttack : CombatActionKind.Art, actorId, null,
                     basic ? null : selectingArt.ProfileId, snapshot.CommandContextVersion,
                     attackDirection: directional ? direction : (int?)null, targetCell: cell));
-                previewView?.Present(Preview, CurrentActionPoints, snapshot);
+                attackLocked = mouse.leftButton.wasPressedThisFrame && Preview?.CanConfirm == true;
+                previewView?.Present(Preview, CurrentActionPoints, snapshot, selectingTarget: !attackLocked);
                 timeline?.PresentPrediction(Preview);
                 PresentSelectionHighlights();
-            }
-            if (mouse.leftButton.wasPressedThisFrame && Preview?.CanConfirm == true)
-            {
-                CommitCandidate();
             }
         }
 
@@ -264,6 +284,8 @@ namespace TianZhang.Features.CombatPresentation
 
         public void SetContext(CombatHudSnapshot nextSnapshot)
         {
+            bool invalidated = nextSnapshot != null && (showingInvalidation || HasPendingSelection && snapshot != null &&
+                snapshot.CommandContextVersion != nextSnapshot.CommandContextVersion);
             CancelCandidate();
             snapshot = nextSnapshot;
             acceptsCommands = snapshot != null && snapshot.AcceptsCommands;
@@ -272,6 +294,13 @@ namespace TianZhang.Features.CombatPresentation
             divineProfileId = snapshot != null && snapshot.DivineProfileIds.Count > 0 ? snapshot.DivineProfileIds[0] : null;
             actionBar?.Present(snapshot);
             movementView?.Present(nextSnapshot);
+            if (invalidated) ShowInvalidated();
+        }
+
+        public void ShowInvalidated()
+        {
+            showingInvalidation = true;
+            previewView?.PresentInvalidated();
         }
 
         public void ClearContext()

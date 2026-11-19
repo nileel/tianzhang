@@ -77,6 +77,23 @@ namespace TianZhang.Tests.PlayMode
 
         public static IEnumerator ClickPointedAttack() => PointAttackAt(Mouse.current.position.ReadValue(), true);
 
+        public static IEnumerator ConfirmPointedAttack()
+        {
+            yield return ClickPointedAttack();
+            var input = FindInActiveScene<CombatCommandInput>();
+            Assert.That(input.IsTargetLocked, Is.True, "The chosen cell must lock before submitting its quote.");
+            yield return ConfirmLockedTarget();
+        }
+
+        public static IEnumerator ConfirmLockedTarget()
+        {
+            var button = FindInActiveScene<CombatActionPreviewView>().ConfirmButton;
+            Assert.That(button.gameObject.activeInHierarchy && button.IsInteractable(), Is.True,
+                "Locking a target must enable the common confirmation button.");
+            var rect = (RectTransform)button.transform;
+            yield return PointAttackAt(RectTransformUtility.WorldToScreenPoint(null, rect.TransformPoint(rect.rect.center)), true);
+        }
+
         // Check the formal new-game result; this helper must never upgrade or initialize a player.
         public static void PrepareEquippedPlayerFixture()
         {

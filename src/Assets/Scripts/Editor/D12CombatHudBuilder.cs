@@ -139,7 +139,7 @@ namespace TianZhang.Editor
             combat.SetParent(hud, false);
             Anchor(combat, new Vector2(.5f, 0), new Vector2(.5f, 0), 0, 252, 510, 78);
             Transform body = Find(combat, "JindanCombatBody"); Stretch(body);
-            D12CombatHudAssets.Surface(body.GetComponent<Image>(), "panel");
+            ClearSurface(body);
             var data = new SerializedObject(view);
             var bindings = data.FindProperty("buttons");
             Button fireTab = canvas.GetComponentsInChildren<Button>(true).FirstOrDefault(b => b.name == "fire_tab");
@@ -187,17 +187,6 @@ namespace TianZhang.Editor
                     label.text = OptionName(option.name, label.text); Stretch(label.transform, 2);
                 }
             }
-            Transform quoteViewport = Find(combat, "CombatQuoteViewport"); Rect(quoteViewport, 98, 10, 224, 58);
-            ClearSurface(quoteViewport); quoteViewport.GetComponent<ScrollRect>().enabled = false;
-            quoteViewport.GetComponent<RectMask2D>().enabled = false;
-            Text quoteText = quoteViewport.GetComponentInChildren<Text>(); DisableLayout(quoteText.transform); Stretch(quoteText.transform);
-            quoteText.fontSize = 18; quoteText.alignment = TextAnchor.MiddleLeft;
-            Text quoteTitle = Label(body, "JindanQuoteTitle", "", 21); Rect(quoteTitle.transform, 16, 10, 78, 58);
-            SceneBuildSupport.SetObject(view, "quoteTitle", quoteTitle);
-            Button confirm = Find(body, "confirm").GetComponent<Button>(); Rect(confirm.transform, 330, 16, 112, 46);
-            D12CombatHudAssets.Button(confirm, "confirm"); confirm.GetComponentInChildren<Text>().fontSize = 18;
-            Button cancel = Find(body, "cancel_targeting").GetComponent<Button>(); Rect(cancel.transform, 450, 16, 48, 46);
-            D12CombatHudAssets.Button(cancel, null); cancel.GetComponentInChildren<Text>().text = "Esc"; cancel.GetComponentInChildren<Text>().fontSize = 18;
             GameObject detailPanel = Panel(hud, "JindanDetailsRoot");
             Anchor(detailPanel.transform, new Vector2(.02f, .21f), Vector2.zero, 0, 0, 440, 400);
             Transform oldDetails = Find(canvas, "CombatDetailsViewport"); oldDetails.SetParent(detailPanel.transform, false);
@@ -317,7 +306,7 @@ namespace TianZhang.Editor
             view.CancelButton.GetComponentInChildren<Text>().text = "Esc"; view.CancelButton.GetComponentInChildren<Text>().fontSize = 18;
             foreach (Button button in new[] { view.ConfirmButton, view.CancelButton }) DisableLayout(button.transform);
             Text cost = Label(preview, "CompactQuote", "", 19); Rect(cost.transform, 90, 10, 144, 58); cost.alignment = TextAnchor.MiddleLeft;
-            Text prompt = Label(preview, "BoardActionPrompt", "点格施行", 18); Rect(prompt.transform, 240, 16, 118, 46);
+            Text prompt = Label(preview, "BoardActionPrompt", "点格锁定", 18); Rect(prompt.transform, 240, 16, 118, 46);
             Text hint = Label(preview, "ActionHint", "", 16);
             Anchor(hint.transform, new Vector2(.5f, 0), new Vector2(.5f, 0), 0, -36, 760, 28);
             Transform selectors = Find(preview, "PreviewSelectors"); Rect(selectors, -50, 86, 560, 38);

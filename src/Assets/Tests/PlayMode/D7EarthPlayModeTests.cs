@@ -49,6 +49,157 @@ namespace TianZhang.Tests.PlayMode
         [UnityTest,Timeout(600000)] public IEnumerator AirborneSourceLowersFlyingAlly()=>GravityLoop(true);
         [UnityTest,Timeout(600000)] public IEnumerator GroundSourceLandsFlyingAlly()=>GravityLoop(false);
 
+        [UnityTest, Timeout(180000)]
+        public IEnumerator UnifiedEarthEdgesPreviewLockCancelAndPayOnce()
+        {
+            yield return Setup(false);
+            yield return Enter(true);
+            encounter.RequestMove(Earth, 7, 7);
+            yield return Ready();
+            Assert.AreEqual(new HexCoord(7, 7), Actor.Position);
+            CenterCameraOn(Actor.Position);
+            var grid = Find<CombatMovementView>();
+            var confirm = Find<CombatActionPreviewView>().ConfirmButton;
+            int ap = Actor.ActionPointsRemainingUnits, mp = Actor.CurrentSpirit;
+            foreach (var mode in new[] { CombatEarthMode.Wall, CombatEarthMode.Ramp })
+            {
+                yield return Press(mode == CombatEarthMode.Wall ? "earth_wall" : "earth_ramp");
+                StringAssert.Contains("第一个格", SharedHint);
+                var edge = (from a in surface.Cells.Where(c => c.kind == 0).Select(c => new HexCoord(c.q, c.r))
+                            where CanAimAt(a)
+                            orderby (Point(a) - Point(Actor.Position)).sqrMagnitude
+                            from b in a.Neighbors() where CanAimAt(b)
+                            let quote = encounter.PreviewJindan(Deploy(mode, a, b))
+                            where quote.IsLegal select (a, b, quote)).First();
+                var first = grid.Highlights[new Vector2Int(edge.a.Q, edge.a.R)];
+                var second = grid.Highlights[new Vector2Int(edge.b.Q, edge.b.R)];
+                yield return Click(Point(edge.a));
+                StringAssert.Contains("相邻第二格", SharedHint);
+                Assert.IsTrue(first.gameObject.activeInHierarchy, "The first endpoint must remain marked on the board.");
+                yield return Hover(Point(edge.b));
+                Assert.IsFalse(confirm.isActiveAndEnabled && confirm.interactable);
+                AssertQuote(edge.quote);
+                yield return Click(Point(edge.b));
+                Assert.IsTrue(first.gameObject.activeInHierarchy && second.gameObject.activeInHierarchy);
+                Assert.IsTrue(confirm.interactable);
+                Assert.AreEqual(ap, Actor.ActionPointsRemainingUnits);
+                Assert.AreEqual(mp, Actor.CurrentSpirit);
+                if (mode == CombatEarthMode.Wall)
+                {
+                    yield return RightClick(Point(edge.b));
+                    StringAssert.Contains("相邻第二格", SharedHint);
+                    Assert.IsTrue(first.gameObject.activeInHierarchy);
+                    Assert.IsFalse(second.gameObject.activeInHierarchy);
+                    Assert.IsFalse(confirm.isActiveAndEnabled && confirm.interactable);
+                    Assert.IsNull(Seat.ActiveEarth);
+                }
+                else
+                {
+                    yield return Capture("locked-ramp");
+                    yield return Click(confirm);
+                    yield return Ready();
+                    Assert.IsTrue(Seat.ActiveEarth.Objects.Single().Definition.IsTemporaryRamp);
+                    Assert.AreEqual(ap - edge.quote.ActionPointCostUnits, Actor.ActionPointsRemainingUnits);
+                    Assert.AreEqual(mp - edge.quote.SpiritCost, Actor.CurrentSpirit);
+                }
+            }
+        }
+
+        [UnityTest, Timeout(180000)]
+        public IEnumerator UnifiedGravityRejectsIllegalCellsAndInvalidatesLockedQuote()
+        {
+            yield return Setup(false);
+            yield return Enter(false);
+            yield return Press("earth_heavy");
+            var confirm = Find<CombatActionPreviewView>().ConfirmButton;
+            bool HasUnit(HexCoord cell) => session.Combatants.All.Any(unit => unit.IsAlive && unit.OccupiedCells.Contains(cell));
+            var empty = surface.Cells.Select(c => new HexCoord(c.q, c.r)).First(cell => CanAimAt(cell) &&
+                !HasUnit(cell) && !session.SceneObjects.All.Any(obj => obj.Contains(cell)));
+            int ap = Actor.ActionPointsRemainingUnits, mp = Actor.CurrentSpirit;
+            yield return Click(Point(empty));
+            Assert.IsFalse(confirm.isActiveAndEnabled && confirm.interactable);
+            StringAssert.Contains("没有合法受力目标", SharedHint);
+            // The first segment places the water cultivator six hexes from Earth, beyond gravity's four-hex reach.
+            Assert.IsTrue(session.Combatants.TryGet(Water, out var distantActor));
+            var distantCell = distantActor.Position;
+            var distantRequest = new CombatJindanRequest(Seat.Definition.SeatId, earthMode: CombatEarthMode.Heavy,
+                earthTargetId: Water, selectedTargetCell: distantCell);
+            var rejected = encounter.PreviewJindan(new CombatCommand(CombatCommandKind.JindanAbility, Earth,
+                profileId: "EARTH_GRAVITY", jindan: distantRequest));
+            Assert.IsFalse(rejected.IsLegal);
+            Assert.IsNotEmpty(rejected.RejectionReason);
+            CenterCameraOn(distantCell);
+            yield return null;
+            Assert.IsTrue(CanAimAt(distantCell), Water);
+            yield return Click(Point(distantCell));
+            Assert.IsFalse(confirm.isActiveAndEnabled && confirm.interactable);
+            StringAssert.Contains("不可施行", GameObject.Find("CompactQuote").GetComponent<Text>().text);
+            Assert.IsNull(Seat.ActiveEarth);
+            CenterCameraOn(Actor.Position);
+            yield return null;
+            var request = new CombatJindanRequest(Seat.Definition.SeatId, earthMode: CombatEarthMode.Heavy,
+                earthTargetId: Earth, selectedTargetCell: Actor.Position);
+            var quote = encounter.PreviewJindan(new CombatCommand(CombatCommandKind.JindanAbility, Earth,
+                profileId: "EARTH_GRAVITY", jindan: request));
+            Assert.IsTrue(quote.IsLegal, quote.RejectionReason);
+            yield return Hover(Point(Actor.Position));
+            AssertQuote(quote);
+            Assert.IsFalse(confirm.isActiveAndEnabled && confirm.interactable);
+            yield return Click(Point(Actor.Position));
+            Assert.IsTrue(confirm.interactable);
+            Assert.IsTrue(session.RefreshActionEconomy(Earth, Actor.ActionPointMaximumUnits,
+                Actor.MovementEfficiencyMilliUnits + 1));
+            yield return null; yield return null;
+            Assert.IsFalse(confirm.isActiveAndEnabled && confirm.interactable);
+            StringAssert.Contains("战况已变", SharedHint);
+            Assert.IsFalse(Find<CombatMovementView>().Highlights[new Vector2Int(Actor.Position.Q, Actor.Position.R)]
+                .gameObject.activeInHierarchy, "Invalidating the gravity quote also clears the locked body cell.");
+            Assert.IsNull(Seat.ActiveEarth);
+            Assert.AreEqual(ap, Actor.ActionPointsRemainingUnits);
+            Assert.AreEqual(mp, Actor.CurrentSpirit);
+            yield return Press("earth_heavy");
+            yield return Click(Point(Actor.Position));
+            yield return Click(confirm);
+            yield return Ready();
+            Assert.AreEqual(Earth, Seat.ActiveEarth.TargetId);
+            Assert.AreEqual(ap - quote.ActionPointCostUnits, Actor.ActionPointsRemainingUnits);
+            Assert.AreEqual(mp - quote.SpiritCost, Actor.CurrentSpirit);
+        }
+
+        private static string SharedHint => GameObject.Find("ActionHint").GetComponent<Text>().text;
+        private static void AssertQuote(CombatCommandPreview quote) => StringAssert.Contains(
+            CombatActionPreviewView.FormatActionPoints(quote.ActionPointCostUnits) + " AP · " + quote.SpiritCost + " MP",
+            GameObject.Find("CompactQuote").GetComponent<Text>().text);
+
+        private void CenterCameraOn(HexCoord cell)
+        {
+            var camera = Camera.main;
+            Vector3 world = surface.Center(new CombatUnitPresentationHex(cell.Q, cell.R));
+            Vector3 center = camera.ScreenToWorldPoint(new Vector3(Screen.width * .5f, Screen.height * .6f,
+                camera.WorldToScreenPoint(world).z));
+            camera.transform.position += world - center;
+        }
+
+        private bool CanAimAt(HexCoord cell)
+        {
+            if (!surface.Cells.Any(value => value.q == cell.Q && value.r == cell.R)) return false;
+            Vector2 screen = Point(cell);
+            return screen.x >= 0 && screen.x < Screen.width && screen.y >= 0 && screen.y < Screen.height &&
+                Find<CombatMovementView>().TryPickCell(screen, out var picked) && picked.Q == cell.Q && picked.R == cell.R;
+        }
+
+        private IEnumerator Hover(Vector2 point)
+        {
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = point }); yield return null; yield return null;
+        }
+
+        private IEnumerator RightClick(Vector2 point)
+        {
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = point }.WithButton(MouseButton.Right));
+            yield return null; yield return null;
+            yield return Hover(point);
+        }
+
         private IEnumerator Enter(bool manifest,int stage=1)
         {
             yield return Click(GameObject.Find("JindanRehearsalButton").GetComponent<Button>());

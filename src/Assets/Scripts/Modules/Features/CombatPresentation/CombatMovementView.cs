@@ -70,6 +70,7 @@ namespace TianZhang.Features.CombatPresentation
         private bool ownsPreview;
         public Action SelectionStarted { private get; set; }
         public bool IsSelecting { get; private set; }
+        public bool IsLocked { get; private set; }
         public CombatMovementOption Selected => selected;
         public IReadOnlyDictionary<Vector2Int, LineRenderer> Highlights => highlights;
         public LineRenderer InspectionRing => inspectionRing;
@@ -241,25 +242,30 @@ namespace TianZhang.Features.CombatPresentation
 
         public void Confirm()
         {
-            if (!CanInput || !IsSelecting || selected == null || selected.Candidate == null) return;
+            if (!CanInput || !IsLocked || selected?.Candidate == null) return;
             CombatMovementOption committed = selected;
             // Close the popup and range before the authority projection can repaint either.
             ClearSelection();
             previewHandler.ConfirmAction(committed.Candidate);
         }
 
+        public void CancelSelectionLayer()
+        {
+            if (!IsLocked) { Cancel(); return; }
+            IsLocked = false;
+            selected = null;
+            HighlightDestination(null);
+            DrawPath(null);
+            PresentMovementPreview(false);
+            RefreshControls();
+        }
+
         private void LateUpdate()
         {
-            if (!CanInput || !IsSelecting || snapshot.Movement == null) return;
+            if (!CanInput || !IsSelecting || IsLocked || snapshot.Movement == null) return;
             Mouse mouse = Mouse.current;
             if (mouse == null) return;
             Vector2 pointer = mouse.position.ReadValue();
-            // Cancellation must work even while the pointer is over the popup or another UI owner.
-            if (mouse.rightButton.wasPressedThisFrame || (Keyboard.current?.escapeKey.wasPressedThisFrame ?? false))
-            {
-                Cancel();
-                return;
-            }
             bool uiOwnsPointer = UiOwnsPointer(pointer);
             bool pointerOnBoard = false;
             CombatMovementOption hovered = null;
@@ -271,11 +277,11 @@ namespace TianZhang.Features.CombatPresentation
             }
             // Hover is only a preview; it never commits and never clears an ongoing selection.
             selected = hovered;
+            IsLocked = mouse.leftButton.wasPressedThisFrame && hovered != null;
             HighlightDestination(hovered);
             DrawPath(hovered);
             PresentMovementPreview(pointerOnBoard);
             actionBar?.PresentMovement(snapshot, IsSelecting, hovered);
-            if (mouse.leftButton.wasPressedThisFrame && hovered != null) Confirm();
         }
 
         public bool TryPickCell(Vector2 screenPoint, out CombatUnitPresentationHex picked)
@@ -454,6 +460,7 @@ namespace TianZhang.Features.CombatPresentation
                 previewView?.PresentMovement(null, null, false, false);
             }
             IsSelecting = false;
+            IsLocked = false;
             selected = null;
             destinationCells.Clear();
             foreach (LineRenderer ring in highlights.Values)
@@ -474,7 +481,7 @@ namespace TianZhang.Features.CombatPresentation
         private void PresentMovementPreview(bool pointerOnBoard)
         {
             if (!ownsPreview) return;
-            previewView?.PresentMovement(snapshot?.Movement, selected, IsSelecting, pointerOnBoard);
+            previewView?.PresentMovement(snapshot?.Movement, selected, IsSelecting, pointerOnBoard, IsLocked);
         }
 
         private void RefreshControls() => actionBar?.PresentMovement(snapshot, IsSelecting, selected);

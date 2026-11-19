@@ -14,6 +14,7 @@ using TianZhang.Features.Settlement;
 using TianZhang.Features.WorldMap;
 using TianZhang.Gameplay.Contracts;
 using TianZhang.Infrastructure.Persistence;
+using TianZhang.Spatial;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -178,6 +179,10 @@ namespace TianZhang.Tests.PlayMode
                 Assert.IsFalse(bar.DivineButton.gameObject.activeInHierarchy);
                 yield return Capture("ordinary-initial-" + width);
                 CheckSlots("ordinary-" + width);
+                yield return Click(bar.ArtButton);
+                Assert.AreEqual("spell_guanshiji", Find<CombatCommandInput>().Candidate.ProfileId);
+                D12PlayerStartPlayModeTests.AssertPrice(50000, 12);
+                yield return Capture("ordinary-guanshiji-before-target-" + width);
                 yield return Click(bar.ThirdArtButton);
                 Assert.AreEqual("spell_feixingzhi", Find<CombatCommandInput>().Candidate.ProfileId);
                 yield return Capture("ordinary-spell-" + width);
@@ -222,14 +227,84 @@ namespace TianZhang.Tests.PlayMode
                 yield return Capture("scale-selected-" + width);
                 yield return Click(view.GetButton("visibility_tab"));
                 yield return Click(view.GetButton("visibility_deploy"));
-                Assert.IsTrue(view.GetButton("confirm").interactable);
+                Assert.IsTrue(Find<CombatActionPreviewView>().ConfirmButton.interactable);
                 yield return Click(bar.ArtButton);
                 Assert.IsNull(view.SelectedKey);
-                Assert.IsFalse(view.GetButton("confirm").gameObject.activeInHierarchy);
+                Assert.IsFalse(Find<CombatActionPreviewView>().ConfirmButton.isActiveAndEnabled &&
+                    Find<CombatActionPreviewView>().ConfirmButton.interactable);
                 yield return Capture("scale-ordinary-switch-" + width);
+                yield return PreviewThirdScaleCellAndConfirmOriginalPath(view, encounter, width);
                 yield return Withdraw();
                 Assert.IsNull(Find<JindanDemoView>());
             }
+        }
+
+        private IEnumerator PreviewThirdScaleCellAndConfirmOriginalPath(JindanDemoView view, EncounterCoordinator encounter, int width)
+        {
+            yield return Click(view.GetButton("scale_tab"));
+            yield return Click(view.GetButton("compress"));
+            yield return Click(view.GetButton("pick_edges"));
+            var session = encounter.CurrentSession;
+            var actor = session.Combatants.All.Single(a => a.Id == encounter.ControlledActorId);
+            var seat = session.Jindan.Seats.Single(s => s.Definition.ActorId == actor.Id && s.EffectId == "SPACE_SCALE");
+            var surface = Find<CombatBattlefieldSurface>();
+            var movement = Find<CombatMovementView>();
+            var points = new Dictionary<HexCoord, Vector2>();
+            for (int q = actor.Position.Q - 3; q <= actor.Position.Q + 3; q++)
+            for (int r = actor.Position.R - 3; r <= actor.Position.R + 3; r++)
+            {
+                var cell = new HexCoord(q, r);
+                Vector3 center = CombatBattlefieldSurface.Horizontal(q, r);
+                if (!surface.TryHeight(center, out center.y)) continue;
+                if (GuanzhongMovementPlayModeTests.TryFindCellPoint(movement, Camera.main, center, new Vector2Int(q, r), out var point))
+                    points.Add(cell, point);
+            }
+            CombatCommandPreview Quote(params HexCoord[] path) => encounter.PreviewJindan(
+                new CombatCommand(CombatCommandKind.JindanAbility, actor.Id, profileId: seat.EffectId,
+                    jindan: new CombatJindanRequest(seat.Definition.SeatId, path, 1)));
+            var route = (from a in points.Keys
+                         from b in a.Neighbors() where points.ContainsKey(b)
+                         from c in b.Neighbors() where c != a && points.ContainsKey(c)
+                         where Quote(a, b, c).IsLegal
+                         select new[] { a, b, c }).FirstOrDefault();
+            Assert.IsNotNull(route, "Need three adjacent legal cells visible through the HUD.");
+            HexCoord first = route[0], second = route[1], third = route[2];
+            var quoted = Quote(first, second);
+            Assert.IsTrue(quoted.IsLegal, quoted.RejectionReason);
+            int ap = actor.ActionPointsRemainingUnits, mp = actor.CurrentSpirit;
+            yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(points[first], click: true);
+            yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(points[second], click: true);
+            var shared = Find<CombatActionPreviewView>();
+            var hint = GameObject.Find("ActionHint").GetComponent<Text>();
+            Assert.IsTrue(shared.ConfirmButton.interactable);
+            string originalHint = hint.text;
+            yield return Click(view.GetButton("pick_origin"));
+            var origin = points.Keys.First(cell => cell != actor.Position && cell != first && cell != second &&
+                encounter.PreviewJindan(new CombatCommand(CombatCommandKind.JindanAbility, actor.Id,
+                    profileId: seat.EffectId, jindan: new CombatJindanRequest(seat.Definition.SeatId,
+                        new[] { first, second }, 1, cell))).IsLegal);
+            yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(points[origin], click: true);
+            StringAssert.Contains($"原点 ({origin.Q},{origin.R})", hint.text);
+            yield return Click(shared.CancelButton);
+            Assert.AreEqual(originalHint, hint.text, "Undoing the last-picked origin must keep both locked endpoints.");
+            yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(points[third]);
+            StringAssert.Contains($"({third.Q},{third.R})", hint.text);
+            Assert.AreNotEqual(originalHint, hint.text);
+            yield return Capture("scale-third-hover-" + width);
+            yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(points[first]);
+            StringAssert.Contains("不可施行", GameObject.Find("CompactQuote").GetComponent<Text>().text);
+            Assert.AreEqual(ap, actor.ActionPointsRemainingUnits);
+            Assert.AreEqual(mp, actor.CurrentSpirit);
+            Assert.IsNull(seat.ActiveScale);
+            var confirmRect = (RectTransform)shared.ConfirmButton.transform;
+            Vector2 confirmPoint = RectTransformUtility.WorldToScreenPoint(null, confirmRect.TransformPoint(confirmRect.rect.center));
+            yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(confirmPoint);
+            Assert.AreEqual(originalHint, hint.text, "Leaving the board restores the locked pair.");
+            yield return Click(shared.ConfirmButton);
+            yield return Ready();
+            CollectionAssert.AreEqual(new[] { first, second }, seat.ActiveScale.Path);
+            Assert.AreEqual(ap - quoted.ActionPointCostUnits, actor.ActionPointsRemainingUnits);
+            Assert.AreEqual(mp - quoted.SpiritCost, actor.CurrentSpirit);
         }
 
         public static void CheckSlots(string name)
@@ -237,6 +312,60 @@ namespace TianZhang.Tests.PlayMode
             Canvas.ForceUpdateCanvases();
             CaptureLayout(name);
             CheckV3Bounds(name);
+            CheckRenderedSlots(name);
+        }
+
+        // Layout-only fixture: exercise every ordinary slot on the real active fire HUD. The player keeps their own loadout.
+        internal static IEnumerator CheckFullLoadoutLayout(int width)
+        {
+            var bar = Find<CombatActionBarView>();
+            var original = Find<CombatHudPresenter>().Snapshot;
+            var arts = new List<CombatArtActionSnapshot>();
+            string[] artNames = { "飞星指", "贯石击", "聚灵术", "裂石", "演武·破垒" };
+            string[] divineNames = { "雷剑破虚", "剑心通明" };
+            var actions = new List<CombatActionPreviewSnapshot>(original.Actions);
+            var divineIds = new List<string>();
+            foreach (string title in artNames.Concat(divineNames))
+            {
+                bool art = arts.Count < artNames.Length;
+                string id = "layout_" + title;
+                var candidate = new CombatActionCandidate(art ? CombatActionKind.Art : CombatActionKind.Divine,
+                    "player", null, id, original.CommandContextVersion);
+                var quote = new CombatActionPreviewSnapshot(candidate, title, "沈行舟", "", true, "", 10,
+                    true, 0, 100, 0, actionPointCostUnits: 50000, canOpen: true);
+                if (art)
+                    arts.Add(new CombatArtActionSnapshot(id, title, 0, Array.Empty<CombatArtTargetSnapshot>(), entryQuote: quote));
+                else divineIds.Add(id);
+                actions.Add(quote);
+            }
+            var full = new CombatHudSnapshot(original.Player, original.Enemy, original.TurnText, true,
+                arts.Select(a => a.ProfileId).ToArray(), divineIds, movement: original.Movement, canEndTurn: true,
+                artActions: arts, commandContextVersion: original.CommandContextVersion, actions: actions);
+            try
+            {
+                bar.Present(full);
+                yield return null;
+                yield return new WaitForEndOfFrame();
+                Canvas.ForceUpdateCanvases();
+                var buttons = new[] { bar.ArtButton, bar.SecondArtButton, bar.ThirdArtButton, bar.FourthArtButton,
+                    bar.FifthArtButton, bar.DivineButton, bar.SecondDivineButton };
+                foreach (var pair in buttons.Zip(artNames.Concat(divineNames), (button, title) => (button, title)))
+                {
+                    Assert.IsTrue(pair.button.gameObject.activeInHierarchy && pair.button.interactable, pair.title);
+                    StringAssert.Contains(pair.title.Replace("演武·", ""), pair.button.GetComponentInChildren<Text>().text);
+                }
+                CheckRenderedSlots("full-loadout-" + width);
+                CheckResizeButton(bar.WaitButton);
+                Rect rightmost = ScreenRect((RectTransform)bar.BasicAttackButton.transform.parent.GetComponentsInChildren<Button>().Last().transform);
+                Assert.LessOrEqual(rightmost.xMax, ScreenRect((RectTransform)bar.WaitButton.transform).xMin);
+                ScreenCapture.CaptureScreenshot(Path.GetFullPath("Logs/d12-hud/full-loadout-" + width + ".png"));
+                yield return null;
+            }
+            finally { bar.Present(original); }
+        }
+
+        private static void CheckRenderedSlots(string name)
+        {
             var bar = Find<CombatActionBarView>();
             var row = bar.BasicAttackButton.transform.parent;
             var slots = row.GetComponentsInChildren<Button>().Where(b => b.gameObject.activeInHierarchy).ToArray();
@@ -356,7 +485,7 @@ namespace TianZhang.Tests.PlayMode
         { yield return new WaitForEndOfFrame(); CaptureLayout(name); ScreenCapture.CaptureScreenshot(Path.Combine(output, name + ".png")); yield return null; }
         private static IEnumerator ReadyScene(string name)
         { for (int i = 0; i < 300 && SceneManager.GetActiveScene().name != name; i++) yield return null; yield return null; yield return null; Assert.AreEqual(name, SceneManager.GetActiveScene().name); }
-        private static void Refresh(EncounterCoordinator encounter) => typeof(EncounterCoordinator).GetMethod("Present", BindingFlags.Instance | BindingFlags.NonPublic)
+        internal static void Refresh(EncounterCoordinator encounter) => typeof(EncounterCoordinator).GetMethod("Present", BindingFlags.Instance | BindingFlags.NonPublic)
             .Invoke(encounter, new object[] { "你的行动", true, null });
         private static T Find<T>() where T : Object => Object.FindFirstObjectByType<T>();
         private static void Set(object target, string field, object value) => target.GetType().GetField(field, BindingFlags.NonPublic | BindingFlags.Instance).SetValue(target, value);

@@ -194,7 +194,7 @@ namespace TianZhang.Tests.PlayMode
                     yield return GuanzhongBasicAttackPlayModeTests.PointBasicAttack(session);
                     Assert.That(input.Preview.ActionPointCostUnits, Is.EqualTo(cost));
                     Assert.That(input.Preview.CanConfirm, Is.True, input.Preview.Reason);
-                    yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+                    yield return GuanzhongBasicAttackPlayModeTests.ConfirmPointedAttack();
                     Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - cost));
                     yield return Ready();
                 }
@@ -208,7 +208,7 @@ namespace TianZhang.Tests.PlayMode
                     Assert.That(input.Preview.CanConfirm, Is.True, input.Preview.Reason);
                     int ap = spawned.Player.ActionPointsRemainingUnits, cost = input.Preview.ActionPointCostUnits;
                     yield return CaptureAp2("spell-" + width + "-" + (use + 1));
-                    yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+                    yield return GuanzhongBasicAttackPlayModeTests.ConfirmPointedAttack();
                     Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - cost));
                     yield return Ready();
                 }
@@ -218,7 +218,7 @@ namespace TianZhang.Tests.PlayMode
                 Assert.IsNull(input.Candidate.TargetId);
                 yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Player.Id, click: false);
                 Assert.That(input.Preview.CanConfirm, Is.True, input.Preview.Reason);
-                yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+                yield return GuanzhongBasicAttackPlayModeTests.ConfirmPointedAttack();
                 Assert.IsNull(input.Candidate);
                 yield return Ready();
                 var cooling = presenter.Snapshot.ArtActions[1].Targets[0].Quote;
@@ -259,7 +259,7 @@ namespace TianZhang.Tests.PlayMode
                     Assert.That(input.Preview.ActionPointCostUnits, Is.EqualTo(25000));
                     Assert.That(input.Preview.CanConfirm, Is.True, input.Preview.Reason);
                     yield return CaptureAp2("unarmed-" + width + "-" + use);
-                    yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+                    yield return GuanzhongBasicAttackPlayModeTests.ConfirmPointedAttack();
                     yield return Ready();
                 }
                 bar.BasicAttackButton.onClick.Invoke();
@@ -379,7 +379,7 @@ namespace TianZhang.Tests.PlayMode
                     AssertAp2Quote(input.Preview, CombatCommandKind.Art);
                     paid += input.Preview.ActionPointCostUnits;
                     float actionStarted = Time.realtimeSinceStartup;
-                    yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+                    yield return GuanzhongBasicAttackPlayModeTests.ConfirmPointedAttack();
                     yield return Ready();
                     presentationSeconds += Time.realtimeSinceStartup - actionStarted;
                 }
@@ -468,7 +468,7 @@ namespace TianZhang.Tests.PlayMode
                 Assert.IsNull(input.Candidate.TargetId);
                 yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Player.Id, click: false);
                 Assert.That(input.Preview.CanConfirm, Is.True, input.Preview.Reason);
-                yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+                yield return GuanzhongBasicAttackPlayModeTests.ConfirmPointedAttack();
                 Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - 25000));
                 Assert.That(presenter.Snapshot.IsPresenting, Is.True);
                 Assert.That(bar.ArtButton.interactable || bar.GuardButton.interactable || bar.MoveButton.interactable, Is.False);
@@ -523,7 +523,10 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(Get<Text>(bar, "movementLabel").text, Does.Contain("消耗 25 AP"));
             InputSystem.QueueStateEvent(mouse, new MouseState { position = point, buttons = 1 }); yield return null; yield return null;
             InputSystem.QueueStateEvent(mouse, new MouseState { position = point }); yield return null; yield return null;
-            Assert.That(move.IsSelecting, Is.False, "A legal click must commit and close the popup.");
+            Assert.That(move.IsLocked, Is.True);
+            Assert.That(State(), Is.EqualTo(before));
+            yield return GuanzhongBasicAttackPlayModeTests.ConfirmLockedTarget();
+            Assert.That(move.IsSelecting, Is.False, "Confirmation must commit and close the popup.");
             Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - quote.ActionPointCostUnits));
             Assert.That(spawned.Player.Position, Is.EqualTo(destination));
             // A repeated submission cannot spend AP or reposition twice.
@@ -593,7 +596,7 @@ namespace TianZhang.Tests.PlayMode
                 yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Player.Id, click: false);
                 Assert.That(input.Preview.CanConfirm, Is.True, input.Preview.Reason);
                 Assert.AreEqual(0, input.Preview.SpiritCost);
-                yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+                yield return GuanzhongBasicAttackPlayModeTests.ConfirmPointedAttack();
                 Assert.AreEqual(apBefore - selfQuote.ActionPointCostUnits, spawned.Player.ActionPointsRemainingUnits);
                 Assert.Greater(spawned.Player.CurrentSpirit, 0, "The legal self target recovers MP instead of paying for the unavailable enemy target.");
                 yield return Ready();
@@ -693,6 +696,9 @@ namespace TianZhang.Tests.PlayMode
                 bar.DivineButton.onClick.Invoke();
                 if (state.legal && !state.busy)
                 {
+                    Assert.AreEqual("enemy_2", input.Candidate.TargetId);
+                    Assert.AreEqual(commits, recorder.Commits);
+                    Find<CombatActionPreviewView>().ConfirmButton.onClick.Invoke();
                     Assert.IsNull(input.Candidate);
                     Assert.AreEqual("enemy_2", recorder.LastCommitted.TargetId);
                     Assert.AreEqual(requests + 1, recorder.Requests);
@@ -742,6 +748,7 @@ namespace TianZhang.Tests.PlayMode
                 Assert.IsTrue(input.IsSelectingAttack, "The skill button must only open board selection.");
                 Assert.IsNull(input.Candidate.TargetId);
                 Assert.IsTrue(view.IsVisible);
+                StringAssert.Contains("选定目标后报价", Get<Text>(view, "compactQuote").text);
                 Assert.IsFalse(view.ConfirmButton.gameObject.activeSelf);
                 StringAssert.Contains("施法范围 0–2 格", Get<Text>(view, "summary").text);
                 StringAssert.Contains("作用范围", Get<Text>(view, "summary").text);
@@ -753,31 +760,40 @@ namespace TianZhang.Tests.PlayMode
                 Assert.That(input.Preview.CanConfirm, Is.True, input.Preview.Reason);
                 Assert.AreEqual(0, input.Preview.SpiritCost);
                 Assert.AreEqual(25000, input.Preview.ActionPointCostUnits);
-                Assert.AreEqual(spawned.Player.Id, input.Candidate.TargetId);
+                GuanzhongCombatTargetSelectionPlayModeTests.AssertAffectedTarget(input, spawned.Player.Id);
                 yield return GuanzhongCombatTargetSelectionPlayModeTests.CaptureArtEvidence("s2-self-" + width, session);
 
                 yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id, click: false);
                 Assert.IsFalse(input.Preview.CanConfirm, "The untouched formal opening places the enemy outside 0-2.");
                 Assert.AreEqual(20, input.Preview.SpiritCost);
-                StringAssert.Contains("距离", input.Preview.Reason);
-                Assert.AreEqual(spawned.Enemy.Id, input.Candidate.TargetId);
+                Assert.That(input.Preview.Reason, Is.Not.Empty);
+                var farCell = input.Candidate.TargetCell.Value;
+                Assert.Contains(new HexCoord(farCell.Q, farCell.R), spawned.Enemy.OccupiedCells.ToList());
+                Assert.IsFalse(input.Preview.AttackArea.Cells.Any(cell => cell.IsLegal));
+                yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+                Assert.IsFalse(input.IsTargetLocked);
+                Assert.AreEqual(before, State());
                 yield return GuanzhongCombatTargetSelectionPlayModeTests.CaptureArtEvidence("s2-other-range-" + width, session);
 
-                Transform emptyTile = GameObject.Find("GuanzhongBattlefield").transform.Find("GuanzhongHex_0_1");
-                Assert.NotNull(emptyTile);
+                var emptyCell = presenter.Snapshot.ArtActions[1].CastableCells.First(cell =>
+                    !session.Combatants.All.Any(unit => unit.OccupiedCells.Contains(new HexCoord(cell.Q, cell.R))) &&
+                    GuanzhongCombatTargetSelectionPlayModeTests.TryFindCastingPoint(new HexCoord(cell.Q, cell.R), out _));
+                Assert.IsTrue(GuanzhongCombatTargetSelectionPlayModeTests.TryFindCastingPoint(
+                    new HexCoord(emptyCell.Q, emptyCell.R), out Vector2 emptyPoint));
                 int emptyAp = spawned.Player.ActionPointsRemainingUnits, emptyMp = spawned.Player.CurrentSpirit;
-                yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(
-                    Camera.main.WorldToScreenPoint(emptyTile.position), false);
-                Assert.IsTrue(string.IsNullOrEmpty(input.Candidate.TargetId), "An empty cell must not produce a unit target.");
-                Assert.IsFalse(input.Preview.CanConfirm);
+                yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(emptyPoint);
+                Assert.That(input.Candidate.TargetCell, Is.EqualTo(emptyCell));
+                Assert.IsTrue(input.Preview.CanConfirm, input.Preview.Reason);
+                Assert.IsEmpty(input.Preview.AttackArea.Targets);
+                Assert.AreEqual(20, input.Preview.SpiritCost);
                 yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
-                Assert.IsTrue(input.IsSelectingAttack, "An empty-cell click must not submit the skill.");
+                Assert.IsTrue(input.IsTargetLocked, "The empty cast stays unpaid until confirmation.");
                 Assert.AreEqual(emptyAp, spawned.Player.ActionPointsRemainingUnits);
                 Assert.AreEqual(emptyMp, spawned.Player.CurrentSpirit);
                 CaptureS2Selection("empty-cell-" + width);
 
-                Vector2 summaryPoint = RectTransformUtility.WorldToScreenPoint(null,
-                    Get<Text>(view, "summary").transform.position);
+                var compactRect = Get<Text>(view, "compactQuote").rectTransform;
+                Vector2 summaryPoint = RectTransformUtility.WorldToScreenPoint(null, compactRect.TransformPoint(compactRect.rect.center));
                 yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(summaryPoint, true);
                 Assert.IsTrue(input.IsSelectingAttack, "A UI click must not submit the board target.");
                 Assert.AreEqual(before, State());
@@ -789,8 +805,12 @@ namespace TianZhang.Tests.PlayMode
                 Assert.IsTrue(input.IsSelectingAttack, "Space must not submit the selected target.");
                 Assert.AreEqual(before, State());
 
-                yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(
-                    RectTransformUtility.WorldToScreenPoint(null, view.CancelButton.transform.position), true);
+                var cancelRect = (RectTransform)view.CancelButton.transform;
+                Vector2 cancelPoint = RectTransformUtility.WorldToScreenPoint(null, cancelRect.TransformPoint(cancelRect.rect.center));
+                yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(cancelPoint, true);
+                Assert.IsFalse(input.IsTargetLocked);
+                Assert.IsTrue(input.IsSelectingAttack);
+                yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(cancelPoint, true);
                 Assert.IsFalse(input.IsSelectingAttack);
                 Assert.IsNull(input.Candidate);
                 Assert.IsFalse(view.IsVisible);
@@ -856,7 +876,7 @@ namespace TianZhang.Tests.PlayMode
                         recovery.MinimumSpiritRecovery, Math.Min(spawned.Player.RawSpirit,
                             recovery.RuleMetadata.Tier.RawSpiritRecoveryCapacity) * (double)recovery.SpiritRecoveryMultiplier) *
                         session.SpiritRecoveryEnvironmentMultiplier));
-                    yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+                    yield return GuanzhongBasicAttackPlayModeTests.ConfirmPointedAttack();
                     Assert.IsFalse(input.IsSelectingAttack);
                     Assert.IsNull(input.Candidate);
                     Assert.AreEqual(ap - cost, spawned.Player.ActionPointsRemainingUnits);
@@ -864,7 +884,7 @@ namespace TianZhang.Tests.PlayMode
                     Assert.AreEqual(16, spawned.Player.GetCooldown("spell_julingshu"));
                     string after = State();
                     CaptureS2Selection("self-after-" + width);
-                    yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+                    view.ConfirmButton.onClick.Invoke();
                     input.ConfirmCandidate();
                     Assert.AreEqual(after, State(), "A second click or old candidate cannot settle again.");
                     Assert.IsTrue(encounter.IsPresenting);
@@ -874,11 +894,20 @@ namespace TianZhang.Tests.PlayMode
                     InputSystem.QueueStateEvent(keyboard, new KeyboardState()); yield return null;
                     Assert.AreEqual(after, State(), "Keyboard resubmission during presentation cannot pay twice.");
                     yield return Ready();
-                    Assert.IsFalse(bar.SecondArtButton.interactable, "Cooldown must disable the recovery entry.");
+                    int cooldown = spawned.Player.GetCooldown("spell_julingshu");
+                    Assert.Greater(cooldown, 0);
+                    StringAssert.Contains(cooldown.ToString(), bar.SecondArtButton.transform.Find("Cooldown").GetComponent<Text>().text);
+                    string coolingState = State();
                     bar.SecondArtButton.onClick.Invoke();
-                    Assert.IsFalse(input.IsSelectingAttack);
-                    Assert.IsNull(input.Candidate);
-                    CaptureS2Selection("cooldown-disabled-" + width);
+                    yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Player.Id, click: true);
+                    Assert.IsFalse(input.IsTargetLocked);
+                    Assert.IsFalse(input.Preview.CanConfirm);
+                    Assert.AreEqual(cooldown, input.Preview.RemainingCooldownTicks);
+                    StringAssert.Contains("冷却", input.Preview.Reason);
+                    input.ConfirmCandidate();
+                    Assert.AreEqual(coolingState, State(), "Inspecting and clicking a cooling spell cannot spend resources or sample a hit.");
+                    CaptureS2Selection("cooldown-rejected-" + width);
+                    input.CancelCandidate();
                     yield return CaptureHud("s2-recovery-self-" + width);
                     continue;
                 }
@@ -909,13 +938,19 @@ namespace TianZhang.Tests.PlayMode
                 Assert.IsTrue(LegalEnemyTarget(), "Player=" + spawned.Player.Position + "; enemy=" + spawned.Enemy.Position);
                 CombatArtTargetSnapshot other = presenter.Snapshot.ArtActions[1].Targets.First(target =>
                     target.Id != spawned.Player.Id && target.CanExecute);
+                // At 1366 the quote panel covers the approached unit's ground cell in the opening camera.
+                Assert.IsTrue(provider.TryGetVisibleBounds(other.Id, out Bounds targetBounds));
+                Camera camera = Camera.main;
+                Ray centerRay = camera.ViewportPointToRay(new Vector3(.5f, .5f));
+                Assert.IsTrue(new Plane(Vector3.up, targetBounds.center).Raycast(centerRay, out float centerDistance));
+                camera.transform.position += targetBounds.center - centerRay.GetPoint(centerDistance);
                 yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(
                     RectTransformUtility.WorldToScreenPoint(null, bar.SecondArtButton.transform.position), true);
                 Assert.IsTrue(input.IsSelectingAttack);
                 yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, other.Id, click: false);
                 Assert.That(input.Preview.CanConfirm, Is.True, input.Preview.Reason);
                 Assert.AreEqual(20, input.Preview.SpiritCost);
-                Assert.AreEqual(other.Id, input.Candidate.TargetId);
+                GuanzhongCombatTargetSelectionPlayModeTests.AssertAffectedTarget(input, other.Id);
                 yield return GuanzhongCombatTargetSelectionPlayModeTests.CaptureArtEvidence("s2-other-legal-" + width, session);
                 int otherMp = spawned.Player.CurrentSpirit, otherAp = spawned.Player.ActionPointsRemainingUnits;
                 spawned.Player.SetSpirit(spawned.Player.MaximumSpirit, 0);
@@ -927,14 +962,14 @@ namespace TianZhang.Tests.PlayMode
                 Assert.AreEqual(otherAp, spawned.Player.ActionPointsRemainingUnits);
                 CaptureS2Selection("other-insufficient-" + width);
                 spawned.Player.SetSpirit(spawned.Player.MaximumSpirit, otherMp);
-                yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+                yield return GuanzhongBasicAttackPlayModeTests.ConfirmPointedAttack();
                 Assert.IsFalse(input.IsSelectingAttack);
                 Assert.AreEqual(otherMp - 20, spawned.Player.CurrentSpirit);
                 Assert.AreEqual(otherAp - 25000, spawned.Player.ActionPointsRemainingUnits);
                 Assert.AreEqual(16, spawned.Player.GetCooldown("spell_julingshu"));
                 string otherAfter = State();
                 CaptureS2Selection("other-after-" + width);
-                yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+                view.ConfirmButton.onClick.Invoke();
                 input.ConfirmCandidate();
                 Assert.AreEqual(otherAfter, State(), "The other-target settlement must also be single-shot.");
                 yield return Ready();
@@ -970,7 +1005,7 @@ namespace TianZhang.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator Q3DivineDirectActionUsesRealPaymentRepeatCooldownAndPresentationGuards()
+        public IEnumerator Q3DivineConfirmationUsesRealPaymentRepeatCooldownAndPresentationGuards()
         {
             // Isolated skill fixtures use the formal scene/session/command service, without adding production content.
             var bar = Find<CombatActionBarView>();
@@ -986,7 +1021,8 @@ namespace TianZhang.Tests.PlayMode
                 Get<System.Collections.Generic.List<string>>(spawned.Player, "equippedDivineProfileIds").Add(id);
                 Get<System.Collections.Generic.List<string>>(spawned.Player, "availableDivineProfileIds").Add(id);
                 spawned = new AdventureSpawnSet(spawned.Player, spawned.Enemy, spawned.EnemyData,
-                    spawned.PlayerBasicProfileId, spawned.EnemyBasicProfileId, new[] { id }, spawned.Enemies.Skip(1).ToArray());
+                    spawned.PlayerBasicProfileId, spawned.EnemyBasicProfileId, new[] { id }, spawned.Enemies.Skip(1).ToArray(),
+                    spawned.EnemyStats, spawned.EnemyDataList.Skip(1).ToArray());
                 Set(encounter, "spawned", spawned);
                 Reproject();
                 var quote = presenter.Snapshot.FindPreferredAction(CombatActionKind.Divine, id);
@@ -994,6 +1030,10 @@ namespace TianZhang.Tests.PlayMode
                 int ap = spawned.Player.ActionPointsRemainingUnits, mp = spawned.Player.CurrentSpirit;
                 int hp = spawned.Enemy.CurrentHealth, rolls = random.Count;
                 bar.DivineButton.onClick.Invoke();
+                Assert.IsNotNull(input.Candidate);
+                Assert.AreEqual(ap, spawned.Player.ActionPointsRemainingUnits);
+                Assert.AreEqual(mp, spawned.Player.CurrentSpirit);
+                Find<CombatActionPreviewView>().ConfirmButton.onClick.Invoke();
                 Assert.IsNull(input.Candidate);
                 Assert.IsFalse(Find<CombatActionPreviewView>().IsVisible);
                 Assert.IsTrue(encounter.IsPresenting);
@@ -1053,7 +1093,7 @@ namespace TianZhang.Tests.PlayMode
                 yield return ClickResourceControl(bar.SecondArtButton);
                 yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, player.Id, click: false);
                 Assert.IsTrue(Find<CombatCommandInput>().Preview.CanConfirm);
-                yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+                yield return GuanzhongBasicAttackPlayModeTests.ConfirmPointedAttack();
                 yield return Ready();
                 Assert.Greater(player.CurrentSpirit, spirit, "The real self spell restores spirit.");
                 yield return CaptureResources("spirit-recovery-" + width);
@@ -1401,6 +1441,10 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsFalse(view.ConfirmButton.gameObject.activeSelf);
             yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
             yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+            Assert.IsTrue(input.IsTargetLocked);
+            Assert.AreEqual(mp, spawned.Player.CurrentSpirit, "Repeated clicks on the locked cell cannot submit it.");
+            yield return GuanzhongBasicAttackPlayModeTests.ConfirmLockedTarget();
+            view.ConfirmButton.onClick.Invoke();
             Assert.AreEqual(mp - 12, spawned.Player.CurrentSpirit);
             Assert.AreEqual(rolls + 5, random.Count);
             Assert.AreEqual(CombatTurnPhase.Active, session.TurnPhase);
@@ -1428,7 +1472,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsNull(input.Candidate.TargetId);
             yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Player.Id, click: false);
             Assert.That(input.Preview.CanConfirm, Is.True, input.Preview.Reason);
-            yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+            yield return GuanzhongBasicAttackPlayModeTests.ConfirmPointedAttack();
             Assert.IsFalse(input.IsSelectingAttack);
             Assert.AreEqual(ap - selfQuote.ActionPointCostUnits, spawned.Player.ActionPointsRemainingUnits);
             Assert.AreEqual(selfQuote.ReuseCooldownTicks, spawned.Player.GetCooldown("spell_julingshu"));
@@ -1622,7 +1666,7 @@ namespace TianZhang.Tests.PlayMode
                 Assert.IsTrue(movement.IsSelecting);
                 Assert.IsTrue(view.IsVisible);
                 StringAssert.Contains("可达", summary.text);
-                StringAssert.Contains("左键点击高亮地块立即移动", summary.text);
+                StringAssert.Contains("左键锁定高亮地块", summary.text);
                 var centers = Get<System.Collections.Generic.Dictionary<Vector2Int, Vector3>>(movement, "centers");
                 int remaining = spawned.Player.ActionPointsRemainingUnits;
                 CombatMovementOption hovered = null;
@@ -1676,9 +1720,11 @@ namespace TianZhang.Tests.PlayMode
                     CombatActionPreviewView.FormatActionPoints(remaining - hovered.Cost), summary.text);
                 yield return CaptureV6("v6-move-hover-" + width, view, movement, directory);
 
-                // One click commits exactly once and clears every border, node and arrow.
+                // Lock the route and commit it once through the shared confirmation.
                 Vector2 committedPoint = camera.WorldToScreenPoint(centers[destinationKey]);
                 yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(committedPoint, true);
+                Assert.IsTrue(movement.IsLocked);
+                yield return GuanzhongBasicAttackPlayModeTests.ConfirmLockedTarget();
                 Assert.IsFalse(movement.IsSelecting);
                 Assert.IsFalse(view.IsVisible);
                 Assert.AreEqual(remaining - hovered.Cost, spawned.Player.ActionPointsRemainingUnits);

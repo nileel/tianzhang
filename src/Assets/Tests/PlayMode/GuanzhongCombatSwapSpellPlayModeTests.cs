@@ -149,7 +149,7 @@ namespace TianZhang.Tests.PlayMode
             int ap = spawned.Player.ActionPointsRemainingUnits, mp = spawned.Player.CurrentSpirit;
             int hp = spawned.Enemy.CurrentHealth, otherHp = spawned.Enemies[1].CurrentHealth;
             int cost = input.Preview.ActionPointCostUnits, mana = input.Preview.SpiritCost;
-            yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+            yield return GuanzhongBasicAttackPlayModeTests.ConfirmPointedAttack();
             input.ConfirmCandidate();
             Assert.AreEqual(ap - cost, spawned.Player.ActionPointsRemainingUnits);
             Assert.AreEqual(mp - mana, spawned.Player.CurrentSpirit);
@@ -163,6 +163,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsTrue(input.IsSelectingAttack);
             Assert.IsNull(input.Candidate.TargetId);
             yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Player.Id, click: true);
+            yield return GuanzhongBasicAttackPlayModeTests.ConfirmLockedTarget();
             Assert.IsFalse(input.IsSelectingAttack);
             Assert.AreEqual(ap - recovery.ActionPointCostUnits, spawned.Player.ActionPointsRemainingUnits);
             Assert.Greater(spawned.Player.CurrentSpirit, mp);
@@ -328,7 +329,7 @@ namespace TianZhang.Tests.PlayMode
             yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id);
             Assert.That(input.Preview.CanConfirm, Is.True);
             int ap = spawned.Player.ActionPointsRemainingUnits;
-            yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+            yield return GuanzhongBasicAttackPlayModeTests.ConfirmPointedAttack();
             Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - 50000));
             Assert.That(spawned.Player.GetCooldown(Attack), Is.Zero, "The final production Guanshiji has CD 0.");
             Assert.That(spawned.Player.CombatSwapsUsed, Is.EqualTo(2));
@@ -351,6 +352,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsTrue(input.IsSelectingAttack);
             Assert.IsNull(input.Candidate.TargetId);
             yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Player.Id, click: true);
+            yield return GuanzhongBasicAttackPlayModeTests.ConfirmLockedTarget();
             Assert.IsFalse(input.IsSelectingAttack);
             yield return Ready();
             bar.GuardButton.onClick.Invoke(); input.ConfirmCandidate();

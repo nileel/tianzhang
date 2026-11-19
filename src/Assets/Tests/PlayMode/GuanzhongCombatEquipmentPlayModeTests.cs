@@ -262,7 +262,7 @@ namespace TianZhang.Tests.PlayMode
             int ap = spawned.Player.ActionPointsRemainingUnits;
             int uses = BasicUseCount();
             int facing = spawned.Player.Facing;
-            yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+            yield return GuanzhongBasicAttackPlayModeTests.ConfirmPointedAttack();
             input.ConfirmCandidate();
             Assert.AreEqual(ap - quote.ActionPointCostUnits, spawned.Player.ActionPointsRemainingUnits);
             Assert.AreEqual(uses + 1, BasicUseCount());
@@ -478,7 +478,7 @@ namespace TianZhang.Tests.PlayMode
                     var enemy = units.Enemies.FirstOrDefault(unit => unit.IsAlive);
                     if (canAttack)
                     {
-                        yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+                        yield return GuanzhongBasicAttackPlayModeTests.ConfirmPointedAttack();
                     }
                     else if (!passive && enemy != null &&
                         !session.SpatialQuery.QueryRange(units.Player.Pose, enemy.Pose, 1, 1).IsInRange)

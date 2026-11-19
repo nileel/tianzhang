@@ -177,6 +177,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.NotNull(chosen, "A legal ground cell must remain clickable after zoom.");
             yield return Capture("move-preview", camera);
             yield return Click(destination);
+            yield return GuanzhongBasicAttackPlayModeTests.ConfirmLockedTarget();
             yield return Ready(encounter);
             Assert.AreEqual(chosen.Destination.Q, spawned.Player.Position.Q);
             Assert.AreEqual(chosen.Destination.R, spawned.Player.Position.R);

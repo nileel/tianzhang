@@ -23,9 +23,13 @@ namespace TianZhang.Features.Adventure
         private string earthEffect = "EARTH_GRAVITY";
         private int metric = 1;
         private HexCoord? remoteOrigin;
+        private int edgesWhenOriginPicked;
         private SelectionMode selection;
         private CombatCommand frozenCommand;
         private CombatCommandPreview frozenQuote;
+        private HexCoord? hoveredCell;
+        private CombatCommand hoverCommand;
+        private CombatCommandPreview hoverQuote;
         private CombatSession observedSession;
         private string observedActor;
         private string message = string.Empty;
@@ -54,31 +58,70 @@ namespace TianZhang.Features.Adventure
         public bool PreparationOpen { get; private set; }
         public bool ControlFire { get; private set; }
         public bool IsSelecting => selection != SelectionMode.None;
+        public IReadOnlyList<HexCoord> SelectedEndpoints => path;
+        public HexCoord? TargetCell => earthCell ?? tideSource ?? remoteOrigin ?? frozenCommand?.TargetCell;
+        public string InteractionHint
+        {
+            get
+            {
+                if (hoverQuote != null && frozenQuote != null)
+                    return "第三格 " + CellText(hoveredCell.Value) + " · " +
+                        (hoverQuote.IsLegal ? "左键追加并锁定" : Explain(hoverQuote.RejectionReason));
+                if (frozenQuote?.IsLegal == true)
+                {
+                    if (selection == SelectionMode.Edges && !earthPage && path.Count == 2)
+                        return "已锁定 " + PathText(path) + " · 可确认或再选相邻第三格";
+                    string target = path.Count > 0 ? PathText(path) : TargetCell is {} cell
+                        ? (earthTarget == null ? "" : Short(earthTarget) + " ") + CellText(cell) : "自身操作";
+                    if (remoteOrigin.HasValue && path.Count > 0) target += " · 原点 " + CellText(remoteOrigin.Value);
+                    return "已锁定 " + target + " · 点击确认施行";
+                }
+                if (selection == SelectionMode.Edges)
+                {
+                    string step = path.Count == 0 ? "选择第一个格" : "首格 " + CellText(path[0]) + " · 选择相邻第二格";
+                    return hoverQuote?.IsLegal == false ? step + " · " + Explain(hoverQuote.RejectionReason) : step;
+                }
+                if (hoverQuote?.IsLegal == false) return Explain(hoverQuote.RejectionReason);
+                if (selection == SelectionMode.EarthTarget)
+                {
+                    if (!hoveredCell.HasValue) return "选择可受力的单位身体格或土石构件";
+                    return hoverQuote == null ? "此格没有合法受力目标，请重新选择" :
+                        Short(hoverCommand.Jindan.EarthTargetId) + " " + CellText(hoveredCell.Value) + " · 左键锁定";
+                }
+                if (selection == SelectionMode.TideSource) return "选择合法潮源格";
+                if (selection == SelectionMode.Origin) return message;
+                return message;
+            }
+        }
         public string PreparationDetails { get; private set; } = string.Empty;
         public string CombatDetails { get; private set; } = string.Empty;
         public string QuoteDetails { get; private set; } = string.Empty;
-        public string QuoteTitle => frozenCommand == null ? "能力" : frozenCommand.Kind == CombatCommandKind.CloseJindan ? "收势" :
-            frozenCommand.Kind == CombatCommandKind.Flight ? "御风" : frozenCommand.ProfileId switch
+        private CombatCommand DisplayCommand => hoverCommand ?? frozenCommand;
+        private CombatCommandPreview DisplayQuote => hoverQuote ?? frozenQuote;
+        public string QuoteTitle => DisplayCommand == null ? "能力" : DisplayCommand.Kind == CombatCommandKind.CloseJindan ? "收势" :
+            DisplayCommand.Kind == CombatCommandKind.Flight ? "御风" : DisplayCommand.ProfileId switch
             { "FIRE_MANIFEST" => "长明", "SPACE_SCALE" => "定尺", "YANG_RADIANCE" => "阳照", "YIN_CONCEAL" => "藏真", "WATER_TIDE" => "蓄澜", _ => "厚载" };
         public string CompactQuote
         {
             get
             {
-                if (frozenQuote == null) return "选择操作，取得报价";
-                string cost = Ap(frozenQuote.ActionPointCostUnits) + " AP · " + frozenQuote.SpiritCost + " MP";
-                if (!frozenQuote.IsLegal) return cost + "\n<size=16>" + Explain(frozenQuote.RejectionReason) + "</size>";
+                var quote = DisplayQuote;
+                if (quote == null) return IsSelecting ? "选定目标后报价" : "选择操作，取得报价";
+                if (!quote.IsLegal) return "不可施行\n<size=16>" + Explain(quote.RejectionReason) + "</size>";
+                string cost = Ap(quote.ActionPointCostUnits) + " AP · " + quote.SpiritCost + " MP";
                 var session = encounter.CurrentSession;
-                if (session == null || !session.Combatants.TryGet(frozenCommand.ActorId, out var actor)) return cost;
+                if (session == null || !session.Combatants.TryGet(quote.ActorId, out var actor)) return cost;
                 return cost + "\n<size=16>AP " + Ap(actor.ActionPointsRemainingUnits) + " → " +
-                    Ap(actor.ActionPointsRemainingUnits - frozenQuote.ActionPointCostUnits) + "</size>";
+                    Ap(actor.ActionPointsRemainingUnits - quote.ActionPointCostUnits) + "</size>";
             }
         }
         public TianZhang.Gameplay.Contracts.JindanHudSnapshot Hud => JindanHudPresentation.Project(
             encounter.CurrentSession, encounter.ControlledActorId, Local(catalog.segments[segmentIndex].displayNameKey));
         public TianZhang.Gameplay.Contracts.CombatSurfacePresentationSnapshot SurfacePresentation =>
-            JindanTidePresentation.Project(encounter.CurrentSession, frozenQuote, frozenCommand);
-        public bool CanConfirm => frozenQuote != null && frozenQuote.IsLegal && encounter.AcceptsPlayerCommand &&
-            frozenCommand.ActorId == encounter.ControlledActorId && observedSession == encounter.CurrentSession;
+            JindanTidePresentation.Project(encounter.CurrentSession, DisplayQuote, DisplayCommand);
+        public bool CanConfirm => frozenQuote != null && hoverQuote == null && frozenQuote.IsLegal && encounter.AcceptsPlayerCommand &&
+            frozenCommand.ActorId == encounter.ControlledActorId && observedSession == encounter.CurrentSession &&
+            frozenQuote.StateVersion == observedSession.StateVersion && frozenQuote.TurnSequence == observedSession.TurnSequence;
 
         public void OpenPreparation()
         {
@@ -118,7 +161,7 @@ namespace TianZhang.Features.Adventure
             }
             if (encounter.CurrentSession?.Jindan == null) return;
             if (key is "flight_tab" or "earth_tab" or "scale_tab" or "tide_tab" or "visibility_tab" or "fire_tab" or "close_tab")
-            { earthPage = key == "earth_tab"; tidePage = key == "tide_tab"; ClearTargeting(); Refresh(); return; }
+            { earthPage = key == "earth_tab"; tidePage = key == "tide_tab"; ClearTargeting(); message = "选择能力操作"; Refresh(); return; }
             if (key == "cancel_targeting")
             { ClearTargeting(); message = "已取消，未扣费。"; Refresh(); return; }
             if (!encounter.AcceptsPlayerCommand)
@@ -132,26 +175,28 @@ namespace TianZhang.Features.Adventure
                     tideAction = key == "tide_ebb" ? CombatTideAction.Ebb : CombatTideAction.Rise;
                     tideEye = key == "tide_eye"; selection = SelectionMode.TideSource;
                     message = tideEye ? "点击无源时的合法潮眼格，再预演。" : "点击一个合法潮源，再预演；青色显示变化格，箭头显示实际落点。"; break;
-                case "tide_charge": tideCharged = !tideCharged; ClearQuote(); message = tideCharged ? "一档蓄力：先付费，1全局tick后完成时重验。" : "普通潮汐：确认即结算。"; break;
+                case "tide_charge":
+                    tideCharged = !tideCharged;
+                    if (tideSource.HasValue) Preview(CombatCommandKind.JindanAbility);
+                    else { ClearQuote(); message = tideCharged ? "一档蓄力，选择潮源" : "普通潮汐，选择潮源"; }
+                    break;
                 case "tide_preview": Preview(CombatCommandKind.JindanAbility); break;
                 case "tide_close": earthPage = false; tidePage = true; Preview(CombatCommandKind.CloseJindan); break;
                 case "fire_preview": Preview(CombatCommandKind.JindanAbility, true); break;
                 case "fire_close": Preview(CombatCommandKind.CloseJindan, true); break;
-                case "earth_tab": earthPage=true; ClearTargeting(); break;
-                case "scale_tab": earthPage=false; ClearTargeting(); break;
                 case "earth_wall": case "earth_ramp":
                     ClearTargeting(); earthPage=true; earthMode=key=="earth_wall"?CombatEarthMode.Wall:CombatEarthMode.Ramp;
-                    selection=SelectionMode.Edges; message="依次选择一条空边的两个相邻落点，再预演。"; break;
+                    selection=SelectionMode.Edges; message="选择一条空边的第一个格"; break;
                 case "earth_heavy": case "earth_light": case "earth_anchor":
                     ClearTargeting(); earthPage=true; earthMode=key=="earth_heavy"?CombatEarthMode.Heavy:key=="earth_light"?CombatEarthMode.Light:CombatEarthMode.Anchor;
                     selection=SelectionMode.EarthTarget; message="点击单位的明确身体格或土石构件；同格对象可用切换目标浏览。"; break;
-                case "earth_next_target": if(earthCell.HasValue) SelectEarthTarget(earthCell.Value,true); break;
+                case "earth_next_target": if (earthCell.HasValue) LockNextEarthTarget(); break;
                 case "break_object": ClearTargeting(); selection=SelectionMode.BreakTarget; message="点击相邻墙／土石支点所在格，预演破垒；两次命中破750耐久。"; break;
                 case "compress": metric = 1; ClearQuote(); message = "已选压缩：每边0.5距离；请选择2–3个相连格。"; break;
                 case "expand": metric = 4; ClearQuote(); message = "已选扩张：每边2距离；请选择2–3个相连格。"; break;
                 case "pick_edges":
-                    path.Clear(); selection = SelectionMode.Edges; ClearQuote();
-                    message = "在地图依次点击2–3个相连格；点末格可撤销。"; break;
+                    path.Clear(); edgesWhenOriginPicked = 0; selection = SelectionMode.Edges; ClearQuote();
+                    message = "依次选择2–3个相连格，右键或 Esc 撤销末格"; break;
                 case "pick_origin":
                     selection = SelectionMode.Origin; ClearQuote();
                     message = "点击当前视野内空格作遥施原点；点自身改回自身。"; break;
@@ -169,111 +214,211 @@ namespace TianZhang.Features.Adventure
             Refresh();
         }
 
+        public void HoverCell(int? q, int? r)
+        {
+            HexCoord? cell = q.HasValue && r.HasValue ? new HexCoord(q.Value, r.Value) : (HexCoord?)null;
+            if (!IsSelecting || !encounter.AcceptsPlayerCommand) cell = null;
+            if (hoveredCell == cell) return;
+            ClearHover();
+            hoveredCell = cell;
+            if (selection == SelectionMode.Origin && path.Count < 2)
+            {
+                string reason = cell.HasValue ? CheckOrigin(cell.Value) : string.Empty;
+                message = reason.Length > 0 ? Explain(reason) : "选择遥施原点格，或点自身恢复默认";
+                return;
+            }
+            if (!cell.HasValue || selection == SelectionMode.Edges &&
+                (path.Count == 0 || path[path.Count - 1] == cell.Value)) return;
+            if (selection == SelectionMode.EarthTarget)
+            {
+                foreach (var candidate in GravityQuotes(cell.Value))
+                {
+                    // Keep a rejection reason for an occupied but unreachable cell.
+                    hoverCommand = candidate.command;
+                    hoverQuote = candidate.quote;
+                    if (hoverQuote.IsLegal) break;
+                }
+                return;
+            }
+            hoverCommand = selection == SelectionMode.BreakTarget
+                ? new CombatCommand(CombatCommandKind.Art, encounter.ControlledActorId,
+                    profileId: catalog.demolition.profileId, targetCell: cell)
+                : BuildCommand(CombatCommandKind.JindanAbility, pointedCell: cell);
+            if (hoverCommand != null) hoverQuote = encounter.PreviewJindan(hoverCommand);
+        }
+
         public void PickCell(int q, int r)
         {
             Refresh();
-            if (!IsSelecting || !encounter.AcceptsPlayerCommand || encounter.CurrentSession?.Jindan == null) return;
+            if (!IsSelecting || !encounter.AcceptsPlayerCommand) return;
             var cell = new HexCoord(q, r);
-            ClearQuote();
-            if (selection == SelectionMode.TideSource)
-            { tideSource = cell; selection = SelectionMode.None; message = "潮源已选" + CellText(cell) + "；点击预演查看变化格、推移与水击。"; Refresh(); return; }
-            if (selection == SelectionMode.EarthTarget)
-            { SelectEarthTarget(cell,false); Refresh(); return; }
-            if (selection == SelectionMode.BreakTarget)
-            {
-                selection=SelectionMode.None;
-                frozenCommand=new CombatCommand(CombatCommandKind.Art,encounter.ControlledActorId,
-                    profileId:catalog.demolition.profileId,targetCell:cell);
-                frozenQuote=encounter.PreviewJindan(frozenCommand);
-                message=frozenQuote?.IsLegal==true?"报价已冻结，请核对环境目标后确认。":Explain(frozenQuote?.RejectionReason);
-                Refresh(); return;
-            }
-            if (selection == SelectionMode.Origin)
-            {
-                encounter.CurrentSession.Combatants.TryGet(encounter.ControlledActorId, out var actor);
-                remoteOrigin = actor.Pose.Contains(cell) ? (HexCoord?)null : cell;
-                selection = SelectionMode.None;
-                message = remoteOrigin.HasValue ? "已选遥施原点；预演时检查视野、空格与费用。" : "已恢复自身原点。";
-            }
-            else if (path.Count > 0 && path[path.Count - 1] == cell)
-            { path.RemoveAt(path.Count - 1); message = "已撤销末格。"; }
-            else if (path.Count == (earthPage?2:3)) message = "已达当前形态选格上限；点末格撤销或重新选边。";
-            else if (path.Contains(cell)) message = "同一格不可重复；请沿相连边继续选择。";
-            else if (path.Count > 0 && !path[path.Count - 1].TryGetDirectionTo(cell, out _))
-                message = "下一格必须与末格相邻。";
-            else
+            if (selection == SelectionMode.Edges && path.Count == 0)
             {
                 path.Add(cell);
-                message = path.Count == 1 ? "已选首格，请再点相邻格。" : "已选" + (path.Count - 1) + "条边，可继续选格或点击预演。";
+                ClearHover();
+                message = "首格 " + CellText(cell) + " · 选择相邻第二格";
+                return;
             }
+            if (selection == SelectionMode.Origin && path.Count < 2)
+            {
+                string reason = CheckOrigin(cell);
+                if (reason.Length > 0) { message = Explain(reason); return; }
+                remoteOrigin = OriginAt(cell);
+                edgesWhenOriginPicked = path.Count;
+                selection = SelectionMode.Edges;
+                ClearHover();
+                message = "已选原点，请选择相连格";
+                return;
+            }
+            HoverCell(q, r);
+            if (hoverQuote?.IsLegal != true) return;
+            if (selection == SelectionMode.Edges) path.Add(cell);
+            if (selection == SelectionMode.EarthTarget)
+            {
+                earthCell = cell;
+                earthTarget = hoverCommand.Jindan.EarthTargetId;
+            }
+            if (selection == SelectionMode.TideSource) tideSource = cell;
+            if (selection == SelectionMode.Origin)
+            {
+                remoteOrigin = OriginAt(cell);
+                edgesWhenOriginPicked = path.Count;
+            }
+            frozenCommand = hoverCommand;
+            frozenQuote = hoverQuote;
+            ClearHover();
+            if (selection != SelectionMode.Edges || earthPage || path.Count == 3) selection = SelectionMode.None;
+            message = "已锁定 " + CellText(cell) + " · 点击确认施行";
             Refresh();
         }
 
-        private void SelectEarthTarget(HexCoord cell,bool next)
+        private HexCoord? OriginAt(HexCoord cell)
         {
-            var s=encounter.CurrentSession;
-            var ids=s.Combatants.All.Where(a=>a.IsAlive && a.OccupiedCells.Contains(cell)).Select(a=>a.Id)
-                .Concat(s.SceneObjects.All.Where(o=>!o.IsDestroyed && o.Contains(cell) && o.Definition.MaterialType is "stone" or "earth").Select(o=>o.Id)).ToArray();
-            earthCell=cell;
-            earthTarget=ids.Length==0?null:ids[next?(Array.IndexOf(ids,earthTarget)+1)%ids.Length:0];
-            ClearQuote(); message=earthTarget==null?"此格没有合法受力对象。":"已选"+Short(earthTarget)+"，身体格"+CellText(cell)+"；点击预演。";
+            encounter.CurrentSession.Combatants.TryGet(encounter.ControlledActorId, out var actor);
+            return actor.Pose.Contains(cell) ? (HexCoord?)null : cell;
         }
 
-        public void Refresh()
+        private string CheckOrigin(HexCoord cell)
+        {
+            var session = encounter.CurrentSession;
+            session.Combatants.TryGet(encounter.ControlledActorId, out var actor);
+            return actor.Pose.Contains(cell) ? string.Empty :
+                CombatScaleRules.CheckRemoteOrigin(session, actor, cell, session.Jindan.Ability("SPACE_SCALE"));
+        }
+
+        private IEnumerable<(CombatCommand command, CombatCommandPreview quote)> GravityQuotes(HexCoord cell)
+        {
+            var session = encounter.CurrentSession;
+            var units = session.Combatants.All.Where(unit => unit.IsAlive && unit.OccupiedCells.Contains(cell) &&
+                session.Visibility?.IsVisible(encounter.ControlledActorId, unit.Id) != false).Select(unit => unit.Id);
+            var objects = session.SceneObjects.All.Where(obj => !obj.IsDestroyed && obj.Contains(cell) &&
+                obj.Definition.MaterialType is "stone" or "earth").Select(obj => obj.Id);
+            foreach (string id in units.Concat(objects))
+            {
+                var command = BuildCommand(CombatCommandKind.JindanAbility, pointedCell: cell, gravityTarget: id);
+                if (command != null) yield return (command, encounter.PreviewJindan(command));
+            }
+        }
+
+        private void LockNextEarthTarget()
+        {
+            var choices = GravityQuotes(earthCell.Value).Where(candidate => candidate.quote.IsLegal).ToArray();
+            if (choices.Length == 0) return;
+            int index = Array.FindIndex(choices, candidate => candidate.command.Jindan.EarthTargetId == earthTarget);
+            (frozenCommand, frozenQuote) = choices[(index + 1) % choices.Length];
+            earthTarget = frozenCommand.Jindan.EarthTargetId;
+            message = "已锁定 " + Short(earthTarget) + " " + CellText(earthCell.Value);
+        }
+
+        public bool Refresh()
         {
             var session = encounter.CurrentSession;
             string actorId = session?.Jindan == null ? null : encounter.ControlledActorId;
+            bool invalidated = false;
             if (session != observedSession || actorId != observedActor)
             {
                 bool changedActor = observedActor != null && actorId != observedActor;
+                invalidated = changedActor && (IsSelecting || frozenQuote != null);
                 ClearTargeting();
-                if (changedActor) message = "行动角色已改变，请重新选择目标并预演。";
+                if (changedActor) message = "战况已变，请重新选取（行动角色已改变）";
                 observedSession = session; observedActor = actorId;
             }
+            else if (frozenQuote != null &&
+                (frozenQuote.StateVersion != session.StateVersion || frozenQuote.TurnSequence != session.TurnSequence))
+            {
+                ClearTargeting();
+                message = "战况已变，请重新选取";
+                invalidated = true;
+            }
+            else if (hoverQuote != null && hoverQuote.StateVersion != session.StateVersion)
+                ClearHover();
             PreparationDetails = PreparationText();
             CombatDetails = JindanVisibilityPresentation.Details(session) + CombatText(session, actorId);
             QuoteDetails = QuoteText();
+            return invalidated;
         }
 
         private void Preview(CombatCommandKind kind, bool fire = false)
         {
-            ClearQuote(); selection = SelectionMode.None;
+            var command = BuildCommand(kind, fire);
+            if (kind != CombatCommandKind.JindanAbility || fire) ClearTargeting();
+            else ClearQuote();
+            if (command == null)
+            {
+                message = kind == CombatCommandKind.SwapJindan ? "当前角色没有可切换的同席候选。" :
+                    "当前角色没有本页装配。";
+                return;
+            }
+            frozenCommand = command;
+            frozenQuote = encounter.PreviewJindan(command);
+            if (frozenQuote?.IsLegal == true) selection = SelectionMode.None;
+            message = frozenQuote?.IsLegal == true ? "报价已锁定，请核对后确认。" : Explain(frozenQuote?.RejectionReason);
+        }
+
+        private CombatCommand BuildCommand(CombatCommandKind kind, bool fire = false, HexCoord? pointedCell = null,
+            string gravityTarget = null)
+        {
             var session = encounter.CurrentSession;
             string actorId = encounter.ControlledActorId;
-            var owned = session.Jindan.Seats.Where(value => value.Definition.ActorId == actorId).ToArray();
+            var owned = session.Jindan.Seats.Where(value => value.Definition.ActorId == actorId);
             var seat = kind == CombatCommandKind.SwapJindan
                 ? owned.FirstOrDefault(value => value.Definition.Candidates.Count > 1)
                 : owned.FirstOrDefault(value => fire ? value.EffectId == CombatFireDomainRules.Effect : tidePage ? value.EffectId == "WATER_TIDE" : earthPage ? value.EffectId is "EARTH_MANIFEST" or "EARTH_GRAVITY" : value.EffectId == "SPACE_SCALE");
-            if (seat == null)
-            {
-                message = kind == CombatCommandKind.SwapJindan ? "当前角色没有可切换的同席候选。" :
-                    "当前角色没有本页装配；请切换位格／土系页或查看能力。";
-                return;
-            }
+            if (seat == null) return null;
             string effect = kind == CombatCommandKind.SwapJindan
                 ? seat.Definition.Candidates.First(value => value != seat.EffectId) : seat.EffectId;
-            var request = kind == CombatCommandKind.JindanAbility
-                ? fire ? new CombatJindanRequest(seat.Definition.SeatId)
-                : tidePage ? new CombatJindanRequest(seat.Definition.SeatId, tideAction: tideAction, tideSource: tideSource,
-                    charged: tideCharged, createTideEye: tideEye)
-                : new CombatJindanRequest(seat.Definition.SeatId, path, metric, remoteOrigin,earthPage?earthMode:null,earthTarget,earthCell)
-                : new CombatJindanRequest(seat.Definition.SeatId);
-            frozenCommand = new CombatCommand(kind, actorId, profileId: effect, jindan: request);
-            frozenQuote = encounter.PreviewJindan(frozenCommand);
-            message = frozenQuote == null ? "当前战斗已结束。" : frozenQuote.IsLegal
-                ? "报价已冻结，请核对后确认。" : Explain(frozenQuote.RejectionReason);
+            string seatId = seat.Definition.SeatId;
+            CombatJindanRequest request;
+            if (kind != CombatCommandKind.JindanAbility || fire)
+                request = new CombatJindanRequest(seatId);
+            else if (tidePage)
+                request = new CombatJindanRequest(seatId, tideAction: tideAction, tideSource: pointedCell ?? tideSource,
+                    charged: tideCharged, createTideEye: tideEye);
+            else
+            {
+                IEnumerable<HexCoord> edges = path;
+                if (selection == SelectionMode.Edges && pointedCell.HasValue) edges = path.Append(pointedCell.Value);
+                var origin = selection == SelectionMode.Origin && pointedCell.HasValue ? OriginAt(pointedCell.Value) : remoteOrigin;
+                request = new CombatJindanRequest(seatId, edges, metric, origin, earthPage ? earthMode : null,
+                    gravityTarget ?? earthTarget, gravityTarget != null ? pointedCell : earthCell);
+            }
+            return new CombatCommand(kind, actorId, profileId: effect, jindan: request);
         }
 
         private void Confirm()
         {
-            if (frozenCommand == null || frozenQuote == null)
-            { message = "请先点击预演，生成本次报价。"; return; }
+            if (frozenCommand == null || frozenQuote?.IsLegal != true) return;
             // Confirmation deliberately sends the original quote, including its original state version.
             var result = encounter.ConfirmJindan(frozenCommand, frozenQuote);
             if (result.Succeeded)
             {
                 message = "已执行：AP −" + Ap(result.ActionPointSpentUnits) + "，MP −" + result.SpiritSpent + "。";
                 ClearTargeting();
+            }
+            else if (result.RejectionReason == "combat_quote_stale")
+            {
+                ClearTargeting();
+                message = "战况已变，请重新选取";
             }
             else { message = Explain(result.RejectionReason); ClearQuote(); }
         }
@@ -299,7 +444,52 @@ namespace TianZhang.Features.Adventure
             message = frozenQuote?.IsLegal == true ? "报价已冻结，请核对后确认。" : Explain(frozenQuote?.RejectionReason);
         }
 
-        private void ClearQuote() { frozenCommand = null; frozenQuote = null; }
+        public bool CancelLayer()
+        {
+            Refresh();
+            bool hadQuote = frozenQuote != null;
+            bool wasPicking = IsSelecting;
+            ClearQuote();
+            if (selection == SelectionMode.Origin || remoteOrigin.HasValue && path.Count == edgesWhenOriginPicked)
+            {
+                if (selection != SelectionMode.Origin) remoteOrigin = null;
+                ResumeEdgeSelection();
+                message = "已返回选边";
+                return true;
+            }
+            if (path.Count > 0)
+            {
+                path.RemoveAt(path.Count - 1);
+                ResumeEdgeSelection();
+                message = "已撤回末格";
+                return true;
+            }
+            if (earthCell.HasValue || tideSource.HasValue)
+            {
+                selection = earthCell.HasValue ? SelectionMode.EarthTarget : SelectionMode.TideSource;
+                earthCell = null; earthTarget = null; tideSource = null;
+                message = "已解除锁定，请重新选取";
+                return true;
+            }
+            if (remoteOrigin.HasValue)
+            {
+                remoteOrigin = null; selection = SelectionMode.Origin;
+                message = "已撤回遥施原点";
+                return true;
+            }
+            ClearTargeting();
+            message = "已取消，未扣费。";
+            return hadQuote || wasPicking;
+        }
+
+        private void ResumeEdgeSelection()
+        {
+            if (path.Count >= 2) Preview(CombatCommandKind.JindanAbility);
+            selection = path.Count == (earthPage ? 2 : 3) ? SelectionMode.None : SelectionMode.Edges;
+        }
+
+        private void ClearHover() { hoveredCell = null; hoverCommand = null; hoverQuote = null; }
+        private void ClearQuote() { frozenCommand = null; frozenQuote = null; ClearHover(); }
         private void ClearTargeting()
         { ClearQuote(); path.Clear(); remoteOrigin = null; earthCell=null; earthTarget=null; tideSource = null; selection = SelectionMode.None; }
         private void SelectSegmentPreset()
@@ -416,42 +606,44 @@ namespace TianZhang.Features.Adventure
 
         private string QuoteText()
         {
-            if (frozenQuote == null) return message;
-            string action = frozenCommand.Kind == CombatCommandKind.Flight ? FlightName(frozenCommand.FlightAction.Value) :
-                frozenCommand.Kind == CombatCommandKind.SwapJindan ? "切装→" + Effect(frozenCommand.ProfileId) :
-                frozenCommand.Kind == CombatCommandKind.CloseJindan ? "关闭"+Effect(frozenCommand.ProfileId) :
-                frozenCommand.Kind == CombatCommandKind.Art ? "演武·破垒" : frozenCommand.ProfileId == CombatFireDomainRules.Effect ? "展开长明火界" : frozenCommand.Jindan?.TideAction is {} water
-                    ? JindanTidePresentation.Name(water, frozenCommand.Jindan.Charged, frozenCommand.Jindan.CreateTideEye)
-                    : frozenCommand.Jindan?.EarthMode is {} mode ? EarthName(mode) : "展开" + Effect(frozenCommand.ProfileId);
-            string result = action + "  " + Ap(frozenQuote.ActionPointCostUnits) + "AP / " + frozenQuote.SpiritCost +
-                "MP / CT " + frozenQuote.CtPenalty + " / CD " + frozenQuote.ReuseCooldownTicks + "tick";
-            if (frozenCommand.Kind == CombatCommandKind.SwapJindan) result += "\n旧持续效果结束；新装配下一本人回合生效。";
-            else if(frozenCommand.Kind==CombatCommandKind.Art) result+="\n环境命中目标："+string.Join("、",frozenQuote.AttackArea?.EnvironmentTargetIds??Array.Empty<string>());
-            else if (frozenCommand.Kind == CombatCommandKind.CloseJindan && frozenCommand.ProfileId != CombatFireDomainRules.Effect) result += "\n移除本来源，按尚存规则重算；不返还资源或重置CD。";
-            if (frozenQuote.Tide != null) result += "\n" + JindanTidePresentation.Quote(frozenQuote.Tide, frozenCommand.Jindan);
-            if (frozenCommand.ProfileId == CombatFireDomainRules.Effect)
-                result += "\n" + (frozenCommand.Kind == CombatCommandKind.CloseJindan
+            var quote = DisplayQuote;
+            var command = DisplayCommand;
+            if (quote == null) return InteractionHint;
+            string action = command.Kind == CombatCommandKind.Flight ? FlightName(command.FlightAction.Value) :
+                command.Kind == CombatCommandKind.SwapJindan ? "切装→" + Effect(command.ProfileId) :
+                command.Kind == CombatCommandKind.CloseJindan ? "关闭"+Effect(command.ProfileId) :
+                command.Kind == CombatCommandKind.Art ? "演武·破垒" : command.ProfileId == CombatFireDomainRules.Effect ? "展开长明火界" : command.Jindan?.TideAction is {} water
+                    ? JindanTidePresentation.Name(water, command.Jindan.Charged, command.Jindan.CreateTideEye)
+                    : command.Jindan?.EarthMode is {} mode ? EarthName(mode) : "展开" + Effect(command.ProfileId);
+            string result = action + "  " + Ap(quote.ActionPointCostUnits) + "AP / " + quote.SpiritCost +
+                "MP / CT " + quote.CtPenalty + " / CD " + quote.ReuseCooldownTicks + "tick";
+            if (command.Kind == CombatCommandKind.SwapJindan) result += "\n旧持续效果结束；新装配下一本人回合生效。";
+            else if(command.Kind==CombatCommandKind.Art) result+="\n环境命中目标："+string.Join("、",quote.AttackArea?.EnvironmentTargetIds??Array.Empty<string>());
+            else if (command.Kind == CombatCommandKind.CloseJindan && command.ProfileId != CombatFireDomainRules.Effect) result += "\n移除本来源，按尚存规则重算；不返还资源或重置CD。";
+            if (quote.Tide != null) result += "\n" + JindanTidePresentation.Quote(quote.Tide, command.Jindan);
+            if (command.ProfileId == CombatFireDomainRules.Effect)
+                result += "\n" + (command.Kind == CombatCommandKind.CloseJindan
                     ? "仅结束主规则；合法本源燃烧转为已付余烬，最多再2个本人结束周期；不能重复关闭。"
                     : "整棋盘地表弱火热；施放当回合不跳动。预留6燃料，后续每次本人结束维护200MP，最多3次。") +
                     "\n" + JindanFireDomainPresentation.Candidates(encounter.CurrentSession);
-            if (frozenCommand.Kind == CombatCommandKind.JindanAbility && frozenCommand.Jindan?.EarthMode is {} earth)
+            if (command.Kind == CombatCommandKind.JindanAbility && command.Jindan?.EarthMode is {} earth)
             {
                 var session = encounter.CurrentSession;
-                var seat = session.Jindan.Find(frozenCommand.Jindan.SeatId);
+                var seat = session.Jindan.Find(command.Jindan.SeatId);
                 var active = seat?.ActiveEarth;
                 if (earth is CombatEarthMode.Wall or CombatEarthMode.Ramp)
                     result += "\n接地受养：是；耐久750；容量" + (active?.Objects.Count ?? 0) + "→" + ((active?.Objects.Count ?? 0)+1) +
                         "/2；剩余施法者结束" + (active?.RemainingOwnTurnEnds ?? 3) + "（追加不刷新）。";
                 else
                 {
-                    session.Combatants.TryGet(frozenCommand.ActorId, out var caster);
-                    session.Combatants.TryGet(frozenCommand.Jindan.EarthTargetId ?? "", out var target);
+                    session.Combatants.TryGet(command.ActorId, out var caster);
+                    session.Combatants.TryGet(command.Jindan.EarthTargetId ?? "", out var target);
                     bool nourished = caster.MovementMode == SpatialMovementMode.Ground || target == null || target.MovementMode == SpatialMovementMode.Ground;
                     result += "\n接地受养：" + (nourished ? "是" : "否") + "；有效档差" + (nourished ? 3 : 2) +
                         "；压力" + (target == null ? 0 : CombatForceMovement.Gravity(target)?.Pressure ?? 0) + "/2；持续2次" + (target == null ? "施法者" : "目标") + "本人结束。";
                 }
             }
-            return result + "\n" + message;
+            return result + "\n" + InteractionHint;
         }
 
         private JindanDemoCommandDefinition DeployDefinition(string effect) =>

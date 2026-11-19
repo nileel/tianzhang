@@ -184,6 +184,7 @@ namespace TianZhang.Tests.PlayMode
             int mana = spawned.Player.CurrentSpirit, health = spawned.Enemy.CurrentHealth, rolls = random.Count;
             actionBar.ArtButton.onClick.Invoke();
             yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id, click: true);
+            yield return GuanzhongBasicAttackPlayModeTests.ConfirmLockedTarget();
             Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mana - 12));
             Assert.That(spawned.Enemy.CurrentHealth, Is.LessThan(health));
             Assert.That(random.Count, Is.EqualTo(rolls + 5));
@@ -208,6 +209,7 @@ namespace TianZhang.Tests.PlayMode
                 actionBar.SecondArtButton.onClick.Invoke();
                 Assert.That(FindInActiveScene<CombatCommandInput>().IsSelectingAttack, Is.True);
                 yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Player.Id, click: true);
+                yield return GuanzhongBasicAttackPlayModeTests.ConfirmLockedTarget();
                 Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mana + recovery));
                 Assert.That(spawned.Enemy.CurrentHealth, Is.EqualTo(enemyHealth));
                 AssertRecoveryProjection(spawned.Player.Id, recovery, rolls);
@@ -226,7 +228,7 @@ namespace TianZhang.Tests.PlayMode
             yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id, click: false);
             CombatActionPreviewView recoveryPreview = FindInActiveScene<CombatActionPreviewView>();
             StringAssert.Contains("20 MP", GetPrivateField<Text>(recoveryPreview, "summary").text);
-            yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+            yield return GuanzhongBasicAttackPlayModeTests.ConfirmPointedAttack();
             Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mana - 20));
             AssertRecoveryProjection(spawned.Enemy.Id, 0, rolls);
             StringAssert.Contains("恢复灵力 0", sink.Logs.Last());
@@ -329,7 +331,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mp));
             actionBar.ArtButton.onClick.Invoke();
             yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id);
-            yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+            yield return GuanzhongBasicAttackPlayModeTests.ConfirmPointedAttack();
             Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - cost));
             Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mp - mana));
             AssertRejectedWithoutConsumption(() => { input.ConfirmCandidate(); encounter.ConfirmAction(candidate); });
@@ -372,7 +374,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mp));
             actionBar.ArtButton.onClick.Invoke();
             yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemies[1].Id);
-            yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+            yield return GuanzhongBasicAttackPlayModeTests.ConfirmPointedAttack();
             Assert.That(spawned.Enemies[0].CurrentHealth, Is.EqualTo(firstHealth));
             Assert.That(spawned.Enemies[1].CurrentHealth, Is.LessThan(secondHealth));
             Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - cost));
@@ -603,7 +605,7 @@ namespace TianZhang.Tests.PlayMode
             actionBar.ArtButton.onClick.Invoke();
             yield return GuanzhongCombatTargetSelectionPlayModeTests.PointArt(session, spawned.Enemy.Id);
             yield return CaptureTrialEvidence("attack-preview", GetPrivateField<Text>(preview, "summary"));
-            yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+            yield return GuanzhongBasicAttackPlayModeTests.ConfirmPointedAttack();
             Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mp - manaCost));
             Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - cost));
             TestContext.WriteLine("Production random legal attack result: " + sink.Logs.Last());
@@ -625,7 +627,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.That(input.Preview.CanConfirm, Is.True, input.Preview.Reason);
             Assert.That(input.Preview.SpiritCost, Is.Zero);
             StringAssert.Contains("施法范围 0–2 格", GetPrivateField<Text>(preview, "summary").text);
-            yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+            yield return GuanzhongBasicAttackPlayModeTests.ConfirmPointedAttack();
             Assert.IsFalse(input.IsSelectingAttack);
             Assert.That(spawned.Player.CurrentSpirit, Is.EqualTo(mp + recovery));
             Assert.That(spawned.Player.ActionPointsRemainingUnits, Is.EqualTo(ap - cost));

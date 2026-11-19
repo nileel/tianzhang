@@ -128,7 +128,7 @@ namespace TianZhang.Tests.PlayMode
             yield return Action(native, "descend", "flight_descend", () => Actor.AltitudeBand == 1);
             Assert.AreEqual(500000, Actor.ActionPointsRemainingUnits);
             if (native)
-                yield return NativeStep("move", "收起演武面板，点击移动按钮，悬停地图(4,5)预览，再左键落点提交。", () => Actor.Position == destination);
+                yield return NativeStep("move", "点击移动，悬停地图(4,5)预览，左键锁定后点击确认移动。", () => Actor.Position == destination);
             else
             {
                 yield return Press("toggle_panel"); yield return Click(Find<CombatActionBarView>().MoveButton);
@@ -140,6 +140,8 @@ namespace TianZhang.Tests.PlayMode
                     Is.EqualTo(.75f).Within(.01f));
                 Record("hovered airborne path: " + line.positionCount + " points, first point 0.75m above origin");
                 yield return Capture("00-air-path-preview"); yield return Click(Point(destination));
+                Assert.AreEqual(origin.Anchor, Actor.Position);
+                yield return Click(Find<CombatActionPreviewView>().ConfirmButton);
             }
             yield return Ready(); Assert.AreEqual(destination, Actor.Position);
             Assert.AreEqual(500000 - low.ActionPointCostUnits, Actor.ActionPointsRemainingUnits);
