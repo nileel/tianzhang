@@ -34,6 +34,22 @@ namespace TianZhang.Tests
             Assert.IsFalse(AbilityRequirementPolicy.IsSatisfied("金丹", "水", "中品", "realm_zhuji", "element_unknown_root"));
         }
 
+        [TestCase("金丹初结", "realm_lianqi", "element_none", true)]
+        [TestCase("金丹温养", "realm_jindan", "element_fire_root", true)]
+        [TestCase("金丹圆满", "realm_yuanying", "element_none", false)]
+        [TestCase("金丹初结", "realm_lianqi", "element_water_root", false)]
+        [TestCase("练气一品", "realm_lianqi", "element_none", true)]
+        [TestCase("练气九品", "realm_zhuji", "element_none", false)]
+        [TestCase("开府", "realm_zhuji", "element_none", true)]
+        [TestCase("金丹未知", "realm_lianqi", "element_none", false)]
+        [TestCase("练气十品", "realm_lianqi", "element_none", false)]
+        [TestCase("金丹初结", "金丹", "element_none", false)]
+        public void SubstageUsesItsMajorRealmAndKeepsTheRootRequirement(
+            string stage, string minimum, string element, bool expected)
+        {
+            Assert.AreEqual(expected, AbilityRequirementPolicy.IsSatisfied(stage, "火", "中品", minimum, element));
+        }
+
         [TestCase("凡品")]
         [TestCase("下品")]
         [TestCase("中品")]

@@ -111,18 +111,21 @@ namespace TianZhang.Tests.PlayMode
                 Assert.Contains("spell_feixingzhi", runtime.Player.AbilityLoadout.EquippedSpells.ToArray());
                 string playerJson = JsonUtility.ToJson(runtime.CaptureSave().player);
                 string cultivationJson = JsonUtility.ToJson(runtime.CaptureSave().cultivation);
-                yield return SceneManager.LoadSceneAsync(GameplaySceneNames.StartMenu);
-                yield return null;
-                Assert.IsTrue(Find<StartMenuSceneInstaller>().LoadPlayer("trial" + size.x).Succeeded);
-                yield return SceneReady(GameplaySceneNames.World);
-                Assert.AreEqual(playerJson, JsonUtility.ToJson(runtime.CaptureSave().player));
-                Assert.AreEqual(cultivationJson, JsonUtility.ToJson(runtime.CaptureSave().cultivation));
                 Assert.IsTrue(Find<WorldMapController>().SelectNode("guanzhong_hub"));
                 Find<WorldMapController>().EnterSelectedLocation();
                 yield return SceneReady(GameplaySceneNames.Settlement);
                 Assert.IsTrue(GameBootstrap.RequireInstance().SaveActiveSlot().Succeeded);
                 for (int entry = 0; entry < 2; entry++)
                 {
+                    if (entry == 1)
+                    {
+                        yield return SceneManager.LoadSceneAsync(GameplaySceneNames.StartMenu);
+                        yield return null;
+                        Assert.IsTrue(Find<StartMenuSceneInstaller>().LoadPlayer("trial" + size.x).Succeeded);
+                        yield return SceneReady(GameplaySceneNames.Settlement);
+                        Assert.AreEqual(playerJson, JsonUtility.ToJson(runtime.CaptureSave().player));
+                        Assert.AreEqual(cultivationJson, JsonUtility.ToJson(runtime.CaptureSave().cultivation));
+                    }
                     Assert.IsTrue(Find<SettlementController>().EnterAdventure("guanzhong_wild"));
                     yield return SceneReady(GameplaySceneNames.Adventure);
                     yield return Click(GameObject.Find("JindanRehearsalButton").GetComponent<Button>());
@@ -148,6 +151,7 @@ namespace TianZhang.Tests.PlayMode
                     Assert.IsFalse(view.GetButton("flight_tab").gameObject.activeInHierarchy);
                     Assert.IsFalse(Find<CombatActionBarView>().DivineButton.gameObject.activeInHierarchy);
                     Assert.IsFalse(Find<CombatActionBarView>().SecondArtButton.gameObject.activeInHierarchy);
+                    yield return CastFlyingStarAtEmptyCell(encounter, actor, entry == 0 ? "新建" : "读档");
                     if (entry == 0)
                     {
                         // The fixed fire spawn occupies the center; vacate it through a real legal move first.
@@ -216,6 +220,46 @@ namespace TianZhang.Tests.PlayMode
                 Assert.Contains("spell_feixingzhi", runtime.Player.AbilityLoadout.EquippedSpells.ToArray());
                 File.AppendAllText(Path.Combine(output, "proof.txt"), size + " PASS: create/load/player+guardian/feixing/deploy/reentry/ordinary schema6\n");
             }
+        }
+
+        private IEnumerator CastFlyingStarAtEmptyCell(EncounterCoordinator encounter, CombatantSnapshot actor, string entry)
+        {
+            int ap = actor.ActionPointsRemainingUnits, mp = actor.CurrentSpirit;
+            yield return Click(Find<CombatActionBarView>().ArtButton);
+            var input = Find<CombatCommandInput>();
+            Assert.AreEqual("spell_feixingzhi", input.Candidate.ProfileId);
+            var art = Find<CombatHudPresenter>().Snapshot.ArtActions.Single();
+            var movement = Find<CombatMovementView>();
+            var surface = Find<CombatBattlefieldSurface>();
+            var targeting = Find<CombatTargetInput>();
+            foreach (var cell in art.CastableCells)
+            {
+                if (targeting.FindUnitAtCell(cell) != null) continue;
+                Vector3 center = CombatBattlefieldSurface.Horizontal(cell.Q, cell.R);
+                if (!surface.TryHeight(center, out center.y)) continue;
+                Vector3 point = Camera.main.WorldToScreenPoint(center);
+                if (point.z <= 0 || !Camera.main.pixelRect.Contains(point) ||
+                    !movement.TryPickCell(point, out var picked) || !picked.Equals(cell) ||
+                    targeting.TryPickBodyPoint(point, out _)) continue;
+                yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(point);
+                Assert.AreEqual(cell, input.Candidate.TargetCell);
+                Assert.IsTrue(input.Preview.CanConfirm, input.Preview.Reason);
+                Assert.IsEmpty(input.Preview.AttackArea.Targets);
+                Assert.AreEqual(50000, input.Preview.ActionPointCostUnits);
+                Assert.AreEqual(10, input.Preview.SpiritCost);
+                Assert.AreEqual(ap, actor.ActionPointsRemainingUnits);
+                Assert.AreEqual(mp, actor.CurrentSpirit);
+                yield return GuanzhongBasicAttackPlayModeTests.ClickPointedAttack();
+                for (float end = Time.realtimeSinceStartup + 30; !encounter.AcceptsPlayerCommand && Time.realtimeSinceStartup < end;)
+                    yield return null;
+                Assert.IsTrue(encounter.AcceptsPlayerCommand);
+                Assert.IsFalse(input.IsSelectingAttack);
+                Assert.AreEqual(ap - 50000, actor.ActionPointsRemainingUnits);
+                Assert.AreEqual(mp - 10, actor.CurrentSpirit);
+                TestContext.WriteLine($"{entry}·飞星指 空格({cell.Q},{cell.R}) AP {ap / 1000}→{actor.ActionPointsRemainingUnits / 1000} MP {mp}→{actor.CurrentSpirit}");
+                yield break;
+            }
+            Assert.Fail("飞星指施放范围内未找到可由鼠标点中的空格。");
         }
 
         private IEnumerator Click(Button button)

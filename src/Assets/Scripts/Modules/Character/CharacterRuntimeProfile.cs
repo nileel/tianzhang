@@ -248,19 +248,8 @@ namespace TianZhang.Character
             return row.profileId;
         }
 
-        private static readonly string[] RealmIds = { "realm_fanren", "realm_lianqi", "realm_zhuji", "realm_jindan", "realm_yuanying", "realm_huashen" };
-        private static readonly string[] RealmNames = { "凡人", "练气", "筑基", "金丹", "元婴", "化神" };
-        public static string ResolveRealmId(string stage)
-        {
-            for (int i = 0; i < RealmIds.Length; i++)
-                if (stage == RealmIds[i] || stage == RealmNames[i]) return RealmIds[i];
-            if (stage == "筑基开府" || stage == "开府" || stage == "筑基圆满") return RealmIds[2];
-            if (stage == "金丹初结" || stage == "金丹温养" || stage == "金丹圆满") return RealmIds[3];
-            string[] grades = { "一", "二", "三", "四", "五", "六", "七", "八", "九" };
-            if (grades.Any(grade => stage == "练气" + grade + "品")) return RealmIds[1];
-            throw new ArgumentException("character_realm_unknown:" + stage);
-        }
-        public static string ResolveRealmStage(string stage) => RealmNames[Array.IndexOf(RealmIds, ResolveRealmId(stage))];
+        public static string ResolveRealmId(string stage) => CultivationRealmFacts.ResolveId(stage);
+        public static string ResolveRealmStage(string stage) => CultivationRealmFacts.ResolveName(stage);
 
         private static int NodeLimit(string stage, int realmCount)
         {
@@ -276,7 +265,7 @@ namespace TianZhang.Character
         }
         public static void RequirePlayerRealm(string stage)
         {
-            if (Array.IndexOf(RealmIds, ResolveRealmId(stage)) > 3)
+            if (CultivationRealmFacts.RequireStageRank(stage) > 3)
                 throw new ArgumentException("character_realm_reserved");
         }
 
@@ -322,7 +311,7 @@ namespace TianZhang.Character
             var rows = new Dictionary<string, CombatRuleSetData.RealmRow>(StringComparer.Ordinal);
             foreach (var row in rules.realms)
             {
-                int order = Array.IndexOf(RealmIds, row.realmId);
+                int order = CultivationRealmFacts.RankOfId(row.realmId);
                 int count = order == 0 ? 0 : order == 1 ? 9 : order == 2 || order == 3 ? 3 : 4;
                 if (order < 0 || row.realmOrder != order || row.usageScope != (order < 4 ? "player" : "reserved") ||
                     !rows.TryAdd(row.realmId, row) || row.actionPointMaximumUnits <= 0 || row.baseMovementEfficiencyMilliUnits < 0 ||

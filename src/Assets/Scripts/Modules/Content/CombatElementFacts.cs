@@ -91,21 +91,40 @@ namespace TianZhang.Content
         }
     }
 
+    public static class CultivationRealmFacts
+    {
+        private static readonly string[] Ids = { "realm_fanren", "realm_lianqi", "realm_zhuji", "realm_jindan", "realm_yuanying", "realm_huashen" };
+        private static readonly string[] Names = { "凡人", "练气", "筑基", "金丹", "元婴", "化神" };
+
+        public static int RankOfId(string id) => Array.IndexOf(Ids, id);
+
+        public static int RankOfStage(string stage)
+        {
+            switch (stage)
+            {
+                case "练气一品" or "练气二品" or "练气三品" or "练气四品" or "练气五品" or
+                     "练气六品" or "练气七品" or "练气八品" or "练气九品": return 1;
+                case "筑基开府" or "开府" or "筑基圆满": return 2;
+                case "金丹初结" or "金丹温养" or "金丹圆满": return 3;
+                default:
+                    int rank = Array.IndexOf(Names, stage);
+                    return rank >= 0 ? rank : RankOfId(stage);
+            }
+        }
+
+        public static int RequireStageRank(string stage)
+        {
+            int rank = RankOfStage(stage);
+            return rank >= 0 ? rank : throw new ArgumentException("character_realm_unknown:" + stage);
+        }
+
+        public static string ResolveId(string stage) => Ids[RequireStageRank(stage)];
+        public static string ResolveName(string stage) => Names[RequireStageRank(stage)];
+    }
+
     /// <summary>Pure content gate over explicit realm identity and valid visible spirit-root facts.</summary>
     public static class AbilityRequirementPolicy
     {
-        private static readonly Dictionary<string, int> RealmThresholds = new(StringComparer.Ordinal)
-        {
-            ["realm_fanren"] = 0, ["realm_lianqi"] = 1, ["realm_zhuji"] = 2,
-            ["realm_jindan"] = 3, ["realm_yuanying"] = 4, ["realm_huashen"] = 5,
-        };
-
-        private static readonly Dictionary<string, int> RealmStages = new(StringComparer.Ordinal)
-        {
-            ["凡人"] = 0, ["练气"] = 1, ["筑基"] = 2,
-            ["金丹"] = 3, ["元婴"] = 4, ["化神"] = 5,
-        };
-
         public static bool IsSatisfied(
             string realmStage,
             string visibleRootElement,
@@ -113,9 +132,9 @@ namespace TianZhang.Content
             string realmRequirement,
             string elementRequirement)
         {
-            if (string.IsNullOrWhiteSpace(realmStage) || !RealmStages.TryGetValue(realmStage, out int current) ||
-                string.IsNullOrWhiteSpace(realmRequirement) || !RealmThresholds.TryGetValue(realmRequirement, out int minimum) ||
-                current < minimum || visibleRootGrade is not ("凡品" or "下品" or "中品" or "上品" or "极品") ||
+            int minimum = CultivationRealmFacts.RankOfId(realmRequirement);
+            if (minimum < 0 || CultivationRealmFacts.RankOfStage(realmStage) < minimum ||
+                visibleRootGrade is not ("凡品" or "下品" or "中品" or "上品" or "极品") ||
                 string.IsNullOrWhiteSpace(visibleRootElement))
                 return false;
             // Rehearsal identities preserve every visible root, separated by '/'. All must be valid;
