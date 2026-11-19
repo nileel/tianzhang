@@ -124,15 +124,19 @@ namespace TianZhang.Combat
         internal CombatSurfaceSettlement(long sequence, string sourceRef, int tick,
             IEnumerable<CombatSurfaceChange> changes, IEnumerable<CombatTidePush> pushes,
             IEnumerable<CombatDamageResult> damage, IEnumerable<CombatSceneObjectChange> objectChanges,
-            IEnumerable<CombatDamageResult> fallDamage = null, IEnumerable<CombatSurfaceTargetSnapshot> targets = null)
+            IEnumerable<CombatDamageResult> fallDamage = null, IEnumerable<CombatSurfaceTargetSnapshot> targets = null,
+            HexCoord? tideSource = null, CombatTideAction? tideAction = null)
         {
             Sequence=sequence; SourceRef=sourceRef; Tick=tick;
+            TideSource = tideSource; TideAction = tideAction;
             Changes=Array.AsReadOnly(changes.ToArray()); Pushes=Array.AsReadOnly(pushes.ToArray());
             Damage=Array.AsReadOnly(damage.ToArray()); SceneObjectChanges=Array.AsReadOnly(objectChanges.ToArray());
             FallDamage=Array.AsReadOnly((fallDamage??Array.Empty<CombatDamageResult>()).ToArray());
             Targets=Array.AsReadOnly((targets??Array.Empty<CombatSurfaceTargetSnapshot>()).ToArray());
         }
         public long Sequence { get; }
+        public HexCoord? TideSource { get; }
+        public CombatTideAction? TideAction { get; }
         public string SourceRef { get; }
         public int Tick { get; }
         public IReadOnlyList<CombatSurfaceChange> Changes { get; }

@@ -35,7 +35,7 @@ namespace TianZhang.Art.Jindan.Visibility.Samples
         private readonly List<string> proof = new();
         private GameObject yang, yin;
         private GameObject sunRange, moonRange;
-        private VisibilitySampleDomain sunMotion, moonMotion;
+        private JindanVisibilityDomain sunMotion, moonMotion;
         private bool checkedRangeGeometry;
         private RenderTexture target;
         private Texture2D pixels;
@@ -184,7 +184,7 @@ namespace TianZhang.Art.Jindan.Visibility.Samples
             yin = Instantiate(yinAltar, Point(new HexCoord(config.yinQ,config.yinR)), Quaternion.identity);
             sunRange = Instantiate(yangRange,Vector3.zero,Quaternion.identity);
             moonRange = Instantiate(yinRange,Vector3.zero,Quaternion.identity);
-            sunMotion = new VisibilitySampleDomain(sunRange); moonMotion = new VisibilitySampleDomain(moonRange);
+            sunMotion = new JindanVisibilityDomain(sunRange); moonMotion = new JindanVisibilityDomain(moonRange);
             if (!checkedRangeGeometry)
             {
                 var expected = new HashSet<HexCoord>(demo.Session.SceneObjects.Board.Cells);
@@ -371,7 +371,7 @@ namespace TianZhang.Art.Jindan.Visibility.Samples
                     +" material="+renderer.sharedMaterial.name+" changedPixels="+contribution+"; fixed map UV; no hidden actor input.");
             }
         }
-        private IEnumerator VerifyMotion(VisibilitySampleDomain domain,string label)
+        private IEnumerator VerifyMotion(JindanVisibilityDomain domain,string label)
         {
             if (!capture) yield break;
             int[] before=RangePixels(domain); Key(label+"-a");
@@ -386,12 +386,12 @@ namespace TianZhang.Art.Jindan.Visibility.Samples
             {
                 var renderer=ps.GetComponent<Renderer>(); Bounds b=renderer.bounds;
                 Vector3 min=sampleCamera.WorldToScreenPoint(b.min),max=sampleCamera.WorldToScreenPoint(b.max);
-                proof.Add(label+" owner=VisibilityAssetSample/Present/VisibilitySampleDomain particle="+ps.name+" count="+ps.particleCount
+                proof.Add(label+" owner=VisibilityAssetSample/Present/JindanVisibilityDomain particle="+ps.name+" count="+ps.particleCount
                     +" worldBounds="+b+" screenBoundCorners="+min+".."+max+" material="+renderer.sharedMaterial.name
                     +" sourceMesh="+ps.shape.mesh.name+" renderer="+ps.GetComponent<ParticleSystemRenderer>().renderMode);
             }
         }
-        private int[] RangePixels(VisibilitySampleDomain domain)
+        private int[] RangePixels(JindanVisibilityDomain domain)
         {
             Render(); Color32[] with=pixels.GetPixels32();
             foreach (var r in domain.Renderers) r.enabled=false;

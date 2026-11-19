@@ -57,6 +57,9 @@ namespace TianZhang.Tests.PlayMode
             var oldMove = encounter.PreviewJindan(move); var oldAttack = encounter.PreviewJindan(emptyAttack);
             Assert.IsTrue(oldMove.IsLegal); Assert.IsTrue(oldAttack.IsLegal);
             yield return Scale(false, new HexCoord(5, 14), new HexCoord(6, 14), new HexCoord(7, 14));
+            Assert.AreEqual(2, Bands("ScaleCompressed", "DirectionalSpaceWave"),
+                "Each changed metric edge has its own directional wave.");
+            yield return Capture("00-compressed-before-attack");
             int ap = Actor(Player).ActionPointsRemainingUnits, mp = Actor(Player).CurrentSpirit;
             Assert.IsFalse(encounter.ConfirmJindan(move, oldMove).Succeeded);
             Assert.IsFalse(encounter.ConfirmJindan(emptyAttack, oldAttack).Succeeded);
@@ -80,6 +83,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsTrue(encounter.PreviewJindan(attack).IsLegal);
             yield return Scale(true, new HexCoord(6, 14), new HexCoord(7, 14));
             Assert.IsFalse(encounter.PreviewJindan(attack).IsLegal);
+            Assert.AreEqual(1, Bands("ScaleExpanded", "DirectionalSpaceWave"));
             Record("expanded adjacent edge to range2; adjacent basic attack unavailable"); yield return Capture("02-expanded-adjacent");
             yield return Press("cancel_targeting");
             yield return Press("toggle_panel");
@@ -109,7 +113,9 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsTrue(direct.IsLegal); Assert.Greater(direct.MovementSteps.Count, 1);
             Assert.IsFalse(direct.MovementSteps.Any(step => step.From.Anchor == GateFrom && step.To.Anchor == GateTo));
             Record("enemy paid deployment; gate arrow and layers shown; ground route detours " + direct.MovementSteps.Count + " steps");
-            Assert.IsNotNull(GameObject.Find("JindanSealDirection"));
+            Assert.AreEqual(1, Bands("SealOuter", "EnergyMembrane"));
+            Assert.AreEqual(1, Bands("SealInner", "EnergyMembrane"));
+            StringAssert.Contains("我方沿门环箭头禁入，反向可过", view.PersistentStatus);
             yield return Capture("01-gate-intact");
             if (!native)
             {
@@ -145,6 +151,9 @@ namespace TianZhang.Tests.PlayMode
                 {
                     Assert.AreEqual(80, seal.Support.Durability); Assert.AreEqual(seal.CreatedTick + 2, seal.ExpiresTick);
                     Assert.IsNotNull(seat.ActiveSeal); Assert.IsEmpty(CombatForceMovement.Query(session, Player, 0, 1, 2).Path);
+                    yield return new WaitForSeconds(.55f);
+                    Assert.AreEqual(0, Bands("SealOuter", "EnergyMembrane"));
+                    Assert.AreEqual(1, Bands("SealInner", "EnergyMembrane"));
                     yield return Capture("03-outer-broken-still-sealed");
                 }
             }
@@ -153,12 +162,18 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsTrue(opened.IsLegal); Assert.AreEqual(1, opened.MovementSteps.Count);
             Record("7 strikes: AP=" + initialAp + "->" + Actor(Player).ActionPointsRemainingUnits + " MP=" + initialMp + "->" + Actor(Player).CurrentSpirit);
             yield return Move(GateTo); Record("walked through opened edge"); yield return Capture("04-gate-open");
+            Assert.AreEqual(0, Bands("SealInner", "EnergyMembrane"));
             Assert.AreEqual(save, JsonUtility.ToJson(CharacterRecord.Capture(GameBootstrap.RequireRuntime().Player.Capture())));
             yield return Withdraw(); Assert.IsNull(seat.ActiveSeal); Assert.IsEmpty(session.SceneObjects.Board.MetricOverrides);
             yield return EnterAdventure(); yield return Enter(); Assert.AreEqual(200, SealSeat.ActiveSeal.Support.Durability);
             Assert.AreEqual(1, SealSeat.SuccessfulDeployments); Record("fresh reentry pays a fresh deployment; world character unchanged");
             yield return Capture("05-reentry");
         }
+
+        private static int Bands(string root, string surface) =>
+            Object.FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None).Count(renderer =>
+                renderer.enabled && renderer.name == surface && renderer.transform.parent.name == root &&
+                renderer.sharedMaterial.shader.name == "TianZhang/Jindan/Space Band");
 
         private IEnumerator Strike()
         {

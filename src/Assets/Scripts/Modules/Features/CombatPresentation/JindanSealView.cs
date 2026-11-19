@@ -1,49 +1,52 @@
-using System;
 using TianZhang.Gameplay.Contracts;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace TianZhang.Features.CombatPresentation
 {
-    /// <summary>The map's existing support marker and a grounded arrow for the one directed gate.</summary>
     public sealed class JindanSealView : MonoBehaviour
     {
-        [SerializeField] private GameObject supportMarker;
-        [SerializeField] private Material edgeMaterial;
+        [SerializeField] private GameObject supportMarker, supportPrefab, outerPrefab, innerPrefab;
         private CombatBattlefieldSurface surface;
-        private LineRenderer arrow;
+        private GameObject intact, failed, glow;
+        private JindanSpaceBand outerBand, innerBand;
+        private int lastOuter, lastInner;
 
         public void ConfigureSurface(CombatBattlefieldSurface value) => surface = value;
 
         public void Present(CombatUnitPresentationHex[] path, int outer, int inner, bool destroyed)
         {
-            bool active = path != null && path.Length == 2;
-            supportMarker.transform.Find("Intact").gameObject.SetActive(!destroyed);
-            supportMarker.transform.Find("Failed").gameObject.SetActive(destroyed);
-            supportMarker.transform.Find("Intact/Glow").gameObject.SetActive(active && outer > 0);
-            if (!active)
+            if (!intact)
             {
-                if (arrow != null) arrow.gameObject.SetActive(false);
-                return;
+                if (!supportMarker.activeInHierarchy) return;
+                supportMarker.transform.Find("Intact").gameObject.SetActive(false);
+                supportMarker.transform.Find("Failed").gameObject.SetActive(false);
+                var replacement = Instantiate(supportPrefab, supportMarker.transform, false);
+                intact = replacement.transform.Find("Intact").gameObject;
+                failed = replacement.transform.Find("Failed").gameObject;
+                glow = replacement.transform.Find("Intact/Glow").gameObject;
             }
-            if (surface == null) throw new InvalidOperationException("jindan_seal_surface_missing");
-            if (arrow == null)
+            intact.SetActive(!destroyed);
+            failed.SetActive(destroyed);
+            glow.SetActive(outer > 0);
+            UpdateLayer(ref outerBand, outerPrefab, path, lastOuter, outer);
+            UpdateLayer(ref innerBand, innerPrefab, path, lastInner, inner);
+            lastOuter = outer;
+            lastInner = inner;
+        }
+
+        private void UpdateLayer(ref JindanSpaceBand band, GameObject prefab, CombatUnitPresentationHex[] path,
+            int oldHealth, int health)
+        {
+            if (path != null && path.Length == 2 && health > 0)
             {
-                var obj = new GameObject("JindanSealDirection");
-                obj.transform.SetParent(transform, false);
-                arrow = obj.AddComponent<LineRenderer>();
-                arrow.sharedMaterial = edgeMaterial; arrow.useWorldSpace = true;
-                arrow.widthMultiplier = .07f; arrow.shadowCastingMode = ShadowCastingMode.Off;
-                arrow.receiveShadows = false;
+                if (!band) band = JindanSpaceBand.Place(prefab, transform, surface, path[0], path[1]);
+                else if (health < oldHealth) band.Pulse(1);
             }
-            Vector3 from = surface.Center(path[0]), to = surface.Center(path[1]);
-            Vector3 direction = to - from, side = Vector3.Cross(Vector3.up, direction) * .2f;
-            var points = new[] { from, to, to - direction * .3f + side, to, to - direction * .3f - side };
-            arrow.gameObject.SetActive(inner > 0);
-            var properties = new MaterialPropertyBlock();
-            properties.SetColor("_BaseColor", outer > 0 ? new Color(.85f, .35f, .9f) : new Color(1f, .4f, .2f));
-            arrow.SetPropertyBlock(properties);
-            surface.DrawPath(arrow, points, .035f);
+            else if (band)
+            {
+                band.Dissolve();
+                band = null;
+            }
         }
     }
 }

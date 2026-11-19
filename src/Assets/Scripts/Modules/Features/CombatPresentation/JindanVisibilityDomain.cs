@@ -1,9 +1,9 @@
 using UnityEngine;
 
-namespace TianZhang.Art.Jindan.Visibility.Samples
+namespace TianZhang.Features.CombatPresentation
 {
-    // Sample-only binding. Domain facts are supplied by Present; this owns only the short visual envelope.
-    internal sealed class VisibilitySampleDomain
+    // Range opacity and particle lifetime follow the supplied public domain state.
+    public sealed class JindanVisibilityDomain
     {
         public readonly GameObject Root;
         public readonly Renderer[] Renderers;
@@ -14,7 +14,7 @@ namespace TianZhang.Art.Jindan.Visibility.Samples
         private readonly MaterialPropertyBlock block=new();
         private float eventTime=-100;
 
-        public VisibilitySampleDomain(GameObject root)
+        public JindanVisibilityDomain(GameObject root)
         {
             Root=root; Renderers=root.GetComponentsInChildren<Renderer>(true);
             Particles=root.GetComponentsInChildren<ParticleSystem>(true); colours=new Color[Renderers.Length];

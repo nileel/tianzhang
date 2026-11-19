@@ -84,6 +84,7 @@ namespace TianZhang.Bootstrap
             combatTargetInput.ConfigureSurface(terrainRehearsalSurface);
             jindanScaleView.ConfigureSurface(terrainRehearsalSurface);
             jindanSealView.ConfigureSurface(terrainRehearsalSurface);
+            jindanFireDomainView.ConfigureSurface(terrainRehearsalSurface);
             earthView.ConfigureSurface(terrainRehearsalSurface);
             surfaceView.ConfigureSurface(terrainRehearsalSurface);
             battlefieldCamera.GetComponent<AdventureCameraController>().Configure(battlefieldCamera,
@@ -172,6 +173,7 @@ namespace TianZhang.Bootstrap
                         bool observed = actor.Team == TianZhang.Combat.CombatTeam.Player || visibilitySession.Combatants.All.Any(observer =>
                             observer.IsAlive && observer.Team == TianZhang.Combat.CombatTeam.Player && visibility.IsVisible(observer.Id, actor.Id));
                         root.SetActive(actor.IsAlive && observed);
+                        static3DUnitPresentationProvider.SetFeedbackObserved(actor.Id, observed);
                     }
             }
             var yangSeat = visibilitySession?.Jindan?.Seats.FirstOrDefault(value => value.EffectId == "YANG_RADIANCE");
@@ -199,14 +201,28 @@ namespace TianZhang.Bootstrap
             jindanScaleView.Present(scale?.Path.Select(value => new TianZhang.Gameplay.Contracts.CombatUnitPresentationHex(value.Q, value.R)).ToArray()
                 ?? Array.Empty<TianZhang.Gameplay.Contracts.CombatUnitPresentationHex>(), scale?.MetricDistanceUnits ?? 0,
                 scale?.Support.Durability ?? 0, scale?.Support.Definition.MaxDurability ?? 0);
-            earthView.Present(encounterCoordinator.CurrentSession?.Jindan?.Seats.Where(s=>s.ActiveEarth!=null)
+            var earthObjects = visibilitySession?.Jindan?.Seats.Where(s=>s.ActiveEarth!=null)
                 .SelectMany(s=>s.ActiveEarth.Objects).Select(o=>new TianZhang.Gameplay.Contracts.CombatEarthObjectSnapshot(o.Id,
                     new TianZhang.Gameplay.Contracts.CombatUnitPresentationHex(o.Cell.Q,o.Cell.R),
                     new TianZhang.Gameplay.Contracts.CombatUnitPresentationHex(o.EdgeOther.Value.Q,o.EdgeOther.Value.R),
-                    o.Definition.IsTemporaryRamp,o.Durability)).ToArray() ?? Array.Empty<TianZhang.Gameplay.Contracts.CombatEarthObjectSnapshot>());
-            surfaceView.Present(jindan.SurfacePresentation);
-            var fire = encounterCoordinator.CurrentSession?.Jindan?.Seats.FirstOrDefault(value => value.FireDomain != null)?.FireDomain;
-            jindanFireDomainView.Present(fire?.Main != null, fire?.Support.IsDestroyed == true);
+                    o.Definition.IsTemporaryRamp,o.Durability)).ToArray();
+            earthView.Present(earthObjects);
+            var fireSeat = visibilitySession?.Jindan?.Seats.FirstOrDefault(value => value.FireDomain != null);
+            var fire = fireSeat?.FireDomain;
+            CombatUnitPresentationHex? center = fire == null ? null : new CombatUnitPresentationHex(fire.Support.Cell.Q, fire.Support.Cell.R);
+            var tailCells = fire?.Tails.SelectMany(tail => tail.Cells).Where(cell =>
+                visibilitySession.Surfaces.Get(cell) is { Kind: CombatSurfaceKind.Burning } burning &&
+                burning.SourceRef == fireSeat.Definition.AbilityInstanceId).Select(cell => new CombatUnitPresentationHex(cell.Q, cell.R)).ToArray();
+            surfaceView.Present(jindan.SurfacePresentation, tailCells);
+            jindanFireDomainView.Present(fire?.Main != null, fire?.Support.IsDestroyed == true, tailCells, center);
+            bool guideFire = center.HasValue && jindan.ControlFire && !fire.Support.IsDestroyed &&
+                (jindanDemoView.SelectedKey == "fire_tab" || combatMovementView.IsSelecting && fire.Main == null);
+            jindanDemoView.PresentFireCenter(guideFire ? battlefieldCamera.WorldToViewportPoint(terrainRehearsalSurface.Center(center.Value)) : (Vector3?)null);
+            CombatUnitPresentationHex? Altar(CombatJindanSeatState seat) => seat?.ActiveVisibility?.Support is { } altar
+                ? new CombatUnitPresentationHex(altar.Cell.Q, altar.Cell.R) : (CombatUnitPresentationHex?)null;
+            bool showRampEnds = jindanDemoView.SelectedKey == "earth_tab" || combatMovementView.IsSelecting;
+            jindanDemoView.PresentFieldLabels(battlefieldCamera, terrainRehearsalSurface, tailCells, Altar(yangSeat),
+                Altar(yinSeat), showRampEnds ? earthObjects : null);
             var sealSeat = encounterCoordinator.CurrentSession?.Jindan?.Seats.FirstOrDefault(value => value.EffectId == "SPACE_SEAL");
             var seal = sealSeat?.ActiveSeal;
             jindanSealView.Present(seal == null ? null : new[] {
@@ -346,6 +362,7 @@ namespace TianZhang.Bootstrap
                     RequireReference(jindanFireDomainView, "jindan_fire_domain_view_missing");
                     RequireReference(earthView, "jindan_earth_view_missing");
                     RequireReference(surfaceView, "jindan_surface_view_missing");
+                    encounterCoordinator.SurfaceSettled = surfaceView.PlaySettlement;
                     jindan = new JindanRehearsalPresenter(jindanDemoCatalog, encounterCoordinator, BeginJindanRehearsal, UiText.Resolve,
                         string.IsNullOrEmpty(runtime.JindanDemoPresetId) ? null : runtime.Player.Identity.DisplayName);
                     jindanRehearsalButton.onClick.AddListener(OpenJindanPreparation);

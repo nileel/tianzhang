@@ -151,13 +151,31 @@ namespace TianZhang.Tests.PlayMode
                     Assert.IsFalse(view.GetButton("flight_tab").gameObject.activeInHierarchy);
                     Assert.IsFalse(Find<CombatActionBarView>().DivineButton.gameObject.activeInHierarchy);
                     Assert.IsFalse(Find<CombatActionBarView>().SecondArtButton.gameObject.activeInHierarchy);
+                    StringAssert.Contains("守阵 · 接近阵心", Find<CombatBountyTrackerView>().Summary);
                     yield return CastFlyingStarAtEmptyCell(encounter, actor, entry == 0 ? "新建" : "读档");
                     if (entry == 0)
                     {
-                        // The fixed fire spawn occupies the center; vacate it through a real legal move first.
-                        yield return MoveOffFireCenter(encounter, actor);
                         var shared = Find<CombatActionPreviewView>();
+                        int beforeApproach = actor.ActionPointsRemainingUnits;
                         int mana = actor.CurrentSpirit;
+                        yield return Click(view.GetButton("fire_tab"));
+                        yield return Click(view.GetButton("fire_preview"));
+                        Assert.IsFalse(shared.ConfirmButton.interactable);
+                        StringAssert.Contains("点「移动」靠近", GameObject.Find("ActionHint").GetComponent<Text>().text);
+                        var marked = Find<CombatMovementView>().Highlights.Single(pair => pair.Value.gameObject.activeSelf).Key;
+                        var center = new CombatUnitPresentationHex(marked.x, marked.y);
+                        Assert.AreEqual(seat.FireDomain.Support.Cell.Q, center.Q);
+                        Assert.AreEqual(seat.FireDomain.Support.Cell.R, center.R);
+                        var label = GameObject.Find("FireCenterLabel").GetComponent<Text>();
+                        Assert.AreEqual("阵心", label.text);
+                        Vector3 ground = Camera.main.WorldToViewportPoint(Find<CombatBattlefieldSurface>().Center(center));
+                        Assert.Less(Vector2.Distance(label.rectTransform.anchorMin, (Vector2)ground), .001f);
+                        yield return Capture(size.x + "-fire-center-approach");
+                        yield return Click(shared.CancelButton);
+                        Assert.IsFalse(Find<CombatMovementView>().Highlights[marked].gameObject.activeSelf);
+                        Assert.AreEqual(beforeApproach, actor.ActionPointsRemainingUnits);
+                        Assert.AreEqual(mana, actor.CurrentSpirit);
+                        yield return MoveToMarkedCenter(encounter, actor, center);
                         yield return Click(view.GetButton("fire_tab"));
                         yield return Click(view.GetButton("fire_preview"));
                         Assert.IsTrue(shared.ConfirmButton.interactable);
@@ -181,6 +199,7 @@ namespace TianZhang.Tests.PlayMode
                         yield return CommandReady(encounter);
                         yield return Click(Find<CombatActionBarView>().BasicAttackButton);
                         StringAssert.Contains("中心 600/600", view.PersistentStatus);
+                        StringAssert.Contains("护住阵心", Find<CombatBountyTrackerView>().Summary);
                         StringAssert.Contains("200 MP", view.PersistentStatus);
                         StringAssert.Contains("本回合不维护", view.PersistentStatus);
                         Assert.AreEqual(Find<CombatActionBarView>().BasicAttackButton, Find<CombatActionBarView>().SelectedButton);
@@ -286,20 +305,21 @@ namespace TianZhang.Tests.PlayMode
             Assert.Fail("飞星指施放范围内未找到可由鼠标点中的空格。");
         }
 
-        private IEnumerator MoveOffFireCenter(EncounterCoordinator encounter, CombatantSnapshot actor)
+        private IEnumerator MoveToMarkedCenter(EncounterCoordinator encounter, CombatantSnapshot actor, CombatUnitPresentationHex center)
         {
             var origin = actor.Position;
             int ap = actor.ActionPointsRemainingUnits, mp = actor.CurrentSpirit;
             yield return Click(Find<CombatActionBarView>().MoveButton);
-            var option = Find<CombatHudPresenter>().Snapshot.Movement.Options.Single(o => o.Destination.Q == 7 && o.Destination.R == 12);
-            Assert.IsTrue(TryGroundPoint(option.Destination, out var point), "The adjacent landing must be pickable.");
+            Assert.IsNotNull(GameObject.Find("FireCenterLabel"), "Keep the destination visible while choosing the approach.");
+            var option = Find<CombatHudPresenter>().Snapshot.Movement.Options.Single(o => o.Destination.Equals(center));
+            Assert.IsTrue(TryGroundPoint(option.Destination, out var point), "The marked center must be pickable.");
             yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(point, click: true);
             AssertPrice(option.Cost, 0);
             Assert.AreEqual(origin, actor.Position);
             Assert.AreEqual(ap, actor.ActionPointsRemainingUnits);
             yield return Click(Find<CombatActionPreviewView>().ConfirmButton);
             yield return CommandReady(encounter);
-            Assert.AreEqual(new TianZhang.Spatial.HexCoord(7, 12), actor.Position);
+            Assert.AreEqual(new TianZhang.Spatial.HexCoord(center.Q, center.R), actor.Position);
             Assert.AreEqual(ap - option.Cost, actor.ActionPointsRemainingUnits);
             Assert.AreEqual(mp, actor.CurrentSpirit);
         }

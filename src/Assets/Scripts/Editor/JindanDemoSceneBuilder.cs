@@ -79,10 +79,6 @@ namespace TianZhang.Editor
             var scaleRoot = new GameObject("JindanScaleRoot");
             scaleRoot.transform.SetParent(owner.transform, false);
             var scale = scaleRoot.AddComponent<JindanScaleView>();
-            SceneBuildSupport.SetObject(scale, "supportPrefab", SceneBuildSupport.RequireAsset<GameObject>(
-                GuanzhongPropSampleBuilder.AssetRoot + "/SupportStele.prefab"));
-            SceneBuildSupport.SetObject(scale, "edgeMaterial", SceneBuildSupport.RequireAsset<Material>(
-                VisualBaselineBuilder.SelectedMaterialPath));
             UnityEngine.Object catalog = AssetDatabase.LoadMainAssetAtPath("Assets/Data/JindanDemo/JindanDemoCatalog.asset");
             if (catalog == null) throw new InvalidOperationException("Jindan demo catalog is missing.");
             SceneBuildSupport.SetObject(installer, "jindanDemoView", view);
@@ -93,7 +89,6 @@ namespace TianZhang.Editor
             var marker = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<Transform>(true))
                 .Single(value => value.name == "space_lock_support");
             SceneBuildSupport.SetObject(seal, "supportMarker", marker.gameObject);
-            SceneBuildSupport.SetObject(seal, "edgeMaterial", SceneBuildSupport.RequireAsset<Material>(VisualBaselineBuilder.SelectedMaterialPath));
             SceneBuildSupport.SetObject(installer, "jindanSealView", seal);
             var fireRoot = new GameObject("JindanFireDomainRoot");
             fireRoot.transform.SetParent(owner.transform, false);
@@ -106,18 +101,10 @@ namespace TianZhang.Editor
             var earthRoot = new GameObject("JindanEarthRoot");
             earthRoot.transform.SetParent(owner.transform, false);
             var earth = earthRoot.AddComponent<CombatEarthView>();
-            SceneBuildSupport.SetObject(earth, "wallPrefab", SceneBuildSupport.RequireAsset<GameObject>(
-                GuanzhongPropSampleBuilder.AssetRoot + "/HighWall.prefab"));
-            SceneBuildSupport.SetObject(earth, "rampPrefab", SceneBuildSupport.RequireAsset<GameObject>(
-                "Assets/Art/Environments/Guanzhong/EarthManifest/EarthManifestRamp.prefab"));
             SceneBuildSupport.SetObject(installer, "earthView", earth);
             var surfaceRoot = new GameObject("JindanSurfaceRoot");
             surfaceRoot.transform.SetParent(owner.transform, false);
             var surfaceView = surfaceRoot.AddComponent<CombatSurfaceView>();
-            SceneBuildSupport.SetObject(surfaceView, "surfacePrefab", SceneBuildSupport.RequireAsset<GameObject>(
-                GuanzhongWaterbankSampleBuilder.AssetRoot + "/WaterHex.prefab"));
-            SceneBuildSupport.SetObject(surfaceView, "groundMaterial", SceneBuildSupport.RequireAsset<Material>(
-                GuanzhongWaterbankSampleBuilder.AssetRoot + "/MudBank.mat"));
             SceneBuildSupport.SetObject(surfaceView, "lineMaterial", SceneBuildSupport.RequireAsset<Material>(
                 VisualBaselineBuilder.SelectedMaterialPath));
             var terrain = owner.transform.Find(GuanzhongDemoBattlefieldBuilder.RootName);
@@ -131,10 +118,54 @@ namespace TianZhang.Editor
             surfaceData.ApplyModifiedPropertiesWithoutUndo();
             SceneBuildSupport.SetObject(installer, "surfaceView", surfaceView);
             SceneBuildSupport.SetObject(installer, "jindanDemoCatalog", catalog);
+            BindEffectAssets(scene, owner);
             // The existing withdrawal dialog remains above every combat panel and receives its clicks.
             canvas.Find("AdventureWithdrawalConfirmation")?.SetAsLastSibling();
             D12CombatHudBuilder.Apply();
             EditorSceneManager.MarkSceneDirty(scene);
+        }
+
+        [MenuItem("天章/场景/D12 绑定五系战场表现")]
+        public static void RebindEffectAssets()
+        {
+            var scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
+            var owner = scene.GetRootGameObjects().Single(go => go.name == "AdventureRoot");
+            BindEffectAssets(scene, owner);
+            var canvas = scene.GetRootGameObjects().Single(go => go.name == "UICanvas");
+            var hud = canvas.GetComponentsInChildren<RectTransform>(true).Single(t => t.name == "CombatHudRoot");
+            D12CombatHudBuilder.BindFireCenter(hud, owner.GetComponent<JindanDemoView>());
+            SceneBuildSupport.Save(scene.path);
+            EditorSceneManager.OpenScene(scene.path, OpenSceneMode.Single);
+        }
+
+        private static void BindEffectAssets(Scene scene, GameObject owner)
+        {
+            void Bind(Component view, string pack, params (string field, string prefab)[] items)
+            {
+                foreach (var item in items)
+                    SceneBuildSupport.SetObject(view, item.field, SceneBuildSupport.RequireAsset<GameObject>(
+                        $"Assets/Art/VFX/Guanzhong/Jindan/{pack}/Prefabs/{item.prefab}.prefab"));
+            }
+
+            var surface = owner.GetComponentInChildren<CombatSurfaceView>(true);
+            Bind(owner.GetComponentInChildren<CombatEarthView>(true), "Earth", ("wallPrefab", "WallForm"),
+                ("rampPrefab", "RampForm"), ("wallDissolvePrefab", "WallDissolve"), ("rampDissolvePrefab", "RampDissolve"));
+            Bind(owner.GetComponent<Static3DCombatUnitPresentationProvider>(), "Earth",
+                ("gravityPressurePrefab", "GravityPressure"), ("landingDustPrefab", "LandingDust"));
+            Bind(surface, "Water", ("wetMudPrefab", "WetMud"), ("shallowWaterPrefab", "ShallowWater"),
+                ("deepWaterPrefab", "DeepWater"), ("wetToDryPrefab", "WetToDry"), ("tideRisePrefab", "TideRise"),
+                ("tideEbbPrefab", "TideEbb"), ("steamPrefab", "ExtinguishSteam"), ("erodePrefab", "LowPlantErode"));
+            Bind(surface, "Fire", ("lowFirePrefab", "LowFire"), ("scorchedPrefab", "ScorchedGround"));
+            var objects = scene.GetRootGameObjects().SelectMany(go => go.GetComponentsInChildren<CombatSceneObjectView>(true)).Single();
+            SceneBuildSupport.SetObject(surface, "sceneObjects", objects);
+            Bind(owner.GetComponentInChildren<JindanFireDomainView>(true), "Fire", ("fireCenterPrefab", "FireCenter"),
+                ("warmEdgePrefab", "WholeBoardWarmEdge"), ("embersPrefab", "FiniteEmbers"));
+            Bind(owner.GetComponentInChildren<JindanScaleView>(true), "Space", ("supportPrefab", "ScaleSupport"),
+                ("compressedPrefab", "ScaleCompressed"), ("expandedPrefab", "ScaleExpanded"));
+            Bind(owner.GetComponentInChildren<JindanSealView>(true), "Space", ("supportPrefab", "SealSupport"),
+                ("outerPrefab", "SealOuter"), ("innerPrefab", "SealInner"));
+            Bind(owner.GetComponent<JindanVisibilityView>(), "Visibility", ("yangAltarPrefab", "YangActive"),
+                ("yinAltarPrefab", "YinActive"), ("yangRangePrefab", "YangDomainRange"), ("yinRangePrefab", "YinDomainRange"));
         }
 
         private static void BuildEarthRamp()

@@ -33,7 +33,6 @@ namespace TianZhang.Features.CombatPresentation
         private readonly List<Material> tailMaterials = new List<Material>();
         private Mesh mesh;
         private MeshRenderer meshRenderer;
-        private GameObject ribbonHost;
         private Material ribbonMaterial;
         private Material headMaterial;
         private bool impacted;
@@ -118,6 +117,7 @@ namespace TianZhang.Features.CombatPresentation
         {
             GameObject quad = GameObject.CreatePrimitive(PrimitiveType.Quad);
             quad.name = name;
+            quad.transform.SetParent(transform, true);
             Object.Destroy(quad.GetComponent<Collider>());
             quad.transform.localScale = Vector3.one * size * scale;
             var renderer = quad.GetComponent<MeshRenderer>();
@@ -133,9 +133,8 @@ namespace TianZhang.Features.CombatPresentation
             mesh = new Mesh { name = "CombatAttackVfx_Ribbon" };
             mesh.MarkDynamic();
             var host = new GameObject("Ribbon");
-            // Vertices are authored in world space, so the ribbon host stays at the origin.
-            host.transform.SetParent(null);
-            ribbonHost = host;
+            // Keep the world-space mesh at the origin. Parenting lets concealment hide the whole effect.
+            host.transform.SetParent(transform, true);
             host.AddComponent<MeshFilter>().sharedMesh = mesh;
             meshRenderer = host.AddComponent<MeshRenderer>();
             ribbonMaterial = CreateMaterial("CombatAttackVfx_Ribbon", Color.white);
@@ -301,10 +300,6 @@ namespace TianZhang.Features.CombatPresentation
 
         private void OnDestroy()
         {
-            if (head != null) Destroy(head.gameObject);
-            foreach (Transform part in tail)
-                if (part != null) Destroy(part.gameObject);
-            if (ribbonHost != null) Destroy(ribbonHost);
             if (mesh != null) Destroy(mesh);
             foreach (Material material in tailMaterials)
                 if (material != null) Destroy(material);

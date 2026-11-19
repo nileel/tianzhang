@@ -15,6 +15,8 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private Text bindingsText;
         [SerializeField] private Button skipButton, autoButton, exitButton, holdBinding, firstBinding, secondBinding;
         [SerializeField] private GameObject yangMarker, yinMarker;
+        [SerializeField] private GameObject yangAltarPrefab, yinAltarPrefab, yangRangePrefab, yinRangePrefab;
+        private JindanVisibilityDomain yangRange, yinRange;
         private Key hold, first, second;
         private long eventId;
         private int rebinding = -1;
@@ -50,7 +52,44 @@ namespace TianZhang.Features.CombatPresentation
             bindingsText.text = rebinding >= 0 ? "按下新的键；Esc取消；三键不得重复" : "维持 " + hold + "　破绽 " + first + " / " + second;
         }
         public void PresentSupports(bool yangActive, bool yangDestroyed, bool yinActive, bool yinDestroyed)
-        { Support(yangMarker, yangActive, yangDestroyed); Support(yinMarker, yinActive, yinDestroyed); }
+        {
+            if (yangRange == null)
+            {
+                if (!yangMarker.activeInHierarchy) return;
+                var board = yangMarker.GetComponentInParent<CombatBattlefieldSurface>();
+                yangMarker = ReplaceAltar(yangMarker, yangAltarPrefab);
+                yinMarker = ReplaceAltar(yinMarker, yinAltarPrefab);
+                yangRange = MakeRange(yangRangePrefab, board.transform);
+                yinRange = MakeRange(yinRangePrefab, board.transform);
+            }
+            Support(yangMarker, yangActive, yangDestroyed);
+            Support(yinMarker, yinActive, yinDestroyed);
+            PresentRange(yangRange, yangActive);
+            PresentRange(yinRange, yinActive);
+        }
+
+        private static GameObject ReplaceAltar(GameObject marker, GameObject prefab)
+        {
+            marker.transform.Find("Intact").gameObject.SetActive(false);
+            marker.transform.Find("Failed").gameObject.SetActive(false);
+            return Instantiate(prefab, marker.transform, false);
+        }
+
+        private static JindanVisibilityDomain MakeRange(GameObject prefab, Transform board)
+        {
+            // WholeBoardRange was baked in the actual fixed board's world coordinates.
+            var root = Instantiate(prefab, Vector3.zero, Quaternion.identity, board);
+            root.name = prefab.name;
+            return new JindanVisibilityDomain(root);
+        }
+
+        private static void PresentRange(JindanVisibilityDomain range, bool active)
+        {
+            range.Set(active);
+            if (active && range.Opacity < 1f || !active && range.Root.activeSelf)
+                range.Tick(Time.deltaTime);
+        }
+
         private static void Support(GameObject marker, bool deployed, bool destroyed)
         {
             marker.transform.Find("Intact").gameObject.SetActive(!destroyed);

@@ -14,6 +14,7 @@ using TianZhang.Features.Settlement;
 using TianZhang.Features.WorldMap;
 using TianZhang.Gameplay.Contracts;
 using TianZhang.Infrastructure.Persistence;
+using TianZhang.Spatial;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -174,6 +175,67 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsFalse(Find<CombatHudPresenter>().Snapshot.Enemies.Any(target => target.Id == Yin));
             Record("hold release: yin wins; both pay50; clocks unchanged; target remains hidden");
             yield return Capture("01-hidden-after-release"); yield return LeaveAtTheNextLegalWindow();
+        }
+
+        [UnityTest, Timeout(600000)]
+        public IEnumerator PublicAltarRemainsWhenIndependentCastAndHitCrossConcealment()
+        {
+            yield return Setup(); yield return Enter();
+            var provider = Find<Static3DCombatUnitPresentationProvider>();
+            Assert.IsTrue(provider.TryGetPresentedUnit(Yin, out var yinBody));
+            Assert.IsFalse(yinBody.activeInHierarchy);
+            var altar = GameObject.Find("YinActive(Clone)");
+            var range = GameObject.Find("YinDomainRange");
+            Assert.IsNotNull(altar);
+            Assert.IsTrue(altar.transform.Find("Intact/Glow/Glyph").gameObject.activeInHierarchy);
+            Assert.IsNotNull(range);
+            yield return Capture("01-hidden-actor-public-moon-altar");
+
+            var near = new HexCoord(6, 14);
+            encounter.RequestMove(Yang, near.Q, near.R);
+            yield return Ready();
+            Assert.AreEqual(near, Actor(Yang).Position);
+            Assert.IsTrue(yinBody.activeInHierarchy);
+
+            // Isolate overlapping playback: normal input waits for the presentation lock.
+            // Both casts use the actual catalog carrier, and the committed move below changes real observation.
+            CombatUnitPresentationHex Cell(string id) => new(Actor(id).Position.Q, Actor(id).Position.R);
+            CombatAttackVfx Cast(string id, CombatUnitPresentationHex to)
+            {
+                var before = Object.FindObjectsByType<CombatAttackVfx>(FindObjectsSortMode.None);
+                provider.Present(new CombatUnitPresentationEventProjection(id, CombatUnitPresentationEvent.Cast,
+                    Cell(id), Cell(id), Actor(id).Facing, null, profileId: "spell_feixingzhi", sourceCell: Cell(id), targetCell: to));
+                return Object.FindObjectsByType<CombatAttackVfx>(FindObjectsSortMode.None).Except(before).Single();
+            }
+            var privateShot = Cast(Yin, Cell(Yang));
+            var publicShot = Cast(Yang, Cell(Yin));
+            provider.Present(new CombatUnitPresentationEventProjection(Yin, CombatUnitPresentationEvent.Hit,
+                Cell(Yin), Cell(Yin), Actor(Yin).Facing, null));
+            var hit = GameObject.Find("GuanzhongCombatFeedback_Hit_Vfx");
+            Assert.IsNotNull(hit);
+            Assert.AreEqual(6, privateShot.GetComponentsInChildren<MeshRenderer>().Length, "Head, four tail quads and the ribbon");
+            Assert.IsTrue(privateShot.transform.Find("Head").gameObject.activeInHierarchy);
+            Assert.IsTrue(publicShot.transform.Find("Head").gameObject.activeInHierarchy);
+            var retreat = new CombatCommand(CombatCommandKind.Move, Yang, destination: new HexCoord(4, 14));
+            var result = new CombatCommandService().Execute(session, retreat);
+            Assert.IsTrue(result.Succeeded, result.RejectionReason);
+            Assert.IsFalse(session.Visibility.IsVisible(Yang, Yin));
+            yield return null; // Installer.LateUpdate applies this observation before the next test frame.
+            Assert.IsFalse(yinBody.activeInHierarchy);
+            Assert.IsFalse(privateShot.gameObject.activeInHierarchy);
+            Assert.IsEmpty(privateShot.GetComponentsInChildren<MeshRenderer>(true).Where(r => r.gameObject.activeInHierarchy));
+            Assert.IsFalse(hit.activeInHierarchy);
+            Assert.IsTrue(publicShot.gameObject.activeInHierarchy, "A visible actor's cast at a public cell still plays.");
+            Assert.IsTrue(altar.transform.Find("Intact/Glow/Glyph").gameObject.activeInHierarchy);
+            Assert.IsTrue(range.activeInHierarchy);
+            Record("Natural reveal then retreat; concealed caster Head/Tail/Ribbon and hit inactive. Public-cell cast, altar glyph and domain remain.");
+            yield return Capture("02-retreat-public-altar-no-actor-effects");
+            yield return LeaveAtTheNextLegalWindow();
+            Assert.IsTrue(range == null && altar == null);
+            yield return EnterAdventure(); yield return Enter();
+            Assert.IsNotNull(GameObject.Find("YinDomainRange"));
+            Assert.IsNull(GameObject.Find("YangDomainRange"));
+            Assert.IsEmpty(Object.FindObjectsByType<CombatAttackVfx>(FindObjectsSortMode.None));
         }
 
         private IEnumerator DeployBothThroughEntryAndButtons()

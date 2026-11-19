@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TianZhang.Gameplay.Contracts;
@@ -10,44 +11,43 @@ namespace TianZhang.Features.CombatPresentation
     /// <summary>Projects the unique surface slot and the same frozen tide quote used by Combat.</summary>
     public sealed class CombatSurfaceView : MonoBehaviour
     {
-        [SerializeField] private GameObject surfacePrefab;
-        [SerializeField] private Material groundMaterial;
+        [SerializeField] private GameObject wetMudPrefab, shallowWaterPrefab, deepWaterPrefab, wetToDryPrefab;
+        [SerializeField] private GameObject tideRisePrefab, tideEbbPrefab, steamPrefab, erodePrefab;
+        [SerializeField] private GameObject lowFirePrefab, scorchedPrefab;
+        [SerializeField] private CombatSceneObjectView sceneObjects;
         [SerializeField] private Material lineMaterial;
         [SerializeField] private GameObject[] staticWaterOverlays = Array.Empty<GameObject>();
         private CombatBattlefieldSurface surface;
         private readonly Dictionary<CombatUnitPresentationHex, GameObject> sheets = new();
-        private readonly List<Mesh> meshes = new();
+        private readonly Dictionary<CombatUnitPresentationHex, CombatSurfaceDisplayKind> kinds = new();
+        private readonly Dictionary<(CombatUnitPresentationHex, Mesh, float), Mesh> meshes = new();
+        private readonly List<GameObject> transients = new();
+        private readonly Dictionary<CombatUnitPresentationHex, GameObject> drying = new();
         private readonly List<LineRenderer> previewLines = new();
         private string signature;
         private bool active;
 
         public void ConfigureSurface(CombatBattlefieldSurface value) { surface = value; signature = null; }
 
-        public void Present(CombatSurfacePresentationSnapshot snapshot)
+        public void Present(CombatSurfacePresentationSnapshot snapshot, CombatUnitPresentationHex[] tailCells = null)
         {
             if (snapshot == null) { Clear(); return; }
             if (surface == null) throw new InvalidOperationException("surface_presentation_support_missing");
             string next = snapshot.Revision + ":" + string.Join(";", snapshot.Changes.Select(Hex)) + ":" +
                 string.Join(";", snapshot.Pushes.Select(p => p.ActorId + Hex(p.Origin) + Hex(p.Destination) + p.Direction + p.Reason)) +
-                ":" + snapshot.Source + ":" + snapshot.WaterlineHeight;
+                ":" + (snapshot.Source.HasValue ? Hex(snapshot.Source.Value) : "") + ":" + snapshot.WaterlineHeight + ":" +
+                string.Join(";", (tailCells ?? Array.Empty<CombatUnitPresentationHex>()).Select(Hex));
             if (active && signature == next) return;
             active = true;
             foreach (var original in staticWaterOverlays) original.SetActive(false);
             foreach (var cell in snapshot.Cells)
             {
-                if (cell.Kind == CombatSurfaceDisplayKind.None)
-                { if (sheets.TryGetValue(cell.Cell, out var dry)) dry.SetActive(false); continue; }
-                if (!sheets.TryGetValue(cell.Cell, out var sheet)) sheet = CreateSheet(cell.Cell);
-                sheet.SetActive(true);
-                bool water = cell.Kind is CombatSurfaceDisplayKind.ShallowWater or CombatSurfaceDisplayKind.DeepWater;
-                foreach (var renderer in sheet.GetComponentsInChildren<Renderer>())
-                {
-                    renderer.sharedMaterial = water ? surfacePrefab.GetComponentInChildren<Renderer>().sharedMaterial : groundMaterial;
-                    var properties = new MaterialPropertyBlock();
-                    properties.SetColor("_BaseColor", ColorFor(cell.Kind));
-                    renderer.SetPropertyBlock(properties);
-                }
-                sheet.name = "Surface_" + Hex(cell.Cell) + "_" + cell.Kind;
+                var sheet = SetState(cell.Cell, cell.Kind);
+                if (cell.Kind != CombatSurfaceDisplayKind.Burning) continue;
+                var properties = new MaterialPropertyBlock();
+                properties.SetFloat("_Opacity", 1f);
+                properties.SetFloat("_Strength", tailCells != null && Array.IndexOf(tailCells, cell.Cell) >= 0 ? .65f : 1f);
+                sheet.GetComponentInChildren<MeshRenderer>().SetPropertyBlock(properties);
             }
             int used = 0;
             foreach (var cell in snapshot.Changes) Draw(ref used, Border(cell, .035f), new Color(.2f, .95f, .94f), true);
@@ -61,6 +61,16 @@ namespace TianZhang.Features.CombatPresentation
                         new Vector2Int(-1,0),new Vector2Int(-1,1),new Vector2Int(0,1) };
                     Vector2Int d = push.Direction >= 0 ? directions[push.Direction] : Vector2Int.zero;
                     end = start + (CombatBattlefieldSurface.Horizontal(d.x, d.y) - CombatBattlefieldSurface.Horizontal(0,0)) * .3f;
+                }
+                if (!moved)
+                {
+                    // A cross marks the actual stopped landing, including a unit already at its tide source.
+                    var center = start + Vector3.up * .10f;
+                    var left = new Vector3(.14f, 0, .14f);
+                    var right = new Vector3(.14f, 0, -.14f);
+                    Draw(ref used, new[] { center - left, center + left }, new Color(1, .35f, .2f));
+                    Draw(ref used, new[] { center - right, center + right }, new Color(1, .35f, .2f));
+                    if (push.Direction < 0) continue;
                 }
                 Vector3 direction = (end - start).normalized;
                 Vector3 side = Vector3.Cross(Vector3.up, direction) * .12f;
@@ -78,25 +88,123 @@ namespace TianZhang.Features.CombatPresentation
             signature = next;
         }
 
-        private GameObject CreateSheet(CombatUnitPresentationHex cell)
+        private GameObject Prefab(CombatSurfaceDisplayKind kind) => kind switch
+        {
+            CombatSurfaceDisplayKind.Wet => wetMudPrefab,
+            CombatSurfaceDisplayKind.ShallowWater => shallowWaterPrefab,
+            CombatSurfaceDisplayKind.DeepWater => deepWaterPrefab,
+            CombatSurfaceDisplayKind.Scorched => scorchedPrefab,
+            CombatSurfaceDisplayKind.Burning => lowFirePrefab,
+            _ => null
+        };
+
+        private GameObject SetState(CombatUnitPresentationHex cell, CombatSurfaceDisplayKind kind)
+        {
+            if (kinds.TryGetValue(cell, out var current) && current == kind) return sheets[cell];
+            if (sheets.Remove(cell, out var old)) { old.SetActive(false); Destroy(old); kinds.Remove(cell); }
+            if (kind == CombatSurfaceDisplayKind.None) return null;
+            if (drying.Remove(cell, out var dry) && dry != null) { dry.SetActive(false); Destroy(dry); }
+            var sheet = kind == CombatSurfaceDisplayKind.Burning
+                ? Instantiate(lowFirePrefab, surface.Center(cell) + Vector3.up * .025f, Quaternion.identity, transform)
+                : PlaceSheet(Prefab(kind), cell, .018f);
+            sheet.name = "Surface_" + Hex(cell) + "_" + kind;
+            kinds.Add(cell, kind);
+            sheets.Add(cell, sheet);
+            return sheet;
+        }
+
+        private GameObject PlaceSheet(GameObject prefab, CombatUnitPresentationHex cell, float lift, bool front = false)
         {
             var support = surface.Cells.Single(value => value.q == cell.Q && value.r == cell.R);
-            var sheet = Instantiate(surfacePrefab, transform);
-            sheet.transform.position = surface.Center(cell);
+            var sheet = Instantiate(prefab, surface.Center(cell), Quaternion.identity, transform);
             foreach (var filter in sheet.GetComponentsInChildren<MeshFilter>())
             {
-                Mesh mesh = Instantiate(filter.sharedMesh); meshes.Add(mesh);
-                var vertices = mesh.vertices;
-                for (int i = 0; i < vertices.Length; i++)
+                var key = (cell, filter.sharedMesh, lift);
+                if (!meshes.TryGetValue(key, out var mesh))
                 {
-                    Vector3 world = filter.transform.TransformPoint(vertices[i]);
-                    // The approved D3 water sheet follows the actual support, including ramp/stair surfaces.
-                    world.y = surface.Height(support, world.z) + .018f;
-                    vertices[i] = filter.transform.InverseTransformPoint(world);
+                    mesh = CombatSurfaceMesh.Fit(filter.sharedMesh, filter.transform, surface, support, lift, front ? 1 : 12);
+                    if (front)
+                    {
+                        var bounds = mesh.bounds;
+                        bounds.Expand(new Vector3(.3f, .6f, .3f));
+                        mesh.bounds = bounds;
+                    }
+                    meshes.Add(key, mesh);
                 }
-                mesh.vertices = vertices; mesh.RecalculateNormals(); mesh.RecalculateBounds(); filter.sharedMesh = mesh;
+                filter.sharedMesh = mesh;
             }
-            sheets.Add(cell, sheet); return sheet;
+            return sheet;
+        }
+
+        public void PlaySettlement(CombatSurfaceSettlementSnapshot settlement)
+        {
+            if (surface == null) return;
+            active = true;
+            // Present reconciles against the latest full snapshot even if several receipts ran in one frame.
+            signature = null;
+            transients.RemoveAll(value => value == null);
+            foreach (var change in settlement.Changes)
+            {
+                var sheet = SetState(change.Cell, change.After);
+                if (settlement.TideSource.HasValue)
+                {
+                    Vector3 flow = surface.Center(change.Cell) - surface.Center(settlement.TideSource.Value);
+                    flow.y = 0;
+                    flow = flow.sqrMagnitude < .001f ? Vector3.right : flow.normalized;
+                    if (!settlement.Rising) flow = -flow;
+                    var front = PlaceSheet(settlement.Rising ? tideRisePrefab : tideEbbPrefab, change.Cell, .023f, true);
+                    foreach (var spray in front.GetComponentsInChildren<ParticleSystem>())
+                        spray.transform.rotation = Quaternion.LookRotation(Vector3.up + flow * .5f);
+                    var properties = new MaterialPropertyBlock();
+                    properties.SetVector("_Flow", new Vector4(flow.x, flow.z, 0, 0));
+                    foreach (var renderer in front.GetComponentsInChildren<MeshRenderer>()) renderer.SetPropertyBlock(properties);
+                    Expire(front);
+                }
+                if (change.Before == CombatSurfaceDisplayKind.Burning && change.After == CombatSurfaceDisplayKind.Wet)
+                    Expire(Instantiate(steamPrefab, surface.Center(change.Cell) + Vector3.up * .04f, Quaternion.identity, transform));
+                if (change.After is CombatSurfaceDisplayKind.Wet or CombatSurfaceDisplayKind.ShallowWater or CombatSurfaceDisplayKind.DeepWater)
+                    StartCoroutine(BlendWater(sheet.GetComponentInChildren<MeshRenderer>(), change.Before));
+                else if (change.After == CombatSurfaceDisplayKind.None && change.Before >= CombatSurfaceDisplayKind.Wet)
+                {
+                    var dry = PlaceSheet(wetToDryPrefab, change.Cell, .018f);
+                    drying[change.Cell] = dry;
+                    Expire(dry);
+                }
+            }
+            foreach (string id in settlement.ErodedPlants)
+            {
+                var plant = sceneObjects.ErodePlant(id);
+                if (plant == null) continue;
+                var eroded = Instantiate(erodePrefab, plant.position, plant.rotation, transform);
+                eroded.transform.localScale = plant.lossyScale;
+                Expire(eroded);
+            }
+        }
+
+        private void Expire(GameObject effect)
+        {
+            transients.Add(effect);
+            Destroy(effect, 1.2f);
+        }
+
+        private IEnumerator BlendWater(MeshRenderer renderer, CombatSurfaceDisplayKind before)
+        {
+            var to = renderer.sharedMaterial;
+            var start = before >= CombatSurfaceDisplayKind.Wet ? Prefab(before) : wetMudPrefab;
+            var from = start.GetComponentInChildren<MeshRenderer>().sharedMaterial;
+            Color fromMud = before == CombatSurfaceDisplayKind.Burning ? new Color(.92f, .27f, .055f) : from.GetColor("_MudColor");
+            var properties = new MaterialPropertyBlock();
+            for (float elapsed = 0; elapsed < .65f && renderer != null && renderer.gameObject.activeInHierarchy; elapsed += Time.deltaTime)
+            {
+                float t = elapsed / .65f;
+                properties.SetFloat("_Depth", Mathf.Lerp(from.GetFloat("_Depth"), to.GetFloat("_Depth"), t));
+                properties.SetFloat("_Opacity", before == CombatSurfaceDisplayKind.None ? t : 1f);
+                properties.SetColor("_BaseColor", Color.Lerp(from.GetColor("_BaseColor"), to.GetColor("_BaseColor"), t));
+                properties.SetColor("_MudColor", Color.Lerp(fromMud, to.GetColor("_MudColor"), t));
+                renderer.SetPropertyBlock(properties);
+                yield return null;
+            }
+            if (renderer != null) renderer.SetPropertyBlock(null);
         }
 
         private Vector3[] Border(CombatUnitPresentationHex cell, float lift)
@@ -131,22 +239,18 @@ namespace TianZhang.Features.CombatPresentation
         private void Clear()
         {
             if (!active) return;
-            foreach (var sheet in sheets.Values) if (sheet != null) sheet.SetActive(false);
+            StopAllCoroutines();
+            foreach (var obj in sheets.Values.Concat(transients))
+                if (obj != null) { obj.SetActive(false); Destroy(obj); }
+            sheets.Clear(); kinds.Clear(); drying.Clear(); transients.Clear();
+            sceneObjects.ClearErosion();
+            foreach (var mesh in meshes.Values) Destroy(mesh);
+            meshes.Clear();
             foreach (var line in previewLines) if (line != null) line.gameObject.SetActive(false);
             foreach (var original in staticWaterOverlays) if (original != null) original.SetActive(true);
             active = false; signature = null;
         }
         private void OnDisable() => Clear();
-        private void OnDestroy() { foreach (var mesh in meshes) Destroy(mesh); }
         private static string Hex(CombatUnitPresentationHex cell) => cell.Q + "_" + cell.R;
-        private static Color ColorFor(CombatSurfaceDisplayKind kind) => kind switch
-        {
-            CombatSurfaceDisplayKind.Scorched => new Color(.12f, .095f, .065f),
-            CombatSurfaceDisplayKind.Burning => new Color(.92f, .27f, .055f),
-            CombatSurfaceDisplayKind.Wet => new Color(.25f, .26f, .17f),
-            CombatSurfaceDisplayKind.ShallowWater => new Color(.22f, .48f, .43f),
-            CombatSurfaceDisplayKind.DeepWater => new Color(.075f, .25f, .36f),
-            _ => Color.white,
-        };
     }
 }

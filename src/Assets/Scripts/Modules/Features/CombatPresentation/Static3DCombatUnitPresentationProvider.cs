@@ -40,11 +40,12 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private CombatAttackVfxCatalogData attackVfxCatalog;
         [SerializeField] private Material targetPreviewMaterial;
         [SerializeField] private Material flightLineMaterial;
+        [SerializeField] private GameObject gravityPressurePrefab, landingDustPrefab;
         [SerializeField, Range(.1f, 1f)] private float doubleCellFootprintFill = .9f;
 
         private readonly Dictionary<string, PresentedUnit> units = new Dictionary<string, PresentedUnit>();
         private readonly Dictionary<string, Coroutine> actionRecoveries = new Dictionary<string, Coroutine>();
-        private readonly HashSet<GameObject> transientFeedback = new HashSet<GameObject>();
+        private readonly Dictionary<GameObject, (string Source, string Target)> transientFeedback = new();
 
         public int ActiveCombatantCount => units.Count;
 
@@ -181,7 +182,8 @@ namespace TianZhang.Features.CombatPresentation
                 StopActionRecovery(unit.CombatantId); ResetRootScale(unit);
                 movements.Add(unit.CombatantId, StartCoroutine(CombatUnitFlightVisual.Transition(unit.Root.transform, target,
                     surface, surface != null ? surfacePoses[unit.CombatantId] : null, profile.sixDirectionYawDegrees[target.Facing],
-                    MovementCellsPerSecond, () => movements.Remove(unit.CombatantId))));
+                    MovementCellsPerSecond, () => movements.Remove(unit.CombatantId),
+                    presentationEvent.IsGravityDescent ? gravityPressurePrefab : null, landingDustPrefab)));
                 return;
             }
             // A long body can turn only along the committed movement pose path. Attack direction
@@ -445,6 +447,8 @@ namespace TianZhang.Features.CombatPresentation
             Vector3 feet = SurfacePosition(presentationEvent.EndPosition);
             Vector3 origin = feet + Vector3.up * 0.85f;
             Vector3 target = origin;
+            // A selected cell is public even for a blind cast. Only a unit-derived endpoint can reveal its target.
+            string endpointOwner = null;
             bool found = presentationEvent.TargetCell.HasValue;
             if (found)
             {
@@ -465,6 +469,7 @@ namespace TianZhang.Features.CombatPresentation
                     target = SurfacePosition(targetResult.TargetCell.Value) + Vector3.up * .75f;
                 }
                 else target = targetUnit.Root.transform.position + Vector3.up * .75f;
+                endpointOwner = targetResult.CombatantId;
                 found = true;
                 break;
             }
@@ -473,7 +478,7 @@ namespace TianZhang.Features.CombatPresentation
             CombatAttackVfx effect = entry.kind == CombatAttackVfxKind.Slash
                 ? CombatAttackVfx.PlaySlash(feet, target, entry.color, entry.scale, entry.durationSeconds)
                 : CombatAttackVfx.PlayProjectile(origin, target, entry.color, entry.scale, entry.durationSeconds);
-            RegisterTransient(effect.gameObject, entry.durationSeconds + 0.3f);
+            RegisterTransient(effect.gameObject, entry.durationSeconds + 0.3f, presentationEvent.ActorCombatantId, endpointOwner);
         }
 
         public bool TryPickBodyPoint(Ray ray, out Vector3 point)
@@ -516,7 +521,7 @@ namespace TianZhang.Features.CombatPresentation
             AudioClip cue = feedback.GetCue(presentationEvent.PresentationEvent);
             SpawnCue(cue, position, feedback.intensity);
             if (presentationEvent.PresentationEvent != CombatUnitPresentationEvent.Move)
-                SpawnVfx(feedback.vfxPrefab, presentationEvent.PresentationEvent, position, feedback.intensity);
+                SpawnVfx(feedback.vfxPrefab, presentationEvent.PresentationEvent, position, feedback.intensity, unit.CombatantId);
         }
 
         private void SpawnCue(AudioClip cue, Vector3 position, float intensity)
@@ -534,7 +539,7 @@ namespace TianZhang.Features.CombatPresentation
             RegisterTransient(audioObject, cue.length + 0.05f);
         }
 
-        private void SpawnVfx(GameObject prefab, CombatUnitPresentationEvent presentationEvent, Vector3 position, float intensity)
+        private void SpawnVfx(GameObject prefab, CombatUnitPresentationEvent presentationEvent, Vector3 position, float intensity, string actorId)
         {
             if (prefab == null) return;
             GameObject effect = Instantiate(prefab, position, Quaternion.identity);
@@ -544,12 +549,24 @@ namespace TianZhang.Features.CombatPresentation
             ParticleSystem.MainModule main = particles.main;
             main.startColor = FeedbackColor(presentationEvent);
             particles.Play(true);
-            RegisterTransient(effect, 1f);
+            RegisterTransient(effect, 1f, actorId);
         }
 
-        private void RegisterTransient(GameObject value, float lifetime)
+        // Suppress only visuals that locate this combatant. Keep their original playback clock and input lock.
+        public void SetFeedbackObserved(string combatantId, bool observed)
         {
-            transientFeedback.Add(value);
+            if (observed) return;
+            foreach (var entry in transientFeedback)
+            {
+                if (entry.Key && entry.Key.activeSelf &&
+                    (entry.Value.Source == combatantId || entry.Value.Target == combatantId))
+                    entry.Key.SetActive(false);
+            }
+        }
+
+        private void RegisterTransient(GameObject value, float lifetime, string source = null, string target = null)
+        {
+            transientFeedback.Add(value, (source, target));
             StartCoroutine(ReapTransient(value, lifetime));
         }
 
@@ -600,7 +617,7 @@ namespace TianZhang.Features.CombatPresentation
 
         private void ClearTransientFeedback()
         {
-            foreach (GameObject feedback in transientFeedback)
+            foreach (GameObject feedback in transientFeedback.Keys)
                 if (feedback != null) Destroy(feedback);
             transientFeedback.Clear();
         }

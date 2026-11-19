@@ -184,7 +184,7 @@ namespace TianZhang.Combat
                 foreach(var pair in copies) { session.Combatants.TryGet(pair.Key,out var original);original.CommitResolvedState(pair.Value); }
                 session.Surfaces.PublishBoard(session,objectChanges);
                 session.Surfaces.Receipt(seat.Definition.AbilityInstanceId,tick,preview.Changes,preview.Pushes,damage,objectChanges,fallDamage,
-                    copies.Values.Select(value=>new CombatSurfaceTargetSnapshot(value)));
+                    copies.Values.Select(value=>new CombatSurfaceTargetSnapshot(value)), request.TideSource, request.TideAction);
                 session.Surfaces.Reconcile(session);
             };
         }

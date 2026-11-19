@@ -49,7 +49,9 @@ namespace TianZhang.Tests.PlayMode
             string save = JsonUtility.ToJson(CharacterRecord.Capture(GameBootstrap.RequireRuntime().Player.Capture()));
             Assert.AreEqual(FireId, session.CurrentActorId); Assert.AreEqual(CombatTeam.Player, Actor(FireId).Team);
             Assert.IsNull(FireSeat.FireDomain.Main);
-            yield return Move(new HexCoord(7, 12)); yield return Press("tide_tab");
+            CheckFireView();
+            yield return Capture("00-defender-public-center");
+            yield return Move(new HexCoord(7, 11)); yield return Press("fire_tab");
             int ap = Actor(FireId).ActionPointsRemainingUnits, mp = Actor(FireId).CurrentSpirit;
             yield return Press("fire_preview"); Assert.IsTrue(view.GetButton("confirm").interactable);
             yield return Capture("01-whole-board-preview"); yield return Press("cancel_targeting");
@@ -57,24 +59,24 @@ namespace TianZhang.Tests.PlayMode
             yield return Press("fire_preview"); yield return Press("confirm"); yield return Ready();
             Assert.AreEqual(ap - 500000, Actor(FireId).ActionPointsRemainingUnits); Assert.AreEqual(mp - 1000, Actor(FireId).CurrentSpirit);
             Assert.AreEqual(6, FireSeat.FireDomain.ReservedFuel); Record("player paid 500AP/1000MP, center600, free9/reserved6");
+            CheckFireView(); Assert.AreEqual(0, CombatFireDomainRules.BurningCount(session, FireSeat));
             yield return Capture("02-deployed");
             yield return End(); Assert.AreEqual(0, FireSeat.MaintenancePayments);
             yield return End(); Assert.AreEqual(1, FireSeat.MaintenancePayments);
             Assert.Greater(CombatFireDomainRules.BurningCount(session, FireSeat), 0);
             Record("one later own-turn-end maintenance 200MP; source burning=" + CombatFireDomainRules.BurningCount(session, FireSeat));
-            yield return Capture("03-maintained-fire");
-            yield return Press("fire_close"); yield return Press("confirm"); yield return Ready();
+            CheckFireView(); yield return Capture("03-maintained-fire");
+            yield return Press("close_tab"); yield return Press("fire_close"); yield return Press("confirm"); yield return Ready();
             Assert.IsNull(FireSeat.FireDomain.Main); Assert.AreEqual(2, FireSeat.FireDomain.Tails.Single().RemainingCycles);
-            Record("paid 25AP close; finite two-cycle tail"); yield return Capture("04-paid-tail");
-            yield return Press("fire_close"); Assert.IsFalse(view.GetButton("confirm").interactable);
-            yield return Press("cancel_targeting");
+            Record("paid 25AP close; finite two-cycle tail"); CheckFireView(); yield return Capture("04-paid-tail");
+            Assert.IsFalse(view.GetButton("close_tab").interactable);
             Record("withdraw while paid tail is active; natural expiry covered by own-turn rule tests");
             var previous = FireSeat; yield return Withdraw(); Assert.IsNull(previous.FireDomain.Main); Assert.IsEmpty(previous.FireDomain.Tails);
             Assert.AreEqual(save, JsonUtility.ToJson(CharacterRecord.Capture(GameBootstrap.RequireRuntime().Player.Capture())));
             yield return EnterAdventure(); yield return Enter(true);
             Assert.AreEqual(15, FireSeat.FireDomain.RemainingFuel); Assert.AreEqual(0, FireSeat.SuccessfulDeployments);
             Assert.AreEqual(600, FireSeat.FireDomain.Support.Durability); Record("fresh entry resets field node and leaves world identity unchanged");
-            yield return Capture("06-clean-reentry");
+            CheckFireView(); yield return Capture("06-clean-reentry");
         }
 
         [UnityTest, Timeout(600000)]
@@ -105,9 +107,18 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsNotNull(FireSeat.FireDomain.Main);
             var old = encounter.PreviewJindan(new CombatCommand(CombatCommandKind.Guard, EarthId));
             for (int i = 0; i < 2; i++)
+            {
                 yield return Execute(new CombatCommand(CombatCommandKind.Art, EarthId,
                     profileId: "demo_20261026_polei", targetCell: new HexCoord(7, 12)));
+                CheckFireView();
+                if (i == 0)
+                {
+                    Assert.AreEqual(225, FireSeat.FireDomain.Support.Durability);
+                    yield return Capture("01-center-damaged-still-warm");
+                }
+            }
             Assert.IsTrue(FireSeat.FireDomain.Support.IsDestroyed); Assert.IsNull(FireSeat.FireDomain.Main);
+            Assert.Greater(FireSeat.FireDomain.Tails.Count, 0);
             Assert.IsFalse(encounter.ConfirmJindan(new CombatCommand(CombatCommandKind.Guard, EarthId), old).Succeeded);
             Assert.AreEqual(3, session.Jindan.Seats.Count); Record("two legal polei attacks destroy600 center; seat identity remains and old quote rejects");
             yield return Capture("02-center-broken");
@@ -120,10 +131,64 @@ namespace TianZhang.Tests.PlayMode
                     tideSource: new HexCoord(9, 7), createTideEye: true)));
             Assert.AreEqual(CombatSurfaceKind.Wet, session.Surfaces.Get(burning).Kind);
             Assert.AreEqual(0, FireSeat.FireDomain.Support.Durability);
+            CheckFireView();
             Record("paid tide eye/rise extinguished (9,8); paid tail extinguished after center break"); yield return Capture("03-tide-extinguished");
             var previous = FireSeat; yield return Withdraw(); Assert.IsEmpty(previous.FireDomain.Tails);
             yield return EnterAdventure(); yield return Enter(false); Assert.AreEqual(600, FireSeat.FireDomain.Support.Durability);
-            Record("counter-side withdrawal and reentry reset node"); yield return Capture("04-counter-reentry");
+            Record("counter-side withdrawal and reentry reset node"); CheckFireView(); yield return Capture("04-counter-reentry");
+        }
+
+        private void CheckFireView()
+        {
+            var fire = FireSeat.FireDomain;
+            var root = Find<JindanFireDomainView>().transform;
+            var center = root.Find("FireCenter(Clone)");
+            Assert.IsNotNull(center);
+            var cell = fire.Support.Cell;
+            Assert.That(Vector3.Distance(surface.Center(new CombatUnitPresentationHex(cell.Q, cell.R)), center.position),
+                Is.LessThan(.001f), "The public stele must stand on the actual support cell.");
+            Assert.AreEqual(!fire.Support.IsDestroyed, center.gameObject.activeInHierarchy);
+            Assert.AreEqual(fire.Main != null, center.Find("Intact/Glow/CenterSpiritFlame").gameObject.activeInHierarchy);
+            var warmth = root.Find("FireDomainWarmth");
+            Assert.AreEqual(fire.Main != null, warmth != null && warmth.gameObject.activeInHierarchy);
+            if (fire.Main != null) Assert.AreEqual(surface.Cells.Count, warmth.childCount);
+
+            var tongues = Find<CombatSurfaceView>().GetComponentsInChildren<MeshRenderer>()
+                .Where(renderer => renderer.gameObject.name == "LowTongues").ToArray();
+            var burning = session.Surfaces.Cells.Where(slot => slot.Kind == CombatSurfaceKind.Burning).ToArray();
+            Assert.AreEqual(burning.Length, tongues.Length, "Exactly one low fire per burning surface.");
+            var tail = fire.Tails.SelectMany(value => value.Cells).ToHashSet();
+            foreach (var slot in burning)
+            {
+                var ground = surface.Center(new CombatUnitPresentationHex(slot.Cell.Q, slot.Cell.R));
+                var flame = tongues.Single(renderer => Vector3.Distance(renderer.transform.position, ground) < .1f);
+                var block = new MaterialPropertyBlock(); flame.GetPropertyBlock(block);
+                float strength = block.HasFloat("_Strength") ? block.GetFloat("_Strength") : flame.sharedMaterial.GetFloat("_Strength");
+                Assert.AreEqual(tail.Contains(slot.Cell) ? .65f : 1f, strength, .001f);
+            }
+            Assert.AreEqual(tail.Count, root.GetComponentsInChildren<ParticleSystem>()
+                .Count(particle => particle.transform.parent.name == "FiniteEmbers(Clone)"));
+            var paidMarks = Object.FindObjectsByType<Text>(FindObjectsSortMode.None)
+                .Where(label => label.name == "PublicFieldLabel" && label.text == "余火").ToArray();
+            Canvas.ForceUpdateCanvases();
+            foreach (Text label in paidMarks)
+            {
+                var corners = new Vector3[4];
+                label.rectTransform.GetWorldCorners(corners);
+                Record($"ember label '{label.text}' screen {corners[0]} to {corners[2]}, " +
+                    $"rect {label.rectTransform.rect}, preferred {label.preferredWidth}x{label.preferredHeight}, " +
+                    $"vertices {label.cachedTextGenerator.vertexCount}, canvas {label.canvas.renderMode} scale {label.canvas.scaleFactor}");
+                Assert.LessOrEqual(label.preferredHeight, label.rectTransform.rect.height, evidence.Last());
+            }
+            foreach (var cellWithTail in tail)
+            {
+                Vector3 point = Camera.main.WorldToViewportPoint(surface.Center(new CombatUnitPresentationHex(cellWithTail.Q, cellWithTail.R)));
+                if (point.z > 0 && point.x >= 0 && point.x <= 1 && point.y >= 0 && point.y <= 1)
+                    Assert.IsTrue(paidMarks.Any(mark => mark.text == "余火" && Vector2.Distance(mark.rectTransform.anchorMin, (Vector2)point) < .001f));
+            }
+            if (tail.Count == 0) Assert.IsEmpty(paidMarks);
+            Record($"public center={cell}, durability={fire.Support.Durability}, main={fire.Main != null}, " +
+                $"burning={burning.Length}, paid tails={string.Join(",", tail)}, camera size={Camera.main.orthographicSize}");
         }
 
         private IEnumerator Enter(bool controlFire)

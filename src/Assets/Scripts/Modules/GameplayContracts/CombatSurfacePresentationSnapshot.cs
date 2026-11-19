@@ -25,6 +25,26 @@ namespace TianZhang.Gameplay.Contracts
         public string Reason { get; }
     }
 
+    public readonly struct CombatSurfaceChangeSnapshot
+    {
+        public CombatSurfaceChangeSnapshot(CombatUnitPresentationHex cell, CombatSurfaceDisplayKind before, CombatSurfaceDisplayKind after)
+        { Cell = cell; Before = before; After = after; }
+        public CombatUnitPresentationHex Cell { get; }
+        public CombatSurfaceDisplayKind Before { get; }
+        public CombatSurfaceDisplayKind After { get; }
+    }
+
+    public sealed class CombatSurfaceSettlementSnapshot
+    {
+        public CombatSurfaceSettlementSnapshot(CombatUnitPresentationHex? tideSource, bool rising,
+            CombatSurfaceChangeSnapshot[] changes, string[] erodedPlants)
+        { TideSource = tideSource; Rising = rising; Changes = changes; ErodedPlants = erodedPlants; }
+        public CombatUnitPresentationHex? TideSource { get; }
+        public bool Rising { get; }
+        public CombatSurfaceChangeSnapshot[] Changes { get; }
+        public string[] ErodedPlants { get; }
+    }
+
     public sealed class CombatSurfacePresentationSnapshot
     {
         public CombatSurfacePresentationSnapshot(long revision, CombatSurfaceCellSnapshot[] cells,

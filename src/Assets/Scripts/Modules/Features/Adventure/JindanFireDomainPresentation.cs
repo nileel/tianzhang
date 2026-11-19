@@ -12,7 +12,7 @@ namespace TianZhang.Features.Adventure
             if (seat == null) return string.Empty;
             var fire = seat.FireDomain;
             var text = new StringBuilder("界·不熄炉 / 长明：" + (fire.Main == null ? "主规则未生效" : "整棋盘地表·弱火热1") + "\n");
-            text.AppendLine("中心(7,12) " + fire.Support.Durability + "/600；燃料可用" + fire.RemainingFuel + " / 余火预留" + fire.ReservedFuel);
+            text.AppendLine($"中心({fire.Support.Cell.Q},{fire.Support.Cell.R}) {fire.Support.Durability}/{fire.Support.Definition.MaxDurability}；燃料可用{fire.RemainingFuel} / 余火预留{fire.ReservedFuel}");
             text.AppendLine("燃烧容量 " + CombatFireDomainRules.BurningCount(session, seat) + "/3；累计" + seat.TotalManaSpent + "MP");
             if (fire.Main != null) text.AppendLine("后续本人结束：维护200MP；主规则剩余" + fire.Main.RemainingCycles + "周期；关闭留有限余烬。");
             foreach (var tail in fire.Tails) text.AppendLine("余烬：" + tail.Cells.Count + "格，剩余" + tail.RemainingCycles + "本人结束周期 / " + tail.ReservedFuel + "燃料");

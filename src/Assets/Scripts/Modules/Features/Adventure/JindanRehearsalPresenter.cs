@@ -59,16 +59,41 @@ namespace TianZhang.Features.Adventure
         public bool ControlFire { get; private set; }
         public bool IsSelecting => selection != SelectionMode.None;
         public IReadOnlyList<HexCoord> SelectedEndpoints => path;
-        public HexCoord? TargetCell => earthCell ?? tideSource ?? remoteOrigin ?? frozenCommand?.TargetCell;
+        private HexCoord? PreviewFireCenter => frozenCommand?.Kind == CombatCommandKind.JindanAbility &&
+            frozenCommand.ProfileId == CombatFireDomainRules.Effect
+            ? encounter.CurrentSession.Jindan.Find(frozenCommand.Jindan.SeatId)?.FireDomain?.Support.Cell : null;
+        public HexCoord? TargetCell => PreviewFireCenter ?? earthCell ?? tideSource ?? remoteOrigin ?? frozenCommand?.TargetCell;
         public string InteractionHint
         {
             get
             {
+                if (PreviewFireCenter is { } center)
+                {
+                    string label = "阵心 " + CellText(center);
+                    if (frozenQuote.IsLegal) return label + " · 确认后在标记处展开长明";
+                    return frozenQuote.RejectionReason switch
+                    {
+                        "above_max_range" => "点「移动」靠近标记的" + label + "，再展开长明",
+                        "attack_vertical_reach_exceeded" => "沿坡阶接近" + label + "所在的台面，再展开长明",
+                        "sight_blocked" or "entity_wall_blocks_effects" or "scene_object_blocks_effects" =>
+                            "绕开遮挡，移到能看见" + label + "的位置",
+                        _ => Explain(frozenQuote.RejectionReason),
+                    };
+                }
                 if (hoverQuote != null && frozenQuote != null)
                     return "第三格 " + CellText(hoveredCell.Value) + " · " +
                         (hoverQuote.IsLegal ? "左键追加并锁定" : Explain(hoverQuote.RejectionReason));
                 if (frozenQuote?.IsLegal == true)
                 {
+                    if (frozenQuote.Tide is { } tide && tide.Pushes.Count > 0)
+                    {
+                        var visible = tide.Pushes.Where(push => encounter.CurrentSession.Visibility?.IsVisible(frozenQuote.ActorId, push.ActorId) != false);
+                        string landings = string.Join("；", visible.Select(push =>
+                            (push.ActorId == frozenQuote.ActorId ? "本人" : encounter.ActorName(push.ActorId)) +
+                            (push.Movement.Path.Count == 0 ? "留在 " : "推至 ") + CellText(push.Movement.Destination.Anchor) +
+                            (push.Movement.Reason == "earth_anchored" ? "（镇岳挡推，仍受水击）" : "")));
+                        if (landings.Length > 0) return "潮源 " + CellText(frozenCommand.Jindan.TideSource.Value) + " · " + landings;
+                    }
                     if (selection == SelectionMode.Edges && !earthPage && path.Count == 2)
                         return "已锁定 " + PathText(path) + " · 可确认或再选相邻第三格";
                     string target = path.Count > 0 ? PathText(path) : TargetCell is {} cell
@@ -116,7 +141,7 @@ namespace TianZhang.Features.Adventure
             }
         }
         public TianZhang.Gameplay.Contracts.JindanHudSnapshot Hud => JindanHudPresentation.Project(
-            encounter.CurrentSession, encounter.ControlledActorId, Local(catalog.segments[segmentIndex].displayNameKey));
+            encounter.CurrentSession, encounter.ControlledActorId, Local(catalog.segments[segmentIndex].displayNameKey), ControlFire);
         public TianZhang.Gameplay.Contracts.CombatSurfacePresentationSnapshot SurfacePresentation =>
             JindanTidePresentation.Project(encounter.CurrentSession, DisplayQuote, DisplayCommand);
         public bool CanConfirm => frozenQuote != null && hoverQuote == null && frozenQuote.IsLegal && encounter.AcceptsPlayerCommand &&

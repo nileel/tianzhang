@@ -273,6 +273,101 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3281593}
   m_CullTransparentMesh: 1
+--- !u!1 &9201985
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9201986}
+  - component: {fileID: 9201989}
+  - component: {fileID: 9201988}
+  - component: {fileID: 9201987}
+  m_Layer: 0
+  m_Name: FireCenterLabel
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &9201986
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9201985}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 910956409}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 4}
+  m_SizeDelta: {x: 90, y: 36}
+  m_Pivot: {x: 0.5, y: 0}
+--- !u!114 &9201987
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9201985}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
+  m_EffectColor: {r: 0.105882354, g: 0.06666667, b: 0.03529412, a: 0.9411765}
+  m_EffectDistance: {x: 1.5, y: -1.5}
+  m_UseGraphicAlpha: 1
+--- !u!114 &9201988
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9201985}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 0.8745098, b: 0.5568628, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_FontData:
+    m_Font: {fileID: 12800000, guid: 06a41b2abc6d21945944db2c49459a1e, type: 3}
+    m_FontSize: 19
+    m_FontStyle: 0
+    m_BestFit: 0
+    m_MinSize: 10
+    m_MaxSize: 40
+    m_Alignment: 4
+    m_AlignByGeometry: 0
+    m_RichText: 1
+    m_HorizontalOverflow: 0
+    m_VerticalOverflow: 0
+    m_LineSpacing: 1
+  m_Text: "\u9635\u5FC3"
+--- !u!222 &9201989
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9201985}
+  m_CullTransparentMesh: 1
 --- !u!1 &13255645
 GameObject:
   m_ObjectHideFlags: 0
@@ -25494,6 +25589,7 @@ RectTransform:
   - {fileID: 1346257592}
   - {fileID: 1488614306}
   - {fileID: 1480568740}
+  - {fileID: 9201986}
   m_Father: {fileID: 60140836}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -35695,6 +35791,9 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier: TianZhang.Features.CombatPresentation::TianZhang.Features.CombatPresentation.JindanFireDomainView
   supportMarker: {fileID: 1856248109}
+  fireCenterPrefab: {fileID: 7195009070429023089, guid: 77f0aea7f39aad64588245f6d6218d20, type: 3}
+  warmEdgePrefab: {fileID: 4557062124457905434, guid: 103aaecd518dc914c98b1870f41b416d, type: 3}
+  embersPrefab: {fileID: 3129672431176825388, guid: edaef535caa8d1d4abe88ef078a757f9, type: 3}
 --- !u!4 &1252663617
 Transform:
   m_ObjectHideFlags: 0
@@ -35961,7 +36060,9 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier: TianZhang.Features.CombatPresentation::TianZhang.Features.CombatPresentation.JindanSealView
   supportMarker: {fileID: 1828418173}
-  edgeMaterial: {fileID: 2100000, guid: 5dfbd83b608f6cb4aac279e3125589a2, type: 2}
+  supportPrefab: {fileID: 1741138523349230459, guid: 49bf6c56269b3c84799c96e7dfa91653, type: 3}
+  outerPrefab: {fileID: 5724406825217525769, guid: bff836b5e78694845a7edec51a535a8b, type: 3}
+  innerPrefab: {fileID: 5945585539346953300, guid: a9d92545627671043bc83d82ffbb451a, type: 3}
 --- !u!4 &1264202452
 Transform:
   m_ObjectHideFlags: 0
@@ -37685,6 +37786,8 @@ MonoBehaviour:
   attackVfxCatalog: {fileID: 11400000, guid: 93a9f9ff618a9f94b9752f79e3b90557, type: 2}
   targetPreviewMaterial: {fileID: 2100000, guid: ab46f2cd9aa947bfb02f742de35b7ac1, type: 2}
   flightLineMaterial: {fileID: 2100000, guid: 5dfbd83b608f6cb4aac279e3125589a2, type: 2}
+  gravityPressurePrefab: {fileID: 1217944897728568491, guid: 97e86eab8be94094bb384e884ec70649, type: 3}
+  landingDustPrefab: {fileID: 1442273586181589743, guid: c94c275599e726f4b9245f830a2f0e66, type: 3}
   doubleCellFootprintFill: 0.9
 --- !u!114 &1319519964
 MonoBehaviour:
@@ -38037,6 +38140,7 @@ MonoBehaviour:
   ordinaryPreview: {fileID: 1319519957}
   buildLabel: {fileID: 1081288994}
   playerName: {fileID: 813579201}
+  fireCenterLabel: {fileID: 9201988}
   statusRoot: {fileID: 1131738429}
   statusText: {fileID: 1173322161}
   detailsRoot: {fileID: 400626001}
@@ -38161,6 +38265,10 @@ MonoBehaviour:
   secondBinding: {fileID: 1926219619}
   yangMarker: {fileID: 1215706110}
   yinMarker: {fileID: 351107046}
+  yangAltarPrefab: {fileID: 4158764001006527789, guid: 38c69ec1175a4e74bb2d0dd28bfe8c2c, type: 3}
+  yinAltarPrefab: {fileID: 1494123386399541158, guid: e6224bbe1dcf10c4e8e76ca3c99377bc, type: 3}
+  yangRangePrefab: {fileID: 3504304534595220283, guid: 8150d31429dcd424aad137f61156de29, type: 3}
+  yinRangePrefab: {fileID: 7671371240057249783, guid: 0db3a39890f14d94eae6df1c527a964d, type: 3}
 --- !u!1 &1322447603
 GameObject:
   m_ObjectHideFlags: 0
@@ -38331,8 +38439,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1ea1e2324f94582438095af62de79622, type: 3}
   m_Name:
   m_EditorClassIdentifier: TianZhang.Features.CombatPresentation::TianZhang.Features.CombatPresentation.CombatEarthView
-  wallPrefab: {fileID: 4271286873524300532, guid: 9afeccc6a5df628459ddd0f46f500a7a, type: 3}
-  rampPrefab: {fileID: 8377706654652043822, guid: cc119e06cd8e4a6429245b21e99609df, type: 3}
+  wallPrefab: {fileID: 4059895551630779901, guid: d01438c0e2c350e41984012d2f975775, type: 3}
+  rampPrefab: {fileID: 988451072984065778, guid: 5d107ae2967d0cd4585575a630a971c5, type: 3}
+  wallDissolvePrefab: {fileID: 8473483852683767549, guid: 54216dfc2361e6b4a9f3fdc499348b30, type: 3}
+  rampDissolvePrefab: {fileID: 1914554401596572562, guid: 3cb392fb9b13a0b41831f784f60946f5, type: 3}
 --- !u!4 &1325530450
 Transform:
   m_ObjectHideFlags: 0
@@ -52472,8 +52582,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b02ebfc4dd314f559c0d033dfc6f0ac8, type: 3}
   m_Name:
   m_EditorClassIdentifier: TianZhang.Features.CombatPresentation::TianZhang.Features.CombatPresentation.JindanScaleView
-  supportPrefab: {fileID: 2764158477547517118, guid: 99aec3e88e2015b43a286cda4646a9bd, type: 3}
-  edgeMaterial: {fileID: 2100000, guid: 5dfbd83b608f6cb4aac279e3125589a2, type: 2}
+  supportPrefab: {fileID: 8319100174292578831, guid: 46250d63a43d543419b1c5f01070a8f8, type: 3}
+  compressedPrefab: {fileID: 4548030403718791134, guid: f1057484a370d064796d1692deea5669, type: 3}
+  expandedPrefab: {fileID: 2117500915455057676, guid: 5e7e10571e067154b9783982ecfa1d5f, type: 3}
 --- !u!4 &1873580807
 Transform:
   m_ObjectHideFlags: 0
@@ -55039,8 +55150,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c244a30f7b22487796b3af015f5365e4, type: 3}
   m_Name:
   m_EditorClassIdentifier: TianZhang.Features.CombatPresentation::TianZhang.Features.CombatPresentation.CombatSurfaceView
-  surfacePrefab: {fileID: 5907691506568519017, guid: aca40f4e17d680249b2f1cda78d423cc, type: 3}
-  groundMaterial: {fileID: 2100000, guid: bb3f8fe5763b488419da56e1357e3486, type: 2}
+  wetMudPrefab: {fileID: 2269499933555798908, guid: f9650d45f6a4e0a4e8413f4a6ec37144, type: 3}
+  shallowWaterPrefab: {fileID: 7385924482309046915, guid: 23c658f35dbaa154cbfe319e68ca1ff5, type: 3}
+  deepWaterPrefab: {fileID: 5471803111583616445, guid: 5f2443aa3043b5a44979b442c9483923, type: 3}
+  wetToDryPrefab: {fileID: 5146704900454763411, guid: 27ad1c9cea1eb164b95a94b696a04e41, type: 3}
+  tideRisePrefab: {fileID: 1883973481720064202, guid: 0cabee7bf0cdf54489158843cfe65d7d, type: 3}
+  tideEbbPrefab: {fileID: 1714285370304274916, guid: 688b0405a00ee614b8687582c4dc4c2b, type: 3}
+  steamPrefab: {fileID: 727029802610936663, guid: 8e891450fa59d3149809b455118bfcde, type: 3}
+  erodePrefab: {fileID: 2819464354865387172, guid: 4f38dec67b6fc1c4283db60309a8f9d6, type: 3}
+  lowFirePrefab: {fileID: 8248773153044993866, guid: 403582a8622ff6542a47b5bc200cb964, type: 3}
+  scorchedPrefab: {fileID: 3314942216319176, guid: 867d1972ccc3ede47b2fd4992eb49007, type: 3}
+  sceneObjects: {fileID: 2046743063}
   lineMaterial: {fileID: 2100000, guid: 5dfbd83b608f6cb4aac279e3125589a2, type: 2}
   staticWaterOverlays:
   - {fileID: 1607852739}

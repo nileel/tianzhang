@@ -107,6 +107,129 @@ namespace TianZhang.Tests.PlayMode
             Record("next environment cycle does not spread into (3,7)"); yield return Capture("02-fuel-chain-stopped");
         }
 
+        [UnityTest, Timeout(240000)]
+        public IEnumerator CommittedTideAssetsFollowTwoRisesTwoEbbsAndCleanup()
+        {
+            yield return Setup(false);
+            yield return Enter();
+            var caster = Actor(Water);
+            var source = new HexCoord(5, 5);
+            var target = new HexCoord(4, 6);
+            var plant = GameObject.Find("LowPlant_4_6").transform;
+            var surfaceRoot = Find<CombatSurfaceView>().transform;
+            int CountFronts(string prefab) => surfaceRoot.Cast<Transform>().Count(item => item.name == prefab + "(Clone)");
+            yield return Press("earth_tab");
+            yield return Press("earth_anchor");
+            yield return Click(Point(caster.Position));
+            yield return Press("confirm");
+            yield return Ready();
+            Assert.AreEqual(CombatEarthMode.Anchor, CombatForceMovement.Gravity(caster).EarthMode);
+            yield return EndCurrent();
+            float previousDelta = Time.captureDeltaTime;
+            try
+            {
+                Time.captureDeltaTime = 1f / 60f;
+                var measured = new HashSet<Mesh>();
+                for (int step = 0; step < 4; step++)
+                {
+                    bool rising = step < 2;
+                    string front = rising ? "TideRise" : "TideEbb";
+                    var action = rising ? CombatTideAction.Rise : CombatTideAction.Ebb;
+                    var request = new CombatJindanRequest(Seat(Water).Definition.SeatId, tideAction: action, tideSource: source);
+                    var quote = encounter.PreviewJindan(new CombatCommand(CombatCommandKind.JindanAbility, Water,
+                        profileId: "WATER_TIDE", jindan: request));
+                    Assert.IsTrue(quote.IsLegal, quote.RejectionReason);
+                    int health = caster.CurrentHealth;
+                    var origin = caster.Position;
+                    long sequence = session.Surfaces.SettlementSequence;
+                    yield return Press("tide_tab");
+                    yield return Press(rising ? "tide_rise" : "tide_ebb");
+                    yield return Click(Point(source));
+                    Assert.IsTrue(view.GetButton("confirm").interactable);
+                    Assert.AreEqual(0, CountFronts(front));
+                    Assert.AreEqual(sequence, session.Surfaces.SettlementSequence);
+                    if (step == 0)
+                    {
+                        var stopped = quote.Tide.Pushes.Single(push => push.ActorId == Water);
+                        Assert.IsEmpty(stopped.Movement.Path);
+                        Assert.AreEqual("earth_anchored", stopped.Movement.Reason);
+                        string hint = GameObject.Find("ActionHint").GetComponent<Text>().text;
+                        StringAssert.Contains($"本人留在 ({origin.Q},{origin.R})", hint);
+                        StringAssert.Contains("镇岳挡推，仍受水击", hint);
+                        yield return Capture("01-locked-blocked-push");
+                    }
+                    yield return Press("confirm");
+                    Assert.AreEqual(quote.Tide.Changes.Count, CountFronts(front));
+                    Assert.AreEqual(quote.Tide.Changes.Count(change => change.Before == CombatSurfaceKind.Burning &&
+                        change.After == CombatSurfaceKind.Wet), CountFronts("ExtinguishSteam"));
+                    if (step == 1) Assert.AreEqual(1, CountFronts("LowPlantErode"));
+                    yield return new WaitForSeconds(.24f);
+                    var crest = surfaceRoot.Find(front + "(Clone)").GetComponentInChildren<MeshRenderer>();
+                    var properties = new MaterialPropertyBlock();
+                    crest.GetPropertyBlock(properties);
+                    Assert.That(properties.GetFloat("_Progress"), Is.InRange(.15f, .85f));
+                    Assert.Greater(properties.GetVector("_Flow").sqrMagnitude, .95f);
+                    yield return Capture("0" + (step + 2) + "-" + front);
+                    yield return Ready();
+                    var receipt = session.Surfaces.Settlements.Single(value => value.Sequence > sequence && value.TideAction.HasValue);
+                    Assert.AreEqual(source, receipt.TideSource);
+                    Assert.AreEqual(action, receipt.TideAction);
+                    CollectionAssert.AreEqual(quote.Tide.Changes, receipt.Changes);
+                    foreach (var change in receipt.Changes)
+                    {
+                        Assert.AreEqual(change.After, session.Surfaces.Get(change.Cell).Kind);
+                        if (change.After == CombatSurfaceKind.None) continue;
+                        var sheet = surfaceRoot.Find("Surface_" + change.Cell.Q + "_" + change.Cell.R + "_" + change.After);
+                        Assert.IsNotNull(sheet);
+                        Assert.AreEqual("TianZhang/Jindan/Water Surface", sheet.GetComponentInChildren<MeshRenderer>().sharedMaterial.shader.name);
+                    }
+                    float supportError = 0f;
+                    foreach (var cell in session.Surfaces.Cells.Where(cell => cell.Kind >= CombatSurfaceKind.Wet))
+                    {
+                        var sheet = surfaceRoot.Find("Surface_" + cell.Cell.Q + "_" + cell.Cell.R + "_" + cell.Kind);
+                        var filter = sheet.GetComponentInChildren<MeshFilter>();
+                        var mesh = filter.sharedMesh;
+                        if (!measured.Add(mesh)) continue;
+                        var points = mesh.vertices.Select(filter.transform.TransformPoint).ToArray();
+                        var indices = mesh.triangles;
+                        var support = surface.Cells.Single(item => item.q == cell.Cell.Q && item.r == cell.Cell.R);
+                        for (int i = 0; i < indices.Length; i += 3)
+                        {
+                            Vector3 a = points[indices[i]], b = points[indices[i + 1]], c = points[indices[i + 2]];
+                            if (Vector3.Cross(b - a, c - a).sqrMagnitude < 1e-12f) continue;
+                            Vector3 middle = (a + b + c) / 3f;
+                            supportError = Mathf.Max(supportError, Mathf.Abs(middle.y - surface.Height(support, middle.z) - .018f));
+                        }
+                    }
+                    Assert.Less(supportError, .0001f);
+                    Record("tide " + action + " fronts=" + quote.Tide.Changes.Count + " supportError=" + supportError);
+                    if (step == 0)
+                    {
+                        Assert.AreEqual(origin, caster.Position);
+                        Assert.Less(caster.CurrentHealth, health);
+                        Assert.IsTrue(plant.Find("Living").gameObject.activeInHierarchy);
+                    }
+                    if (step >= 1)
+                    {
+                        Assert.IsFalse(plant.Find("Living").gameObject.activeInHierarchy);
+                        Assert.IsFalse(plant.Find("Charred").gameObject.activeInHierarchy);
+                    }
+                    yield return new WaitForSeconds(1.25f);
+                    Assert.AreEqual(0, CountFronts(front));
+                    Assert.AreEqual(0, CountFronts("ExtinguishSteam"));
+                    if (step < 3) { yield return EndCurrent(); yield return EndCurrent(); }
+                }
+                Assert.AreEqual(CombatSurfaceKind.None, session.Surfaces.Get(target).Kind);
+                yield return Press("close_tab"); yield return Press("tide_close"); yield return Press("confirm"); yield return Ready();
+                Assert.AreEqual(CombatSurfaceKind.None, session.Surfaces.Get(source).Kind);
+                yield return new WaitForSeconds(1.25f);
+                Assert.IsNull(surfaceRoot.Find("Surface_5_5_ShallowWater"));
+                Assert.AreEqual(0, CountFronts("WetToDry"));
+                yield return Capture("06-tide-closed");
+            }
+            finally { Time.captureDeltaTime = previousDelta; }
+        }
+
         private IEnumerator Wall(HexCoord a, HexCoord b)
         {
             yield return Press("earth_wall"); yield return Press("toggle_panel");

@@ -54,18 +54,31 @@ namespace TianZhang.Features.CombatPresentation
         }
 
         public static IEnumerator Transition(Transform root, CombatUnitPresentationPose target,
-            CombatBattlefieldSurface surface, CombatUnitSurfacePose support, float yaw, float speed, Action complete)
+            CombatBattlefieldSurface surface, CombatUnitSurfacePose support, float yaw, float speed, Action complete,
+            GameObject gravityPressurePrefab = null, GameObject landingDustPrefab = null)
         {
             Vector3 end = Position(target, surface); Quaternion rotation = Quaternion.Euler(0, yaw, 0);
             if (target.AltitudeBand == 0 && support != null) support.Evaluate(end, yaw, out end, out rotation);
             Vector3 start = root.position; Quaternion startRotation = root.rotation;
             float duration = Mathf.Max(.1f, Vector3.Distance(start, end) / speed);
+            var pressure = gravityPressurePrefab != null ? UnityEngine.Object.Instantiate(gravityPressurePrefab, root) : null;
             for (float time = 0; time < duration;)
             {
                 yield return null;
                 time = Mathf.Min(duration, time + Time.deltaTime);
                 root.position = Vector3.Lerp(start, end, time / duration);
                 root.rotation = Quaternion.Slerp(startRotation, rotation, time / duration);
+            }
+            if (pressure != null)
+            {
+                foreach (var particles in pressure.GetComponentsInChildren<ParticleSystem>())
+                    particles.Stop(false, ParticleSystemStopBehavior.StopEmitting);
+                UnityEngine.Object.Destroy(pressure, .2f);
+                if (target.AltitudeBand == 0)
+                {
+                    var dust = UnityEngine.Object.Instantiate(landingDustPrefab, end, Quaternion.identity, root);
+                    UnityEngine.Object.Destroy(dust, 1f);
+                }
             }
             complete();
         }

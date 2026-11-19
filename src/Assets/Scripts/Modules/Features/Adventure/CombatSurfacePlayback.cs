@@ -23,7 +23,8 @@ namespace TianZhang.Features.Adventure
                 .SelectMany(value => value.Damage.Concat(value.FallDamage)).Where(value => value.TargetId == actorId).Sum(value => value.FinalDamage) ?? 0;
         }
 
-        internal IEnumerator Play(CombatSession session, ICombatUnitPresentationPort port, Action<string> log)
+        internal IEnumerator Play(CombatSession session, ICombatUnitPresentationPort port, Action<string> log,
+            Action<CombatSurfaceSettlementSnapshot> surfaceSettled = null)
         {
             Observe(session);
             var receipts = session?.Surfaces?.Settlements.Where(value => value.Sequence > sequence).ToArray();
@@ -35,6 +36,17 @@ namespace TianZhang.Features.Adventure
                 foreach (var receipt in receipts)
                 {
                     while (activity?.IsPresenting == true) yield return null;
+                    if (receipt.Changes.Count > 0 || receipt.SceneObjectChanges.Count > 0)
+                    {
+                        var eroded = receipt.SceneObjectChanges.Where(change => receipt.TideAction.HasValue &&
+                            change.ContentType == "low_plant" && change.Before > 0 && change.After == 0);
+                        surfaceSettled?.Invoke(new CombatSurfaceSettlementSnapshot(
+                            receipt.TideSource.HasValue ? Hex(receipt.TideSource.Value) : null,
+                            receipt.TideAction == CombatTideAction.Rise,
+                            receipt.Changes.Select(change => new CombatSurfaceChangeSnapshot(Hex(change.Cell),
+                                (CombatSurfaceDisplayKind)change.Before, (CombatSurfaceDisplayKind)change.After)).ToArray(),
+                            eroded.Select(change => change.Id).ToArray()));
+                    }
                     foreach (var push in receipt.Pushes.Where(value => value.Movement.Path.Count > 0))
                     {
                         var movement = push.Movement;

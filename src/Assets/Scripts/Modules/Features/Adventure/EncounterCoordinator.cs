@@ -59,6 +59,7 @@ namespace TianZhang.Features.Adventure
         private Coroutine combatRoutine;
         private Coroutine surfaceRoutine;
         private readonly CombatSurfacePlayback surfacePlayback = new CombatSurfacePlayback();
+        public Action<CombatSurfaceSettlementSnapshot> SurfaceSettled { get; set; }
         private bool withdrawalPaused;
 
         private CharacterRuntimeProfile equipmentOwner;
@@ -149,7 +150,7 @@ namespace TianZhang.Features.Adventure
         public string ControlledActorId => session != null && session.Combatants.TryGet(session.CurrentActorId, out var current) &&
             current.Team == CombatTeam.Player ? current.Id : spawned?.Player.Id ?? "player";
         private bool IsPlayerActor(string id) => session != null && session.Combatants.TryGet(id, out var actor) && actor.Team == CombatTeam.Player;
-        private string ActorName(string id) => spawned?.RehearsalNames != null && spawned.RehearsalNames.TryGetValue(id, out var name)
+        internal string ActorName(string id) => spawned?.RehearsalNames != null && spawned.RehearsalNames.TryGetValue(id, out var name)
             ? name : IsPlayerActor(id) ? playerDisplayName : resolveText(EnemyDataFor(id)?.displayNameKey ?? id);
         private string PortraitKey(string id) => spawned?.IsJindanRehearsal == true || IsPlayerActor(id) ? "player" : EnemyDataFor(id)?.enemyId;
         public bool IsPresenting => surfacePlayback.Busy || ((unitPresentation as ICombatPresentationActivity)?.IsPresenting ?? false) ||
@@ -586,7 +587,7 @@ namespace TianZhang.Features.Adventure
                 var flightBefore = SnapshotFlightStates();
                 CombatTurnAdvance advance = commandService.AdvanceUntilAction(session, out var advanceSteps);
                 ProjectFlightStates(flightBefore);
-                surfaceRoutine = StartCoroutine(surfacePlayback.Play(session, unitPresentation, presentation.AppendLog));
+                surfaceRoutine = StartCoroutine(surfacePlayback.Play(session, unitPresentation, presentation.AppendLog, SurfaceSettled));
                 Present("回合推进", false, advanceSteps);
                 while (IsPresenting) yield return null;
                 if (!advance.HasActor)
@@ -726,10 +727,16 @@ namespace TianZhang.Features.Adventure
                 }
             }
             else result = quote == null ? commandService.Execute(session, command) : commandService.Execute(session, command, quote);
-            if (result.Succeeded && command.Kind != CombatCommandKind.EndTurn && command.Jindan?.TideAction == null)
-                ProjectPresentation(command, result, actorBefore, actorStart, quote);
-            if (result.Succeeded) ProjectFlightStates(flightBefore);
-            if (result.Succeeded) surfaceRoutine = StartCoroutine(surfacePlayback.Play(session, unitPresentation, presentation.AppendLog));
+            if (result.Succeeded)
+            {
+                string gravityTarget = command.Jindan?.EarthMode == CombatEarthMode.Heavy ? command.Jindan.EarthTargetId : null;
+                bool loweringSelf = gravityTarget == command.ActorId && flightBefore != null &&
+                    flightBefore.TryGetValue(command.ActorId, out var previous) && previous.Pose.AltitudeBand > actorBefore.AltitudeBand;
+                if (command.Kind != CombatCommandKind.EndTurn && command.Jindan?.TideAction == null && !loweringSelf)
+                    ProjectPresentation(command, result, actorBefore, actorStart, quote);
+                ProjectFlightStates(flightBefore, gravityTarget);
+                surfaceRoutine = StartCoroutine(surfacePlayback.Play(session, unitPresentation, presentation.AppendLog, SurfaceSettled));
+            }
             return result;
         }
 
@@ -1126,7 +1133,7 @@ namespace TianZhang.Features.Adventure
                 return (actor.Pose, actor.CurrentHealth);
             });
 
-        private void ProjectFlightStates(Dictionary<string, (SpatialPose Pose, int Health)> before)
+        private void ProjectFlightStates(Dictionary<string, (SpatialPose Pose, int Health)> before, string gravityTarget = null)
         {
             if (session?.Flight == null || before == null) return;
             foreach (var flight in session.Flight.States)
@@ -1140,7 +1147,7 @@ namespace TianZhang.Features.Adventure
                     !actor.IsAlive ? CombatUnitPresentationEvent.Death : damage > 0 ? CombatUnitPresentationEvent.Hit : CombatUnitPresentationEvent.Idle,
                     ToPresentationHex(actor.Position), ToPresentationHex(actor.Position), actor.Facing,
                     damage == 0 ? null : new[] { new CombatUnitPresentationTargetResult(actor.Id, damage, !actor.IsAlive) },
-                    altitudeBand: actor.AltitudeBand));
+                    altitudeBand: actor.AltitudeBand, isGravityDescent: actor.Id == gravityTarget && previous.Pose.AltitudeBand > actor.AltitudeBand));
             }
         }
 

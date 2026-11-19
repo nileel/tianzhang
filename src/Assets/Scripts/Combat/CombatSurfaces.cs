@@ -100,8 +100,9 @@ namespace TianZhang.Combat
 
         internal void Receipt(string sourceRef,int tick,IEnumerable<CombatSurfaceChange> changes,
             IEnumerable<CombatTidePush> pushes,IEnumerable<CombatDamageResult> damage,IEnumerable<CombatSceneObjectChange> objectChanges,
-            IEnumerable<CombatDamageResult> fallDamage=null,IEnumerable<CombatSurfaceTargetSnapshot> targets=null)
-        { settlements.Add(new CombatSurfaceSettlement(++SettlementSequence,sourceRef,tick,changes,pushes,damage,objectChanges,fallDamage,targets)); }
+            IEnumerable<CombatDamageResult> fallDamage=null,IEnumerable<CombatSurfaceTargetSnapshot> targets=null,
+            HexCoord? tideSource=null, CombatTideAction? tideAction=null)
+        { settlements.Add(new CombatSurfaceSettlement(++SettlementSequence,sourceRef,tick,changes,pushes,damage,objectChanges,fallDamage,targets,tideSource,tideAction)); }
 
         internal void ClearSource(CombatSession session,string sourceRef)
         {

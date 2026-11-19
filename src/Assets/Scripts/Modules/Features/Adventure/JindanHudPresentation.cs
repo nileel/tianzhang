@@ -8,7 +8,7 @@ namespace TianZhang.Features.Adventure
 {
     internal static class JindanHudPresentation
     {
-        internal static JindanHudSnapshot Project(CombatSession session, string actorId, string objective)
+        internal static JindanHudSnapshot Project(CombatSession session, string actorId, string objective, bool defendFire)
         {
             if (session?.Jindan == null || !session.Combatants.TryGet(actorId, out var actor)) return null;
             var abilities = new List<JindanHudAbility>();
@@ -24,7 +24,7 @@ namespace TianZhang.Features.Adventure
                 if (key == null) continue;
                 bool active = seat.ActiveScale != null || seat.ActiveEarth != null || seat.ActiveVisibility != null ||
                     seat.FireDomain?.Main != null || seat.PendingTide != null ||
-                    (session.Surfaces?.OwnedCount(seat.Definition.AbilityInstanceId) ?? 0) > 0;
+                    (seat.EffectId == "WATER_TIDE" && (session.Surfaces?.OwnedCount(seat.Definition.AbilityInstanceId) ?? 0) > 0);
                 abilities.Add(new JindanHudAbility(key, seat.EffectId, JindanRehearsalPresenter.Effect(seat.EffectId),
                     !definition.Enabled ? "未接入" : active ? "生效中" : "选择能力", actor.GetCooldown(seat.EffectId),
                     definition.Enabled, seat.Definition.Candidates.Count > 1, active));
@@ -40,6 +40,10 @@ namespace TianZhang.Features.Adventure
             {
                 var definition = session.Jindan.Ability(seat.EffectId);
                 var fire = seat.FireDomain;
+                if (defendFire && fire != null)
+                    objective = fire.Support.IsDestroyed ? "守阵 · 阵心已破，安全转移" :
+                        fire.Main != null ? "守阵 · 护住阵心，准备转移" :
+                        fire.Tails.Count > 0 ? "守阵 · 借余火掩护转移" : "守阵 · 接近阵心，展开长明";
                 if (fire?.Main != null)
                 {
                     status.AppendLine("长明 · 主规则生效");
@@ -58,7 +62,11 @@ namespace TianZhang.Features.Adventure
                     status.AppendLine("定尺 " + (scale.MetricDistanceUnits == 1 ? "压缩" : "扩张") + " " + (scale.Path.Count - 1) +
                         "边 · 碑 " + scale.Support.Durability + " · " + definition.UpkeepMana + " MP/tick");
                 var seal = seat.ActiveSeal;
-                if (seal != null) status.AppendLine("封关 · 外 " + seal.OuterDurability + " / 内 " + seal.InnerDurability);
+                if (seal != null)
+                {
+                    status.AppendLine("封关 · 外 " + seal.OuterDurability + " / 内 " + seal.InnerDurability);
+                    status.AppendLine(seal.OwnerTeam == CombatTeam.Player ? "敌方沿门环箭头禁入，反向可过" : "我方沿门环箭头禁入，反向可过");
+                }
                 var sight = seat.ActiveVisibility;
                 if (sight != null)
                     status.AppendLine(JindanRehearsalPresenter.Effect(seat.EffectId) + " · 坛 " + sight.Support.Durability +

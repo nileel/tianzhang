@@ -281,7 +281,8 @@ namespace TianZhang.Gameplay.Contracts
             IReadOnlyList<CombatUnitPresentationHex> movementPath = null,
             string profileId = null,
             IReadOnlyList<CombatUnitPresentationMovementStep> movementSteps = null,
-            CombatUnitPresentationHex? targetCell = null, CombatUnitPresentationHex? sourceCell = null, int? altitudeBand = null)
+            CombatUnitPresentationHex? targetCell = null, CombatUnitPresentationHex? sourceCell = null, int? altitudeBand = null,
+            bool isGravityDescent = false)
         {
             if (string.IsNullOrWhiteSpace(actorCombatantId))
                 throw new ArgumentException("Actor combatant ID is required.", nameof(actorCombatantId));
@@ -294,6 +295,7 @@ namespace TianZhang.Gameplay.Contracts
             ActorCombatantId = actorCombatantId;
             if (altitudeBand is < 0 or > 2) throw new ArgumentOutOfRangeException(nameof(altitudeBand));
             AltitudeBand = altitudeBand;
+            IsGravityDescent = isGravityDescent;
             PresentationEvent = presentationEvent;
             StartPosition = startPosition;
             EndPosition = endPosition;
@@ -313,6 +315,7 @@ namespace TianZhang.Gameplay.Contracts
 
         public string ActorCombatantId { get; }
         public int? AltitudeBand { get; }
+        public bool IsGravityDescent { get; }
         public CombatUnitPresentationHex? TargetCell { get; }
         public CombatUnitPresentationHex? SourceCell { get; }
         public CombatUnitPresentationEvent PresentationEvent { get; }

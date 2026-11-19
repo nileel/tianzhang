@@ -50,6 +50,33 @@ namespace TianZhang.Tests.PlayMode
         [UnityTest,Timeout(600000)] public IEnumerator GroundSourceLandsFlyingAlly()=>GravityLoop(false);
 
         [UnityTest, Timeout(180000)]
+        public IEnumerator AirborneCasterLowersSelfExactlyOnce()
+        {
+            yield return Setup(false); yield return Enter(false, 2);
+            yield return Press("flight_tab");
+            yield return Press("flight_takeoff"); yield return Press("confirm"); yield return Ready();
+            yield return Press("flight_ascend"); yield return Press("confirm"); yield return Ready();
+            Assert.AreEqual(2, Actor.AltitudeBand);
+            var provider = Find<Static3DCombatUnitPresentationProvider>();
+            Assert.IsTrue(provider.TryGetPresentedUnit(Earth, out var unit));
+            yield return Press("earth_tab"); yield return Press("earth_heavy");
+            yield return Click(Point(Actor.Position));
+            Assert.IsTrue(view.GetButton("confirm").interactable);
+            int spirit = Actor.CurrentSpirit;
+            Time.captureDeltaTime = 1f / 60f;
+            yield return Press("confirm");
+            Assert.AreEqual(1, Actor.AltitudeBand);
+            Assert.AreEqual(1, unit.transform.Cast<Transform>().Count(t => t.name == "GravityPressure(Clone)"));
+            yield return Ready();
+            Assert.AreEqual(Earth, Seat.ActiveEarth.TargetId);
+            Assert.AreEqual(1, Seat.SuccessfulDeployments);
+            Assert.Less(Actor.CurrentSpirit, spirit);
+            Assert.That(unit.transform.position.y - surface.Center(new CombatUnitPresentationHex(Actor.Position.Q, Actor.Position.R)).y,
+                Is.EqualTo(.75f).Within(.001f));
+            Assert.IsNull(unit.transform.Find("LandingDust(Clone)"));
+        }
+
+        [UnityTest, Timeout(180000)]
         public IEnumerator UnifiedEarthEdgesPreviewLockCancelAndPayOnce()
         {
             yield return Setup(false);
@@ -103,6 +130,38 @@ namespace TianZhang.Tests.PlayMode
                     Assert.AreEqual(mp - edge.quote.SpiritCost, Actor.CurrentSpirit);
                 }
             }
+        }
+
+        [UnityTest, Timeout(180000)]
+        public IEnumerator CommittedWallAssetsFormAndDissolveOnSelectedEdge()
+        {
+            yield return Setup(false);
+            yield return Enter(true);
+            var edge = (a: new HexCoord(4, 1), b: new HexCoord(4, 2));
+            var quote = encounter.PreviewJindan(Deploy(CombatEarthMode.Wall, edge.a, edge.b));
+            Assert.IsTrue(quote.IsLegal, quote.RejectionReason);
+            Assert.IsTrue(CanAimAt(edge.a) && CanAimAt(edge.b));
+            yield return Press("earth_wall");
+            yield return Click(Point(edge.a));
+            yield return Click(Point(edge.b));
+            Assert.IsNull(Seat.ActiveEarth);
+            yield return Capture("00-wall-locked");
+            Time.captureDeltaTime = 1f / 60f;
+            yield return Press("confirm"); yield return Ready();
+            var wall = Seat.ActiveEarth.Objects.Single();
+            var drawn = GameObject.Find(wall.Id);
+            AssertEarthClip(drawn, "WallForm");
+            Assert.IsFalse(session.SceneObjects.Board.InspectEdge(edge.a, edge.b, SpatialQueryKind.Attack).IsLegal);
+            yield return new WaitForSeconds(.36f);
+            yield return Capture("01-wall-formed");
+            yield return Press("close_tab"); yield return Press("earth_close"); yield return Press("confirm"); yield return Ready();
+            Assert.IsTrue(session.SceneObjects.Board.InspectEdge(edge.a, edge.b, SpatialQueryKind.Attack).IsLegal);
+            var tail = GameObject.Find("WallDissolve(Clone)");
+            Assert.IsNotNull(tail);
+            AssertEarthClip(tail, "WallDissolve");
+            yield return Capture("02-wall-dissolving");
+            yield return new WaitForSeconds(1.05f);
+            Assert.IsTrue(tail == null);
         }
 
         [UnityTest, Timeout(180000)]
@@ -166,6 +225,16 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(mp - quote.SpiritCost, Actor.CurrentSpirit);
         }
 
+        private static void AssertEarthClip(GameObject drawn, string expected)
+        {
+            var clip = drawn.GetComponent<Animation>().clip;
+            Assert.IsNotNull(clip);
+#if UNITY_EDITOR
+            Assert.AreEqual("Assets/Art/VFX/Guanzhong/Jindan/Earth/Animations/" + expected + ".anim",
+                UnityEditor.AssetDatabase.GetAssetPath(clip));
+#endif
+        }
+
         private static string SharedHint => GameObject.Find("ActionHint").GetComponent<Text>().text;
         private static void AssertQuote(CombatCommandPreview quote) => StringAssert.Contains(
             CombatActionPreviewView.FormatActionPoints(quote.ActionPointCostUnits) + " AP · " + quote.SpiritCost + " MP",
@@ -214,8 +283,7 @@ namespace TianZhang.Tests.PlayMode
                 jindan:new CombatJindanRequest(Seat.Definition.SeatId,new[]{a,b},earthMode:mode));
         private IEnumerator SelectEdge(string key,HexCoord a,HexCoord b)
         {
-            yield return Press(key);yield return Press("toggle_panel");yield return Click(Point(a));yield return Click(Point(b));
-            yield return Press("toggle_panel");yield return Press("earth_preview");
+            yield return Press(key); yield return Click(Point(a)); yield return Click(Point(b));
             Assert.IsTrue(view.GetButton("confirm").interactable,"edge quote failed: "+a+" -> "+b);
             yield return Press("confirm");yield return Ready();
         }
@@ -271,7 +339,7 @@ namespace TianZhang.Tests.PlayMode
             yield return Setup(false);yield return Enter(true);
             encounter.RequestMove(Earth,7,7);yield return Ready();Assert.AreEqual(new HexCoord(7,7),Actor.Position);
             // Position the inspection camera around this actual high-platform route, preserving production scale.
-            Camera.main.transform.position += surface.Center(new CombatUnitPresentationHex(7,7))-surface.Center(new CombatUnitPresentationHex(4,0));
+            CenterCameraOn(Actor.Position);
             var board=session.SceneObjects.Board;
             var candidates=(from a in surface.Cells where a.kind==0 from b in new HexCoord(a.q,a.r).Neighbors()
                 where surface.Cells.Any(c=>c.q==b.Q && c.r==b.R && c.kind==0)
@@ -279,13 +347,34 @@ namespace TianZhang.Tests.PlayMode
                 where board.TryGetCell(lowCell,out var low) && board.TryGetCell(b,out var high) && high.HeightLevel-low.HeightLevel==1
                 where encounter.PreviewJindan(Deploy(CombatEarthMode.Ramp,lowCell,b)).IsLegal
                 let route=board.QueryMovementPath(Actor.Pose,lowCell,500000,Actor.MovementEfficiencyMilliUnits,Occupied())
-                where route.Steps.Count>0
+                where route.Steps.Count>0 && CanAimAt(lowCell) && CanAimAt(b)
                 orderby route.ActionPointCostUnits select (a:lowCell,b)).ToArray();
             Assert.IsNotEmpty(candidates,"No legal ramp near spawn");var edge=candidates[0];
             Assert.IsFalse(board.InspectEdge(edge.a,edge.b,SpatialQueryKind.Movement).IsLegal);
             yield return SelectEdge("earth_ramp",edge.a,edge.b);var ramp=Seat.ActiveEarth.Objects.Single();
             Assert.IsTrue(session.SceneObjects.Board.InspectEdge(edge.a,edge.b,SpatialQueryKind.Movement).IsLegal);
-            VerifyRampMesh(ramp);yield return Press("toggle_panel");yield return Capture("01-created-ramp");
+            VerifyRampMesh(ramp);
+            var formed = GameObject.Find(ramp.Id);
+            AssertEarthClip(formed, "RampForm");
+            Vector3 edgeDirection = surface.Center(new CombatUnitPresentationHex(edge.b.Q,edge.b.R)) - formed.transform.position;
+            edgeDirection.y = 0;
+            Assert.Greater(Vector3.Dot(formed.transform.forward, edgeDirection.normalized), .999f);
+            yield return new WaitForSeconds(formed.GetComponent<Animation>().clip.length);
+            Canvas.ForceUpdateCanvases();
+            Vector2 Label(string text)
+            {
+                var label = Object.FindObjectsByType<Text>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)
+                    .Single(value => value.text == text);
+                Assert.Greater(label.canvasRenderer.GetMesh().vertexCount, 0, text);
+                return RectTransformUtility.WorldToScreenPoint(null, label.rectTransform.TransformPoint(label.rectTransform.rect.center));
+            }
+            Vector2 lowLabel = Label("坡脚"), highLabel = Label("坡顶");
+            Vector2 lowPoint = Point(edge.a), highPoint = Point(edge.b);
+            float projectedLength = Vector2.Distance(lowPoint, highPoint);
+            Assert.Less(Vector2.Distance(lowLabel, lowPoint), projectedLength * 1.5f);
+            Assert.Less(Vector2.Distance(highLabel, highPoint), projectedLength * 1.5f);
+            Assert.Greater(Vector2.Dot(highLabel - lowLabel, highPoint - lowPoint), 0f);
+            yield return Capture("01-created-ramp");
             encounter.RequestMove(Earth,edge.a.Q,edge.a.R);yield return Ready();Assert.AreEqual(edge.a,Actor.Position);
             var provider=Find<Static3DCombatUnitPresentationProvider>();Assert.IsTrue(provider.TryGetPresentedUnit(Earth,out var piece));
             var mesh=piece.GetComponentsInChildren<MeshFilter>().First(f=>f.sharedMesh.vertexCount>1000);
@@ -313,9 +402,16 @@ namespace TianZhang.Tests.PlayMode
             Record("ramp motion frames="+frames+" maxBodyPenetration="+maxPenetration+" maxFootGap="+maxFootGap);
             Assert.Greater(frames,5);Assert.Less(maxPenetration,.002f);Assert.Less(maxFootGap,.002f);
             Record("real ramp traversal "+edge.a+" -> "+edge.b);yield return Capture("02-ramp-climbed");
-            yield return Press("toggle_panel");yield return Press("earth_close");yield return Press("confirm");yield return Ready();
+            Time.captureDeltaTime=1f / 60f;
+            yield return Press("close_tab");yield return Press("earth_close");yield return Press("confirm");yield return Ready();
+            var dissolving = GameObject.Find("RampDissolve(Clone)");
+            Assert.IsNotNull(dissolving);
+            AssertEarthClip(dissolving, "RampDissolve");
+            yield return Capture("03-dissolving-ramp");
             Assert.IsFalse(session.SceneObjects.Board.InspectEdge(edge.a,edge.b,SpatialQueryKind.Movement).IsLegal);
             Assert.IsFalse(surface.HasEarthRamp(new CombatUnitPresentationHex(edge.a.Q,edge.a.R),new CombatUnitPresentationHex(edge.b.Q,edge.b.R)));
+            yield return new WaitForSeconds(1.05f);
+            Assert.IsTrue(dissolving == null);
             Assert.IsNull(GameObject.Find(ramp.Id));Record("ramp close restores original edge while occupant remains on legal high cell");
         }
         private void VerifyRampMesh(CombatSceneObject ramp)
@@ -395,9 +491,15 @@ namespace TianZhang.Tests.PlayMode
             session.Combatants.TryGet(Water,out var water);Assert.AreEqual(2,water.AltitudeBand);
             yield return EndCurrentTurn();Assert.AreEqual(Earth,session.CurrentActorId);
             int hp=water.CurrentHealth,ap=water.ActionPointsRemainingUnits;
-            yield return Press("earth_tab");yield return Press("earth_heavy");yield return Press("toggle_panel");yield return Click(Point(water.Position));
-            yield return Press("toggle_panel");yield return Press("earth_preview");Assert.IsTrue(view.GetButton("confirm").interactable);
-            yield return Press("confirm");yield return Ready();
+            yield return Press("earth_tab");yield return Press("earth_heavy");yield return Click(Point(water.Position));
+            Assert.IsTrue(view.GetButton("confirm").interactable);
+            Assert.IsNull(GameObject.Find("GravityPressure(Clone)"));
+            Time.captureDeltaTime = 1f/60f;
+            yield return Press("confirm");
+            Assert.IsNotNull(GameObject.Find("GravityPressure(Clone)"));
+            yield return Capture("00-descending");
+            yield return Ready();
+            Assert.AreEqual(!sourceAir, GameObject.Find("LandingDust(Clone)") != null);
             int expected=sourceAir?1:0;Assert.AreEqual(expected,water.AltitudeBand);Assert.AreEqual(ap,water.ActionPointsRemainingUnits);
             Assert.AreEqual(sourceAir?hp:hp-(water.MaximumHealth+9)/10,water.CurrentHealth);
             var provider=Find<Static3DCombatUnitPresentationProvider>();Assert.IsTrue(provider.TryGetPresentedUnit(Water,out var root));
@@ -406,7 +508,7 @@ namespace TianZhang.Tests.PlayMode
             var ring=root.GetComponentsInChildren<LineRenderer>(true).Single(l=>l.name=="FlightGroundProjection");Assert.AreEqual(sourceAir,ring.enabled);
             Record("real ally takeoff/high -> gravity altitude"+expected+" rootOffset="+offset+" targetHP="+water.CurrentHealth+" unchangedAP="+ap);
             yield return Capture(sourceAir?"01-pressure-lowered":"01-pressure-landed");
-            yield return Press("earth_close");yield return Press("confirm");yield return Ready();
+            yield return Press("close_tab");yield return Press("earth_close");yield return Press("confirm");yield return Ready();
             Assert.AreEqual(expected,water.AltitudeBand);Assert.IsNull(CombatForceMovement.Gravity(water));Record("removal does not undo damage or freely ascend");
         }
         private IEnumerator EndCurrentTurn()

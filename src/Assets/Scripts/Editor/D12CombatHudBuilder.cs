@@ -119,6 +119,7 @@ namespace TianZhang.Editor
             SceneBuildSupport.SetObject(bar, "movementView", owner.GetComponent<CombatMovementView>());
             SceneBuildSupport.SetObject(owner.GetComponent<TianZhang.Features.Adventure.AdventureHudPresenter>(), "combatReturnSprite", D12CombatHudAssets.Sprite("button"));
             BuildHeader(canvas, hud, owner);
+            BindFireCenter(hud, jindan);
             BuildPreview(canvas, hud, owner);
             var responsive = hud.GetComponent<D12CombatHudLayout>() ?? hud.gameObject.AddComponent<D12CombatHudLayout>();
             foreach (var pair in new[] { ("hud", "CombatHudRoot"), ("card", "CombatResourceCard"), ("portrait", "CombatPlayerPortrait"),
@@ -130,6 +131,19 @@ namespace TianZhang.Editor
             canvas.Find("JindanConflictRoot")?.SetAsLastSibling();
             canvas.Find("AdventureWithdrawalConfirmation")?.SetAsLastSibling();
             EditorSceneManager.MarkSceneDirty(scene);
+        }
+
+        internal static void BindFireCenter(Transform hud, JindanDemoView view)
+        {
+            var label = Label(hud, "FireCenterLabel", "阵心", 19);
+            Anchor(label.transform, Vector2.one * .5f, new Vector2(.5f, 0), 0, 4, 90, 36);
+            label.alignment = TextAnchor.MiddleCenter;
+            label.color = new Color32(255, 223, 142, 255);
+            var outline = label.GetComponent<Outline>() ?? label.gameObject.AddComponent<Outline>();
+            outline.effectColor = new Color32(27, 17, 9, 240);
+            outline.effectDistance = new Vector2(1.5f, -1.5f);
+            label.gameObject.SetActive(false);
+            SceneBuildSupport.SetObject(view, "fireCenterLabel", label);
         }
 
         private static void BuildJindan(Transform canvas, Transform hud, Transform row, GameObject owner,

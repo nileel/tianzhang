@@ -36,6 +36,8 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private CombatActionPreviewView ordinaryPreview;
         [SerializeField] private Text buildLabel;
         [SerializeField] private Text playerName;
+        [SerializeField] private Text fireCenterLabel;
+        private readonly List<Text> fieldLabels = new();
         private readonly List<Text> statusLines = new List<Text>();
         [SerializeField] private GameObject statusRoot;
         [SerializeField] private Text statusText;
@@ -46,6 +48,51 @@ namespace TianZhang.Features.CombatPresentation
         public string SelectedKey => selectedKey;
         public string PersistentStatus => statusText == null ? string.Empty : statusText.text;
         public bool HasAbilities => hud?.Abilities.Count > 0;
+        public void PresentFireCenter(Vector3? viewport)
+        {
+            fireCenterLabel.gameObject.SetActive(viewport.HasValue);
+            if (!viewport.HasValue) return;
+            Vector3 point = viewport.Value;
+            // The V3 HUD fills the camera viewport at every supported resolution.
+            var anchor = new Vector2(Mathf.Clamp(point.x, .05f, .95f), Mathf.Clamp(point.y, .18f, .90f));
+            var rect = fireCenterLabel.rectTransform;
+            rect.anchorMin = rect.anchorMax = anchor;
+            fireCenterLabel.text = point.x < .05f ? "← 阵心" : point.x > .95f ? "阵心 →" :
+                point.y > .90f ? "↑ 阵心" : point.y < .18f ? "↓ 阵心" : "阵心";
+        }
+
+        public void PresentFieldLabels(Camera camera, CombatBattlefieldSurface surface, IReadOnlyList<CombatUnitPresentationHex> embers,
+            CombatUnitPresentationHex? sun, CombatUnitPresentationHex? moon, IReadOnlyList<CombatEarthObjectSnapshot> earth)
+        {
+            int used = 0;
+            void Mark(CombatUnitPresentationHex cell, string caption)
+            {
+                Vector3 point = camera.WorldToViewportPoint(surface.Center(cell));
+                if (point.z <= 0 || point.x < 0 || point.x > 1 || point.y < 0 || point.y > 1) return;
+                if (used == fieldLabels.Count)
+                {
+                    var copy = Instantiate(fireCenterLabel, fireCenterLabel.transform.parent);
+                    copy.name = "PublicFieldLabel";
+                    fieldLabels.Add(copy);
+                }
+                var label = fieldLabels[used++];
+                label.text = caption;
+                label.rectTransform.anchorMin = label.rectTransform.anchorMax = (Vector2)point;
+                label.gameObject.SetActive(true);
+            }
+            if (embers != null) foreach (var cell in embers) Mark(cell, "余火");
+            if (sun.HasValue) Mark(sun.Value, "日坛");
+            if (moon.HasValue) Mark(moon.Value, "月坛");
+            if (earth != null)
+                foreach (var obj in earth)
+                {
+                    if (!obj.IsRamp) continue;
+                    bool aIsLower = surface.Center(obj.A).y < surface.Center(obj.B).y;
+                    Mark(obj.A, aIsLower ? "坡脚" : "坡顶");
+                    Mark(obj.B, aIsLower ? "坡顶" : "坡脚");
+                }
+            for (int i = used; i < fieldLabels.Count; i++) fieldLabels[i].gameObject.SetActive(false);
+        }
         public float OptionsHeight
         {
             get
