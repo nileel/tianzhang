@@ -104,7 +104,7 @@ namespace TianZhang.Bootstrap
             try
             {
                 if (characterCreationController.IsJindanTrial)
-                    runtime.BeginJindanDemoGame(profile.charName, jindanDemoCatalog);
+                    runtime.BeginJindanDemoGame(profile.charName, jindanDemoCatalog, characterCreationController.TrialPresetId);
                 else runtime.BeginEquippedNewGame(
                     CharacterRuntimeProfile.FromDefinition("player", profile, contentCatalog.CombatRuleSet),
                     CultivationState.FromDefinition(profile.foundationPurpleMansionState),

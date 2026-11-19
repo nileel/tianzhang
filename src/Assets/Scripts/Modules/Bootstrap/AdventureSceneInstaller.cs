@@ -68,6 +68,7 @@ namespace TianZhang.Bootstrap
         [SerializeField] private CombatEarthView earthView;
         [SerializeField] private CombatSurfaceView surfaceView;
         private JindanRehearsalPresenter jindan;
+        private bool openInitialPreparation;
 
         public void OpenJindanPreparation()
         {
@@ -89,17 +90,31 @@ namespace TianZhang.Bootstrap
             surfaceView.ConfigureSurface(terrainRehearsalSurface);
             battlefieldCamera.GetComponent<AdventureCameraController>().Configure(battlefieldCamera,
                 terrainRehearsalSurface.transform, .340433121f);
-            var placement = jindanDemoCatalog.segments[segmentIndex].actors.First(value => value.team == (jindan.ControlFire ? 1 : 0));
+            string presetId = GameBootstrap.RequireRuntime().JindanDemoPresetId;
+            var placement = jindan.IsPlayerChallenge
+                ? JindanRehearsalFactory.PlayerPlacements(jindanDemoCatalog, segmentIndex, presetId).Single(p => p.characterId == presetId)
+                : jindanDemoCatalog.segments[segmentIndex].actors.First(value => value.team == (jindan.ControlFire ? 1 : 0));
             Vector3 focus = terrainRehearsalSurface.Center(new TianZhang.Gameplay.Contracts.CombatUnitPresentationHex(placement.q, placement.r));
             battlefieldCamera.transform.position = focus - battlefieldCamera.transform.forward * 20;
+            if (jindan.IsPlayerChallenge) encounterCoordinator.PrepareJindanChallenge(segmentIndex, presetId);
             if (!controller.BeginJindanRehearsal(jindanDemoCatalog, segmentIndex, earthEffect,
                 terrainRehearsalEnvironment, UiText.Resolve, out string reason, jindan.ControlFire,
-                !string.IsNullOrEmpty(GameBootstrap.RequireRuntime().JindanDemoPresetId)))
+                jindan.IsPlayerChallenge, presetId))
                 throw new InvalidOperationException("jindan_rehearsal_entry_failed:" + reason);
         }
 
         private void HandleJindanAction(string key)
         {
+            if (key == "prep_save" && jindan.PreparationOpen && !jindan.ShowingResult)
+            {
+                jindan.ShowNotice(SaveChallenge());
+                return;
+            }
+            if (key == "cancel_preparation" && jindan.IsPlayerChallenge && jindan.PreparationOpen)
+            {
+                controller.RequestReturn();
+                return;
+            }
             combatCommandInput.CancelCandidate();
             combatMovementView.Cancel();
             jindan.HandleAction(key);
@@ -160,6 +175,11 @@ namespace TianZhang.Bootstrap
         private void LateUpdate()
         {
             if (jindan == null) return;
+            if (openInitialPreparation && controller.CanSelectExplorationNode)
+            {
+                openInitialPreparation = false;
+                jindan.OpenPreparation();
+            }
             var visibilitySession = encounterCoordinator.CurrentSession;
             var visibility = visibilitySession?.Visibility;
             var conflict = visibility?.Current;
@@ -192,7 +212,8 @@ namespace TianZhang.Bootstrap
             combatBountyTrackerView.SetObjective(jindanHud?.Objective);
             combatActionBar.PauseInput(visibility?.IsPaused == true || jindan.PreparationOpen || controller.IsWithdrawalConfirmationOpen);
             combatTargetInput.enabled = jindanDemoView.SelectedKey == null;
-            if (jindan.PreparationOpen) jindanDemoView.PresentPreparation(jindan.PreparationDetails);
+            if (jindan.PreparationOpen) jindanDemoView.PresentPreparation(jindan.PreparationDetails, jindan.IsPlayerChallenge,
+                jindan.ShowingResult, jindan.ShowingDetails, jindan.HasEarth);
             else if (encounterCoordinator.CurrentSession?.Jindan != null)
                 jindanDemoView.PresentCombat(jindan.CombatDetails, jindan.QuoteDetails,
                     encounterCoordinator.AcceptsPlayerCommand, jindan.CanConfirm, jindan.QuoteTitle, jindan.CompactQuote, jindan.InteractionHint);
@@ -364,7 +385,10 @@ namespace TianZhang.Bootstrap
                     RequireReference(surfaceView, "jindan_surface_view_missing");
                     encounterCoordinator.SurfaceSettled = surfaceView.PlaySettlement;
                     jindan = new JindanRehearsalPresenter(jindanDemoCatalog, encounterCoordinator, BeginJindanRehearsal, UiText.Resolve,
-                        string.IsNullOrEmpty(runtime.JindanDemoPresetId) ? null : runtime.Player.Identity.DisplayName);
+                        string.IsNullOrEmpty(runtime.JindanDemoPresetId) ? null : runtime.Player.Identity.DisplayName, runtime.JindanDemoPresetId);
+                    openInitialPreparation = jindan.IsPlayerChallenge;
+                    if (jindan.IsPlayerChallenge) combatHudPresenter.ConfigureTrialPortraits(jindanDemoView);
+                    controller.PlayerChallengeEnded += OnPlayerChallengeEnded;
                     jindanRehearsalButton.onClick.AddListener(OpenJindanPreparation);
                     jindanDemoView.ActionRequested += HandleJindanAction;
                     combatCommandInput.SelectionStarted += () =>
@@ -384,6 +408,19 @@ namespace TianZhang.Bootstrap
                 Disable(combatTargetInput);
                 Debug.LogError("[AdventureInstaller] " + exception.Message);
             }
+        }
+
+        private static string SaveChallenge()
+        {
+            var result = GameBootstrap.RequireInstance().SaveActiveSlot();
+            return result.Succeeded ? "角色已保存，读档回到演武准备。" : "保存失败：" + result.FailureReason;
+        }
+
+        private void OnPlayerChallengeEnded(TianZhang.Combat.CombatSessionOutcome? outcome)
+        {
+            jindanDemoView.CloseCombatSelection();
+            jindan.ShowResult(!outcome.HasValue ? "已撤离" : outcome == TianZhang.Combat.CombatSessionOutcome.Victory ? "挑战达成" : "挑战失败",
+                outcome.HasValue ? encounterCoordinator.Challenge.ResultText : SaveChallenge());
         }
 
         private string ResolveAttackProfileName(string profileId)

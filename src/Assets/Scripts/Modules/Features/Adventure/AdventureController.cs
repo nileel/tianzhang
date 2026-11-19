@@ -43,25 +43,28 @@ namespace TianZhang.Features.Adventure
         public bool IsTerrainRehearsal { get; private set; }
 
         public bool BeginJindanRehearsal(JindanDemoCatalogData demo, int segmentIndex, string earthEffect,
-            EnvironmentProfileAsset environment, Func<string, string> text, out string reason, bool controlFire = false, bool usePlayer = false)
+            EnvironmentProfileAsset environment, Func<string, string> text, out string reason, bool controlFire = false, bool usePlayer = false,
+            string playerPresetId = JindanDemoCatalogData.PlayerFirePresetId)
         {
             reason = "adventure_not_exploring";
             if (!CanSelectExplorationNode) return false;
-            if (usePlayer && (segmentIndex != 1 || !controlFire))
+            if (segmentIndex < (usePlayer ? -1 : 0) || segmentIndex >= demo.segments.Length ||
+                usePlayer && demo.GetPreset(playerPresetId) == null)
             { reason = "jindan_player_challenge_invalid"; return false; }
-            var actors = usePlayer ? JindanRehearsalFactory.CreateForPlayer(demo, earthEffect, text, player)
+            var actors = usePlayer ? JindanRehearsalFactory.CreateForPlayer(demo, earthEffect, text, player, segmentIndex, playerPresetId)
                 : JindanRehearsalFactory.Create(demo, segmentIndex, earthEffect, text, controlFire);
             if (!combatEntry.TryCreateSession(actors, attackProfiles, environment, out var prepared, out reason, demo)) return false;
             prepared.ConfigureJindan(JindanRehearsalFactory.CreateLoadout(demo, actors, earthEffect));
             prepared.ConfigureFlight(JindanRehearsalFactory.CreateFlight(demo, actors));
             if (!environment.TryCreateDefinition(out var surfaceEnvironment, out reason)) return false;
-            prepared.ConfigureSurfaces(JindanRehearsalFactory.CreateSurfaces(demo, surfaceEnvironment, segmentIndex, usePlayer));
+            prepared.ConfigureSurfaces(JindanRehearsalFactory.CreateSurfaces(demo, surfaceEnvironment, Math.Max(0, segmentIndex),
+                usePlayer && playerPresetId == JindanDemoCatalogData.PlayerFirePresetId));
             if (!encounters.TryBeginRehearsal(actors, prepared,
                 JindanRehearsalFactory.Descriptors(actors, CombatUnitPresentationProfileCatalogData.PlayerProfileId),
                 environment.battlefieldCells.Select(cell => new TianZhang.Spatial.HexCoord(cell.q, cell.r)).ToArray(), out reason)) return false;
             IsTerrainRehearsal = true;
             CurrentState = AdventureSceneState.Combat;
-            hud.PresentTerrainRehearsalLocation("金丹演武 · " + text(demo.segments[segmentIndex].displayNameKey));
+            hud.PresentTerrainRehearsalLocation("金丹演武 · " + (segmentIndex < 0 ? "基础演练" : text(demo.segments[segmentIndex].displayNameKey)));
             return true;
         }
 
@@ -80,6 +83,7 @@ namespace TianZhang.Features.Adventure
         private Action clearCombatInput;
         private Action hideCombatPresentation;
         public bool IsWithdrawalConfirmationOpen { get; private set; }
+        public event Action<CombatSessionOutcome?> PlayerChallengeEnded;
 
         private bool HasGuanzhongReturn => map?.adventureId == FormalEncounterRules.GuanzhongWildAdventureId;
 
@@ -112,6 +116,7 @@ namespace TianZhang.Features.Adventure
             if (CanSelectExplorationNode) { ReturnToSource(null, out _); return; }
             if (CurrentState != AdventureSceneState.Combat || !encounters.PauseForWithdrawal()) return;
             clearCombatInput();
+            hud.SetWithdrawalPurpose(encounters.Challenge != null);
             IsWithdrawalConfirmationOpen = true;
             RefreshReturnEntry();
         }
@@ -137,8 +142,14 @@ namespace TianZhang.Features.Adventure
             try
             {
                 clearCombatInput();
+                bool playerChallenge = encounters.Challenge != null;
                 encounters.TerminateWithoutOutcome();
                 hideCombatPresentation();
+                if (playerChallenge)
+                {
+                    ReturnToChallengeSelection(null);
+                    return;
+                }
                 loadScene(navigation.ReturnToPreviousScene());
             }
             catch (InvalidOperationException exception) { Fail(exception.Message); }
@@ -283,6 +294,13 @@ namespace TianZhang.Features.Adventure
             LastEncounterOutcome = outcome;
             if (IsTerrainRehearsal)
             {
+                if (encounters.Challenge != null)
+                {
+                    clearCombatInput();
+                    hideCombatPresentation();
+                    ReturnToChallengeSelection(outcome);
+                    return;
+                }
                 CurrentState = AdventureSceneState.Returning;
                 loadScene(navigation.ReturnToPreviousScene());
                 return;
@@ -319,6 +337,15 @@ namespace TianZhang.Features.Adventure
             CurrentState = AdventureSceneState.Returning;
             hud.Present(session, input.SelectNode, null, CanSelectExplorationNode);
             loadScene(navigation.ReturnToPreviousScene());
+        }
+
+        private void ReturnToChallengeSelection(CombatSessionOutcome? outcome)
+        {
+            IsTerrainRehearsal = false;
+            formalEncounterConsumed = false;
+            CurrentState = AdventureSceneState.Exploration;
+            hud.Present(session, input.SelectNode, null, CanSelectExplorationNode);
+            PlayerChallengeEnded?.Invoke(outcome);
         }
 
         private void Fail(string reason)

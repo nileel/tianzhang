@@ -27,6 +27,7 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private Text toggleLabel;
         [SerializeField] private GameObject flightActions;
         [SerializeField] private GameObject scaleActions;
+        [SerializeField] private GameObject sealActions;
         [SerializeField] private GameObject earthActions;
         [SerializeField] private GameObject tideActions;
         [SerializeField] private GameObject visibilityActions;
@@ -98,7 +99,7 @@ namespace TianZhang.Features.CombatPresentation
             get
             {
                 if (selectedKey == null) return 0;
-                GameObject group = selectedKey switch { "fire_tab" => fireActions, "scale_tab" => scaleActions,
+                GameObject group = selectedKey switch { "fire_tab" => fireActions, "scale_tab" => scaleActions, "seal_tab" => sealActions,
                     "flight_tab" => flightActions, "earth_tab" => earthActions, "tide_tab" => tideActions,
                     "visibility_tab" => visibilityActions, "close_tab" => closeActions, _ => null };
                 int count = group == null ? 0 : group.GetComponentsInChildren<Button>(false).Count(b => b.gameObject.activeSelf);
@@ -134,7 +135,7 @@ namespace TianZhang.Features.CombatPresentation
 
         private void Request(string key)
         {
-            if (key is "flight_tab" or "scale_tab" or "earth_tab" or "tide_tab" or "visibility_tab" or "fire_tab" or "close_tab")
+            if (key is "flight_tab" or "scale_tab" or "seal_tab" or "earth_tab" or "tide_tab" or "visibility_tab" or "fire_tab" or "close_tab")
             {
                 selectedKey = key;
                 actionBar?.SelectJindan(GetButton(key));
@@ -164,7 +165,7 @@ namespace TianZhang.Features.CombatPresentation
             buildLabel.text = hud == null ? string.Empty : string.Join(" · ", hud.Abilities.Where(a => a.Key != "flight_tab").Select(a =>
                 a.EffectId switch { "SPACE_SCALE" => "定尺", "YANG_RADIANCE" => "阳照", "YIN_CONCEAL" => "藏真", _ => a.Name }));
             buildLabel.rectTransform.anchoredPosition = new Vector2(playerName.preferredWidth + 12, -6);
-            foreach (string key in new[] { "flight_tab", "scale_tab", "earth_tab", "tide_tab", "visibility_tab", "fire_tab" })
+            foreach (string key in new[] { "flight_tab", "scale_tab", "seal_tab", "earth_tab", "tide_tab", "visibility_tab", "fire_tab" })
             {
                 Button button = GetButton(key);
                 if (button == null) continue;
@@ -189,12 +190,13 @@ namespace TianZhang.Features.CombatPresentation
         {
             flightActions.SetActive(selectedKey == "flight_tab");
             scaleActions.SetActive(selectedKey == "scale_tab");
+            sealActions.SetActive(selectedKey == "seal_tab");
             earthActions.SetActive(selectedKey == "earth_tab");
             tideActions.SetActive(selectedKey == "tide_tab");
             visibilityActions.SetActive(selectedKey == "visibility_tab");
             fireActions.SetActive(selectedKey == "fire_tab");
             closeActions.SetActive(selectedKey == "close_tab");
-            foreach (var pair in new[] { ("fire_close", "fire_tab"), ("close_effect", "scale_tab"),
+            foreach (var pair in new[] { ("fire_close", "fire_tab"), ("close_effect", "scale_tab"), ("seal_close", "seal_tab"),
                 ("visibility_close", "visibility_tab"), ("tide_close", "tide_tab"), ("earth_close", "earth_tab") })
                 GetButton(pair.Item1).gameObject.SetActive(hud?.Abilities.Any(a => a.Key == pair.Item2) == true);
             var ability = hud?.Abilities.FirstOrDefault(value => value.Key == selectedKey);
@@ -240,10 +242,23 @@ namespace TianZhang.Features.CombatPresentation
             return null;
         }
 
-        public void PresentPreparation(string details)
+        public void PresentPreparation(string details, bool trial, bool result, bool showDetails, bool hasEarth)
         {
             BindButtons();
+            if (preparationDetails.text != details)
+                preparationDetails.GetComponentInParent<ScrollRect>(true).verticalNormalizedPosition = 1;
             preparationDetails.text = details ?? string.Empty;
+            foreach (string key in new[] { "stage1", "stage2", "stage3", "enter", "cancel_preparation" })
+                GetButton(key).gameObject.SetActive(!result);
+            foreach (string key in new[] { "basic", "prep_details", "prep_save" })
+                GetButton(key).gameObject.SetActive(trial && !result);
+            GetButton("earth_toggle").gameObject.SetActive(!result && (!trial || hasEarth));
+            GetButton("fire_side").gameObject.SetActive(!trial);
+            GetButton("preset_next").gameObject.SetActive(!trial);
+            GetButton("cancel_preparation").GetComponentInChildren<Text>(true).text = trial ? "返回关中城" : "返回冒险";
+            GetButton("prep_details").GetComponentInChildren<Text>(true).text = showDetails ? "返回概要" : "装配详情";
+            GetButton("retry").gameObject.SetActive(result);
+            GetButton("choose_challenge").gameObject.SetActive(result);
             preparationRoot.SetActive(true);
             preparationRoot.transform.SetAsLastSibling();
             combatRoot.SetActive(false);
@@ -270,7 +285,7 @@ namespace TianZhang.Features.CombatPresentation
             bool closable = hud?.Abilities.Any(a => a.HasActiveInstance) == true;
             GetButton("close_tab").interactable = canInput && closable;
             GetButton("close_tab").GetComponentInChildren<Text>().text = CombatActionBarView.Caption("收势", closable ? "选择实例" : "无主实例");
-            foreach (var pair in new[] { ("fire_close", "fire_tab"), ("close_effect", "scale_tab"),
+            foreach (var pair in new[] { ("fire_close", "fire_tab"), ("close_effect", "scale_tab"), ("seal_close", "seal_tab"),
                 ("visibility_close", "visibility_tab"), ("tide_close", "tide_tab"), ("earth_close", "earth_tab") })
                 GetButton(pair.Item1).interactable = canInput && hud?.Abilities.Any(a => a.Key == pair.Item2 && a.HasActiveInstance) == true;
             combatBody.SetActive(true);

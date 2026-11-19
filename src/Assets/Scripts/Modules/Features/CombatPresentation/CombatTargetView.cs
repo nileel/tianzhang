@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using TianZhang.Gameplay.Contracts;
 using UnityEngine;
 using UnityEngine.UI;
@@ -24,6 +25,7 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private Sprite playerPortrait;
         [SerializeField] private Sprite shijiahouPortrait;
         [SerializeField] private Sprite lieshijiaPortrait;
+        internal IReadOnlyDictionary<string, Sprite> TrialPortraits { private get; set; }
         private string targetId;
         public string TargetId => targetId;
         public Button CloseButton => closeButton;
@@ -85,6 +87,7 @@ namespace TianZhang.Features.CombatPresentation
 
         private Sprite PortraitFor(string key, bool player)
         {
+            if (key != null && TrialPortraits != null && TrialPortraits.TryGetValue(key, out var badge)) return badge;
             if (player || string.Equals(key, "player", StringComparison.Ordinal)) return playerPortrait;
             if (string.Equals(key, "enemy_shijiahou", StringComparison.Ordinal)) return shijiahouPortrait;
             if (string.Equals(key, "enemy_lieshijia", StringComparison.Ordinal)) return lieshijiaPortrait;

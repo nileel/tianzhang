@@ -122,7 +122,83 @@ namespace TianZhang.Editor
             // The existing withdrawal dialog remains above every combat panel and receives its clicks.
             canvas.Find("AdventureWithdrawalConfirmation")?.SetAsLastSibling();
             D12CombatHudBuilder.Apply();
+            BindChallengeControls(canvas, view);
             EditorSceneManager.MarkSceneDirty(scene);
+        }
+
+        [MenuItem("天章/场景/D12 绑定演武挑战操作")]
+        public static void RebindChallengeControls()
+        {
+            var scene = EditorSceneManager.OpenScene(SceneBuildSupport.AdventureScenePath, OpenSceneMode.Single);
+            var owner = scene.GetRootGameObjects().Single(go => go.name == "AdventureRoot");
+            BindChallengeControls(scene.GetRootGameObjects().Single(go => go.name == "UICanvas").transform,
+                owner.GetComponent<JindanDemoView>());
+            SceneBuildSupport.Save(scene.path);
+            EditorSceneManager.OpenScene(scene.path, OpenSceneMode.Single);
+        }
+
+        private static void BindChallengeControls(Transform canvas, JindanDemoView view)
+        {
+            var dialog = canvas.Find("JindanDemoPreparationRoot/JindanPreparationDialog");
+            var bindings = new List<JindanDemoView.ActionButton>();
+            void PlaceButton(string key, string label, float x, float y, float w)
+            {
+                var button = dialog.Find(key)?.GetComponent<Button>();
+                if (button == null) AddButton(dialog, bindings, key, label, x, y, w, 60);
+                else
+                {
+                    Place((RectTransform)button.transform, x, y, w, 60);
+                    button.GetComponentInChildren<Text>(true).text = label;
+                }
+            }
+            dialog.Find("Heading").GetComponent<Text>().text = "关中阶地 · 演武准备";
+            PlaceButton("basic", "基础演练", 32, 742, 286);
+            PlaceButton("stage1", "一 · 登高与御风", 342, 742, 286);
+            PlaceButton("stage2", "二 · 水火与筑路", 652, 742, 286);
+            PlaceButton("stage3", "三 · 破封与观形", 962, 742, 286);
+            PlaceButton("prep_details", "装配详情", 32, 90, 392);
+            PlaceButton("prep_save", "保存角色", 856, 90, 392);
+            PlaceButton("retry", "同配置重试", 654, 20, 594);
+            PlaceButton("choose_challenge", "返回挑战选择", 32, 20, 594);
+
+            Button Find(string name) => canvas.GetComponentsInChildren<Button>(true).Single(b => b.name == name);
+            Button Duplicate(Button source, Transform parent, string key, string label)
+            {
+                var old = parent.Find(key);
+                if (old != null) return old.GetComponent<Button>();
+                var button = UnityEngine.Object.Instantiate(source, parent, false);
+                button.name = key;
+                button.GetComponentInChildren<Text>(true).text = label;
+                bindings.Add(new JindanDemoView.ActionButton { key = key, button = button });
+                return button;
+            }
+            Button scale = Find("scale_tab");
+            var seal = Duplicate(scale, scale.transform.parent, "seal_tab", "封关");
+            seal.transform.SetSiblingIndex(scale.transform.GetSiblingIndex() + 1);
+            var fire = Find("fire_preview");
+            var groups = fire.transform.parent.parent;
+            var sealGroup = groups.Find("SealActions");
+            if (sealGroup == null)
+            {
+                sealGroup = UnityEngine.Object.Instantiate(fire.transform.parent, groups, false);
+                sealGroup.name = "SealActions";
+                var deploy = sealGroup.GetComponentInChildren<Button>(true);
+                deploy.name = "seal_deploy";
+                deploy.GetComponentInChildren<Text>(true).text = "展开封关";
+                bindings.Add(new JindanDemoView.ActionButton { key = "seal_deploy", button = deploy });
+            }
+            var close = Find("fire_close");
+            Duplicate(close, close.transform.parent, "seal_close", "封关收势");
+            SceneBuildSupport.SetObject(view, "sealActions", sealGroup.gameObject);
+            var data = new SerializedObject(view);
+            var array = data.FindProperty("buttons");
+            foreach (var newBinding in bindings)
+            {
+                var item = array.GetArrayElementAtIndex(array.arraySize++);
+                item.FindPropertyRelative("key").stringValue = newBinding.key;
+                item.FindPropertyRelative("button").objectReferenceValue = newBinding.button;
+            }
+            data.ApplyModifiedPropertiesWithoutUndo();
         }
 
         [MenuItem("天章/场景/D12 绑定五系战场表现")]

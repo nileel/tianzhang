@@ -62,6 +62,7 @@ namespace TianZhang.Tests.PlayMode
             yield return Press("enter");
             Bind(); yield return Ready(ScaleActor);
             AssertFreshScale();
+            yield return Press("scale_tab");
             yield return Press("preview");
             Assert.IsFalse(view.GetButton("confirm").interactable, "Empty selection must fail without payment.");
             AssertFreshScale();
@@ -82,7 +83,9 @@ namespace TianZhang.Tests.PlayMode
             string first = encounter.ControlledActorId;
             yield return EndTurn();
             Assert.AreNotEqual(first, encounter.ControlledActorId, "Second allied actor must receive player input.");
-            yield return Press("preview");
+            yield return Press("flight_tab");
+            yield return Press("flight_takeoff");
+            Assert.IsTrue(view.GetButton("confirm").interactable, "The second ally's equipped flight should have a legal quote.");
             yield return Press("cancel_targeting");
             int ap = Actor.ActionPointsRemainingUnits;
             yield return Guard();
@@ -96,7 +99,7 @@ namespace TianZhang.Tests.PlayMode
             string effect = earth.EffectId;
             int budget = Actor.ActionPointLimitAtTurnStartUnits, mana = Actor.CurrentSpirit;
             long turn = session.TurnSequence; int tick = session.TurnScheduler.CurrentTick;
-            yield return Press("swap_effect"); yield return Press("confirm"); yield return Ready();
+            yield return Press("earth_tab"); yield return Press("earth_swap"); yield return Press("confirm"); yield return Ready();
             Assert.AreNotEqual(effect, earth.EffectId); Assert.AreEqual(0, Actor.ActionPointsRemainingUnits);
             Assert.AreEqual(budget, earth.TotalActionPointSpent); Assert.AreEqual(mana, Actor.CurrentSpirit);
             for (int i = 0; i < 4; i++) yield return null;
@@ -153,9 +156,9 @@ namespace TianZhang.Tests.PlayMode
             }
             else
             {
+                yield return Press("scale_tab");
                 yield return Press("compress"); yield return Press("pick_edges");
                 yield return Click(Point(4, 14)); yield return Click(Point(5, 14));
-                yield return Press("preview");
                 Assert.IsTrue(view.GetButton("confirm").interactable, GameObject.Find("CompactQuote").GetComponent<Text>().text);
                 yield return Press("confirm");
             }
@@ -191,7 +194,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(40 * elapsed, mp - actor.CurrentSpirit);
             int ap = actor.ActionPointsRemainingUnits; mp = actor.CurrentSpirit;
             if (native) yield return NativeStep("close", "点击关闭方位定尺，再确认；方位标和受影响边线应消失。", () => Seat.ActiveScale == null);
-            else { yield return Press("close_effect"); yield return Press("confirm"); }
+            else { yield return Press("close_tab"); yield return Press("close_effect"); yield return Press("confirm"); }
             yield return Ready(ScaleActor);
             Assert.IsNull(Seat.ActiveScale); Assert.AreEqual(25000, ap - actor.ActionPointsRemainingUnits);
             Assert.AreEqual(mp, actor.CurrentSpirit); Assert.AreEqual(2, Metric());

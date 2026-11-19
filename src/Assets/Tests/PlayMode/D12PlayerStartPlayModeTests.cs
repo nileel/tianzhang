@@ -122,14 +122,17 @@ namespace TianZhang.Tests.PlayMode
                         yield return SceneManager.LoadSceneAsync(GameplaySceneNames.StartMenu);
                         yield return null;
                         Assert.IsTrue(Find<StartMenuSceneInstaller>().LoadPlayer("trial" + size.x).Succeeded);
-                        yield return SceneReady(GameplaySceneNames.Settlement);
+                        yield return SceneReady(GameplaySceneNames.Adventure);
                         Assert.AreEqual(playerJson, JsonUtility.ToJson(runtime.CaptureSave().player));
                         Assert.AreEqual(cultivationJson, JsonUtility.ToJson(runtime.CaptureSave().cultivation));
                     }
-                    Assert.IsTrue(Find<SettlementController>().EnterAdventure("guanzhong_wild"));
-                    yield return SceneReady(GameplaySceneNames.Adventure);
-                    yield return Click(GameObject.Find("JindanRehearsalButton").GetComponent<Button>());
+                    else
+                    {
+                        Assert.IsTrue(Find<SettlementController>().EnterAdventure("guanzhong_wild"));
+                        yield return SceneReady(GameplaySceneNames.Adventure);
+                    }
                     var view = Find<JindanDemoView>();
+                    yield return Click(view.GetButton("stage2"));
                     yield return Click(view.GetButton("enter"));
                     var encounter = Find<EncounterCoordinator>();
                     for (float end = Time.realtimeSinceStartup + 30; !encounter.AcceptsPlayerCommand && Time.realtimeSinceStartup < end;) yield return null;
@@ -223,7 +226,9 @@ namespace TianZhang.Tests.PlayMode
                     controller.RequestReturn();
                     Assert.IsTrue(controller.IsWithdrawalConfirmationOpen);
                     controller.ConfirmWithdrawal();
-                    yield return SceneReady(GameplaySceneNames.Settlement);
+                    yield return null;
+                    Assert.IsTrue(view.GetButton("retry").gameObject.activeInHierarchy);
+                    Assert.IsNull(encounter.CurrentSession);
                     Assert.AreEqual(playerJson, JsonUtility.ToJson(runtime.CaptureSave().player));
                     Assert.AreEqual(cultivationJson, JsonUtility.ToJson(runtime.CaptureSave().cultivation));
                 }

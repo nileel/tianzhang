@@ -83,6 +83,13 @@ namespace TianZhang.Features.Adventure
             }
         }
 
+        public void SetWithdrawalPurpose(bool challenge)
+        {
+            var message = withdrawalConfirmation.transform.Find("WithdrawalDialog/WithdrawalMessage").GetComponent<Text>();
+            message.text = challenge ? "结束本次挑战，保存本人的构筑并返回演武准备。重试会从本段开场重新开始。" : WithdrawalMessage;
+            confirmWithdrawalButton.GetComponentInChildren<Text>(true).text = challenge ? "撤离并保存" : "确认撤离";
+        }
+
         public void PresentReturnEntry(bool visible, string label, bool available, string reason, bool confirming, bool inCombat)
         {
             ApplyReturnEntryLayout(inCombat);

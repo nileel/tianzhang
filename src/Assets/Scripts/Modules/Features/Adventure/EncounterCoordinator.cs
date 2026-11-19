@@ -61,6 +61,17 @@ namespace TianZhang.Features.Adventure
         private readonly CombatSurfacePlayback surfacePlayback = new CombatSurfacePlayback();
         public Action<CombatSurfaceSettlementSnapshot> SurfaceSettled { get; set; }
         private bool withdrawalPaused;
+        private JindanChallengeProgress nextChallenge;
+        private ICombatResolutionRandomSource rehearsalRandom;
+        public JindanChallengeProgress Challenge { get; private set; }
+
+        public void PrepareJindanChallenge(int segmentIndex, string presetId)
+        {
+            if (IsRunning) throw new InvalidOperationException("adventure_encounter_already_running");
+            nextChallenge = new JindanChallengeProgress(segmentIndex, presetId);
+        }
+
+        private CombatSessionOutcome CurrentOutcome => Challenge?.Outcome ?? resultBuilder.Build(session).Outcome;
 
         private CharacterRuntimeProfile equipmentOwner;
         private ContentCatalogData equipmentCatalog;
@@ -152,17 +163,20 @@ namespace TianZhang.Features.Adventure
         private bool IsPlayerActor(string id) => session != null && session.Combatants.TryGet(id, out var actor) && actor.Team == CombatTeam.Player;
         internal string ActorName(string id) => spawned?.RehearsalNames != null && spawned.RehearsalNames.TryGetValue(id, out var name)
             ? name : IsPlayerActor(id) ? playerDisplayName : resolveText(EnemyDataFor(id)?.displayNameKey ?? id);
-        private string PortraitKey(string id) => spawned?.IsJindanRehearsal == true || IsPlayerActor(id) ? "player" : EnemyDataFor(id)?.enemyId;
+        private string PortraitKey(string id) => spawned?.PlayerTrialPresetId != null && id != "player"
+            ? JindanRehearsalFactory.PortraitSlot(id)
+            : spawned?.IsJindanRehearsal == true || IsPlayerActor(id) ? "player" : EnemyDataFor(id)?.enemyId;
         public bool IsPresenting => surfacePlayback.Busy || ((unitPresentation as ICombatPresentationActivity)?.IsPresenting ?? false) ||
             (hudActivity?.IsPresenting ?? false);
 
         /// <summary>The only window in which a direct <c>Request*</c> command is performed instead of
         /// dropped: the player's turn is active and its advance presentation has finished.</summary>
-        public bool AcceptsPlayerCommand => acceptsPlayerCommand && !IsPresenting && session?.Visibility?.IsPaused != true;
+        public bool AcceptsPlayerCommand => acceptsPlayerCommand && (Challenge == null || Challenge.Outcome == CombatSessionOutcome.Ongoing) && !IsPresenting && session?.Visibility?.IsPaused != true;
 
         public void RefreshVisibilityPresentation()
         {
             if (session == null) return;
+            Challenge?.Observe(session);
             Present(session.Visibility?.IsPaused == true ? "显隐对抗中" :
                 IsPlayerActor(session.CurrentActorId) ? "你的行动" : "敌方行动", AcceptsPlayerCommand);
         }
@@ -174,7 +188,7 @@ namespace TianZhang.Features.Adventure
             reason = "回合切换中";
             if (session == null) return false;
             if (session.Visibility?.IsPaused == true) { reason = null; return true; }
-            if (resultBuilder.Build(session).Outcome != CombatSessionOutcome.Ongoing)
+            if (CurrentOutcome != CombatSessionOutcome.Ongoing)
             {
                 reason = "胜负已定，等待结算";
                 return false;
@@ -296,6 +310,9 @@ namespace TianZhang.Features.Adventure
                 spawned = null;
                 return false;
             }
+            Challenge = null;
+            nextChallenge = null;
+            rehearsalRandom = null;
             battlefieldCells = environmentProfile.battlefieldCells.Select(cell => new HexCoord(cell.q, cell.r)).ToArray();
             session.ExternalResources = this;
             try
@@ -329,10 +346,13 @@ namespace TianZhang.Features.Adventure
             catch (Exception exception)
             { unitPresentation.Clear(); reason = "adventure_presentation_spawn_failed:" + exception.Message; return false; }
             spawned = values; session = prepared; battlefieldCells = cells;
+            Challenge = values.Player.Id == "player" ? nextChallenge : null;
+            nextChallenge = null;
+            rehearsalRandom = Challenge == null ? null : new SystemCombatResolutionRandomSource(Challenge.Seed);
             // Fixed actors stay isolated; the trial player retains the existing equipment/inventory owner.
             session.ExternalResources = values.Player.Id == "player"
                 ? this : null;
-            enemyPolicies = values.Enemies.ToDictionary(value => value.Id, value => (ICombatActionPolicy)new LegalActionAI());
+            enemyPolicies = values.Enemies.ToDictionary(value => value.Id, value => Challenge == null ? (ICombatActionPolicy)new LegalActionAI() : new JindanChallengeEnemyPolicy(Challenge));
             playerDisplayName = ActorName(values.Player.Id);
             presentation.ClearLog(); presentation.AppendLog("金丹演武开始：" + string.Join("、", values.RehearsalNames.Values));
             combatRoutine = StartCoroutine(RunCombat());
@@ -450,7 +470,7 @@ namespace TianZhang.Features.Adventure
             string replaced = candidate.Kind == CombatActionKind.SwapSpell && actor != null &&
                 candidate.SlotIndex >= 0 && candidate.SlotIndex < actor.EquippedArtProfileIds.Count
                 ? displayProfile(actor.EquippedArtProfileIds[candidate.SlotIndex]) : string.Empty;
-            return new CombatActionPreviewSnapshot(resolved, name, playerDisplayName, targetName,
+            return new CombatActionPreviewSnapshot(resolved, name, ActorName(command.ActorId), targetName,
                 preview != null && preview.Validation.Succeeded, reason, preview?.SpiritCost ?? 0,
                 preview?.RemainsInTurn ?? false, preview?.Turn?.ChargeTime ?? 0,
                 preview?.Turn?.NextActionThreshold ?? 0, preview?.Turn?.TicksUntilReady ?? 0,
@@ -579,7 +599,7 @@ namespace TianZhang.Features.Adventure
 
         private IEnumerator RunCombat()
         {
-            while (resultBuilder.Build(session).Outcome == CombatSessionOutcome.Ongoing)
+            while (CurrentOutcome == CombatSessionOutcome.Ongoing)
             {
                 while (session.Visibility?.IsPaused == true || withdrawalPaused) yield return null;
                 RefreshGrowth();
@@ -587,12 +607,13 @@ namespace TianZhang.Features.Adventure
                 var flightBefore = SnapshotFlightStates();
                 CombatTurnAdvance advance = commandService.AdvanceUntilAction(session, out var advanceSteps);
                 ProjectFlightStates(flightBefore);
+                Challenge?.Observe(session);
                 surfaceRoutine = StartCoroutine(surfacePlayback.Play(session, unitPresentation, presentation.AppendLog, SurfaceSettled));
                 Present("回合推进", false, advanceSteps);
                 while (IsPresenting) yield return null;
-                if (!advance.HasActor)
+                if (!advance.HasActor || CurrentOutcome != CombatSessionOutcome.Ongoing)
                 {
-                    Complete(resultBuilder.Build(session).Outcome);
+                    Complete(CurrentOutcome);
                     yield break;
                 }
 
@@ -602,7 +623,7 @@ namespace TianZhang.Features.Adventure
                     Present("你的行动", true);
                     bool wasPresenting = IsPresenting;
                     while (IsPresenting || (session.TurnPhase != CombatTurnPhase.Finished &&
-                           resultBuilder.Build(session).Outcome == CombatSessionOutcome.Ongoing))
+                           CurrentOutcome == CombatSessionOutcome.Ongoing))
                     {
                         yield return null;
                         while (withdrawalPaused || session.Visibility?.IsPaused == true) yield return null;
@@ -612,7 +633,7 @@ namespace TianZhang.Features.Adventure
                         {
                             wasPresenting = IsPresenting;
                             Present("你的行动", session.TurnPhase != CombatTurnPhase.Finished &&
-                                resultBuilder.Build(session).Outcome == CombatSessionOutcome.Ongoing);
+                                CurrentOutcome == CombatSessionOutcome.Ongoing);
                         }
                     }
                     acceptsPlayerCommand = false;
@@ -622,7 +643,7 @@ namespace TianZhang.Features.Adventure
                     Present(ActorName(advance.ActorId) + " 行动", false);
                     yield return null;
                     while (session.TurnPhase != CombatTurnPhase.Finished &&
-                           resultBuilder.Build(session).Outcome == CombatSessionOutcome.Ongoing)
+                           CurrentOutcome == CombatSessionOutcome.Ongoing)
                     {
                         while (withdrawalPaused || session.Visibility?.IsPaused == true) yield return null;
                         IReadOnlyList<CombatCommand> legal = legalActions.GetLegalActions(session, advance.ActorId);
@@ -642,7 +663,7 @@ namespace TianZhang.Features.Adventure
                 Present("战斗中", false);
             }
 
-            Complete(resultBuilder.Build(session).Outcome);
+            Complete(CurrentOutcome);
         }
 
         private void ExecutePlayer(CombatCommand command, CombatCommandPreview quote = null)
@@ -660,7 +681,7 @@ namespace TianZhang.Features.Adventure
             CombatActionResult result = ExecuteCommand(command, quote);
             presentation.AppendLog(BuildActionMessage(ActorName(command.ActorId), command, result));
             Present("你的行动", session.TurnPhase != CombatTurnPhase.Finished &&
-                resultBuilder.Build(session).Outcome == CombatSessionOutcome.Ongoing);
+                CurrentOutcome == CombatSessionOutcome.Ongoing);
         }
 
         private CombatActionResult ExecuteCommand(CombatCommand command, CombatCommandPreview quote = null)
@@ -682,9 +703,10 @@ namespace TianZhang.Features.Adventure
                 session.TryGetProfile(command.ProfileId, out CombatAttackProfile sampledProfile) &&
                 sampledProfile.Effect is CombatAttackEffect.Physical or CombatAttackEffect.Soul or CombatAttackEffect.Hybrid)
             {
-                CombatResolutionRolls Sample() => new CombatResolutionRolls(combatRandomSource.NextPercent(),
-                    combatRandomSource.NextPercent(), combatRandomSource.NextPercent(),
-                    combatRandomSource.NextPercent(), combatRandomSource.NextPercent());
+                var random = rehearsalRandom ?? combatRandomSource;
+                CombatResolutionRolls Sample() => new CombatResolutionRolls(random.NextPercent(),
+                    random.NextPercent(), random.NextPercent(),
+                    random.NextPercent(), random.NextPercent());
                 var targetRolls = sampledProfile.Area != CombatAttackArea.Single
                     ? quote.AttackArea.TargetIds.Select(id => new CombatTargetResolutionRolls(id, Sample())).ToArray() : null;
                 CombatResolutionRolls rolls = targetRolls == null &&
@@ -730,6 +752,9 @@ namespace TianZhang.Features.Adventure
             if (result.Succeeded)
             {
                 string gravityTarget = command.Jindan?.EarthMode == CombatEarthMode.Heavy ? command.Jindan.EarthTargetId : null;
+                int previousTargetAltitude = gravityTarget != null && flightBefore != null &&
+                    flightBefore.TryGetValue(gravityTarget, out var gravityBefore) ? gravityBefore.Pose.AltitudeBand : 0;
+                Challenge?.Observe(session, command, result, previousTargetAltitude);
                 bool loweringSelf = gravityTarget == command.ActorId && flightBefore != null &&
                     flightBefore.TryGetValue(command.ActorId, out var previous) && previous.Pose.AltitudeBand > actorBefore.AltitudeBand;
                 if (command.Kind != CombatCommandKind.EndTurn && command.Jindan?.TideAction == null && !loweringSelf)
@@ -1204,8 +1229,8 @@ namespace TianZhang.Features.Adventure
         private string BuildActionMessage(string actor, CombatCommand command, CombatActionResult result)
         {
             if (!result.Succeeded) return actor + "：" + displayReason(result.RejectionReason);
-            if (command.Kind == CombatCommandKind.JindanAbility)
-                return actor + "：" + JindanRehearsalPresenter.Effect(command.ProfileId) +
+            if (command.Kind is CombatCommandKind.JindanAbility or CombatCommandKind.Flight)
+                return actor + "：" + (command.Kind == CombatCommandKind.Flight ? "御风飞行" : JindanRehearsalPresenter.Effect(command.ProfileId)) +
                     "  AP -" + result.ActionPointSpentUnits / 1000f + "，MP -" + result.SpiritSpent;
             string commandName = resolveText(command.Kind switch
             {

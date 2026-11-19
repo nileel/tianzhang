@@ -389,7 +389,7 @@ namespace TianZhang.Editor
         internal static void RemoveRelocatedJindanUi(Transform canvas)
         {
             // These nodes used to live below JindanDemoCombatRoot, which the old builder replaces.
-            string[] names = { "flight_tab", "scale_tab", "earth_tab", "tide_tab", "visibility_tab", "fire_tab", "close_tab", "toggle_panel", "JindanDetailsRoot", "JindanStatusRoot", "JindanDemoCombatRoot" };
+            string[] names = { "flight_tab", "scale_tab", "seal_tab", "earth_tab", "tide_tab", "visibility_tab", "fire_tab", "close_tab", "toggle_panel", "JindanDetailsRoot", "JindanStatusRoot", "JindanDemoCombatRoot" };
             foreach (string name in names)
                 foreach (Transform node in canvas.GetComponentsInChildren<Transform>(true).Where(t => t.name == name).ToArray())
                     UnityEngine.Object.DestroyImmediate(node.gameObject);

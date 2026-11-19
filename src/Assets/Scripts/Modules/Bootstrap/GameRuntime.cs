@@ -40,11 +40,12 @@ namespace TianZhang.Bootstrap
 
         public string JindanDemoPresetId { get; private set; }
         public string JindanDemoContentVersion { get; private set; }
-        public void BeginJindanDemoGame(string name, JindanDemoCatalogData demo)
+        public void BeginJindanDemoGame(string name, JindanDemoCatalogData demo,
+            string presetId = JindanDemoCatalogData.PlayerFirePresetId)
         {
-            JindanDemoNewGame.Create(name, demo, growthRules, out var player, out var cultivation);
+            JindanDemoNewGame.Create(name, demo, growthRules, out var player, out var cultivation, presetId);
             BeginNewGame(player, cultivation, "guanzhong_hub");
-            JindanDemoPresetId = JindanDemoCatalogData.PlayerFirePresetId;
+            JindanDemoPresetId = presetId;
             JindanDemoContentVersion = demo.contentVersion;
         }
 

@@ -18,11 +18,11 @@ namespace TianZhang.Features.Adventure
                 string key = seat.EffectId switch
                 {
                     "FIRE_MANIFEST" => "fire_tab", "WATER_TIDE" => "tide_tab",
-                    "EARTH_MANIFEST" or "EARTH_GRAVITY" => "earth_tab", "SPACE_SCALE" => "scale_tab",
+                    "EARTH_MANIFEST" or "EARTH_GRAVITY" => "earth_tab", "SPACE_SCALE" => "scale_tab", "SPACE_SEAL" => "seal_tab",
                     "YANG_RADIANCE" or "YIN_CONCEAL" => "visibility_tab", _ => null,
                 };
                 if (key == null) continue;
-                bool active = seat.ActiveScale != null || seat.ActiveEarth != null || seat.ActiveVisibility != null ||
+                bool active = seat.ActiveScale != null || seat.ActiveSeal != null || seat.ActiveEarth != null || seat.ActiveVisibility != null ||
                     seat.FireDomain?.Main != null || seat.PendingTide != null ||
                     (seat.EffectId == "WATER_TIDE" && (session.Surfaces?.OwnedCount(seat.Definition.AbilityInstanceId) ?? 0) > 0);
                 abilities.Add(new JindanHudAbility(key, seat.EffectId, JindanRehearsalPresenter.Effect(seat.EffectId),

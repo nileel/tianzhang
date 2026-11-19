@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TianZhang.Gameplay.Contracts;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,10 +19,26 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private Text actionPointLabel;
         [SerializeField] private bool separateResourceNames;
 
+        private IReadOnlyDictionary<string, Sprite> trialPortraits;
+        private Image actorPortrait;
+        private Sprite playerPortrait;
+
+        internal void BindTrialPortraits(IReadOnlyDictionary<string, Sprite> badges)
+        {
+            trialPortraits = badges;
+            actorPortrait = root.GetComponent<D12CombatHudLayout>().ResourcePortrait;
+            playerPortrait = actorPortrait.sprite;
+        }
+
         public void Present(CombatHudSnapshot snapshot)
         {
             root?.SetActive(snapshot != null);
             if (snapshot == null) return;
+            if (actorPortrait != null)
+            {
+                string key = snapshot.Player?.PortraitKey;
+                actorPortrait.sprite = key != null && trialPortraits.TryGetValue(key, out var badge) ? badge : playerPortrait;
+            }
             if (playerText != null) playerText.text = snapshot.Player?.DisplayName ?? string.Empty;
             PresentResource(healthFill, healthLabel, "生命", snapshot.Player?.CurrentHealth ?? 0,
                 snapshot.Player?.MaximumHealth ?? 0);

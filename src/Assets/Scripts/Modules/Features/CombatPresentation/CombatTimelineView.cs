@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using TianZhang.Gameplay.Contracts;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -37,6 +38,7 @@ namespace TianZhang.Features.CombatPresentation
                 "◇ 若此动作\n完成并结束\n+" + value.TicksUntilReady + " 刻\n顺位未定";
         }
 
+        internal IReadOnlyDictionary<string, Sprite> TrialPortraits { private get; set; }
         private CombatTimelineSnapshot snapshot;
         private CombatTimelineSnapshot playbackEnd;
         private int playbackStep;
@@ -183,7 +185,8 @@ namespace TianZhang.Features.CombatPresentation
                 Image portrait = entryPortraits[index];
                 if (portrait != null)
                 {
-                    portrait.sprite = entry.PortraitKey switch
+                    portrait.sprite = entry.PortraitKey != null && TrialPortraits != null && TrialPortraits.TryGetValue(entry.PortraitKey, out var badge)
+                        ? badge : entry.PortraitKey switch
                     {
                         "player" => playerPortrait,
                         "enemy_shijiahou" => shijiahouPortrait,
@@ -292,9 +295,12 @@ namespace TianZhang.Features.CombatPresentation
                 entry.TicksUntilReady + "\n速度 " + entry.Speed + "\n" + state;
         }
 
-        private string FormatEntry(CombatTimelineEntrySnapshot entry, int index) => horizontal
-            ? entry.Faction == CombatUnitDisplayFaction.Player ? "你" : "敌"
-            : entry.IsCurrent ? "当前" : "第" + (index + 1) + "位";
+        private string FormatEntry(CombatTimelineEntrySnapshot entry, int index)
+        {
+            if (!horizontal) return entry.IsCurrent ? "当前" : "第" + (index + 1) + "位";
+            if (entry.Faction != CombatUnitDisplayFaction.Player) return "敌";
+            return entry.PortraitKey != null && TrialPortraits?.ContainsKey(entry.PortraitKey) == true ? "友" : "你";
+        }
 
         private void RefreshMarkers(int index, CombatTimelineEntrySnapshot entry)
         {

@@ -17,6 +17,14 @@ namespace TianZhang.Features.Adventure
         private readonly Action<int, string> enter;
         private readonly Func<string, string> text;
         private readonly string trialPlayerName;
+        private readonly string trialPresetId;
+        private bool showDetails;
+        private string resultText;
+        public bool IsPlayerChallenge => trialPlayerName != null;
+        public bool ShowingResult => resultText != null;
+        public bool ShowingDetails => showDetails;
+        public bool HasEarth => segmentIndex >= 0 && (!IsPlayerChallenge ||
+            JindanRehearsalFactory.PlayerPlacements(catalog, segmentIndex, trialPresetId).Any(p => p.team == 0 && p.characterId == catalog.demolition.characterId));
         private readonly List<HexCoord> path = new List<HexCoord>(3);
         private int segmentIndex = 2;
         private int presetIndex;
@@ -43,14 +51,15 @@ namespace TianZhang.Features.Adventure
         private enum SelectionMode { None, Edges, Origin, EarthTarget, BreakTarget, TideSource }
 
         public JindanRehearsalPresenter(JindanDemoCatalogData catalog, EncounterCoordinator encounter,
-            Action<int, string> enter, Func<string, string> text, string trialPlayerName = null)
+            Action<int, string> enter, Func<string, string> text, string trialPlayerName = null, string trialPresetId = null)
         {
             this.catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
             this.encounter = encounter ?? throw new ArgumentNullException(nameof(encounter));
             this.enter = enter ?? throw new ArgumentNullException(nameof(enter));
             this.text = text ?? throw new ArgumentNullException(nameof(text));
             this.trialPlayerName = trialPlayerName;
-            if (trialPlayerName != null) { segmentIndex = 1; ControlFire = true; }
+            this.trialPresetId = trialPresetId ?? (trialPlayerName == null ? null : JindanDemoCatalogData.PlayerFirePresetId);
+            if (IsPlayerChallenge) segmentIndex = -1;
             SelectSegmentPreset();
             Refresh();
         }
@@ -125,7 +134,7 @@ namespace TianZhang.Features.Adventure
         private CombatCommandPreview DisplayQuote => hoverQuote ?? frozenQuote;
         public string QuoteTitle => DisplayCommand == null ? "能力" : DisplayCommand.Kind == CombatCommandKind.CloseJindan ? "收势" :
             DisplayCommand.Kind == CombatCommandKind.Flight ? "御风" : DisplayCommand.ProfileId switch
-            { "FIRE_MANIFEST" => "长明", "SPACE_SCALE" => "定尺", "YANG_RADIANCE" => "阳照", "YIN_CONCEAL" => "藏真", "WATER_TIDE" => "蓄澜", _ => "厚载" };
+            { "FIRE_MANIFEST" => "长明", "SPACE_SCALE" => "定尺", "SPACE_SEAL" => "封关", "YANG_RADIANCE" => "阳照", "YIN_CONCEAL" => "藏真", "WATER_TIDE" => "蓄澜", _ => "厚载" };
         public string CompactQuote
         {
             get
@@ -141,7 +150,20 @@ namespace TianZhang.Features.Adventure
             }
         }
         public TianZhang.Gameplay.Contracts.JindanHudSnapshot Hud => JindanHudPresentation.Project(
-            encounter.CurrentSession, encounter.ControlledActorId, Local(catalog.segments[segmentIndex].displayNameKey), ControlFire);
+            encounter.CurrentSession, encounter.ControlledActorId, encounter.CurrentSession != null && IsPlayerChallenge ?
+                encounter.Challenge?.ProgressText : StageName, !IsPlayerChallenge && ControlFire);
+
+        private string StageName => segmentIndex < 0 ? "基础演练" : Local(catalog.segments[segmentIndex].displayNameKey);
+        public void ShowResult(string label, string explanation)
+        {
+            var challenge = encounter.Challenge;
+            resultText = label + "\n" + StageName + "\n\n" + explanation +
+                "\n\n配置 v" + challenge.ConfigVersion + " · 种子 " + challenge.Seed;
+            PreparationOpen = true;
+            showDetails = false;
+            ClearTargeting();
+        }
+        public void ShowNotice(string notice) => message = notice;
         public TianZhang.Gameplay.Contracts.CombatSurfacePresentationSnapshot SurfacePresentation =>
             JindanTidePresentation.Project(encounter.CurrentSession, DisplayQuote, DisplayCommand);
         public bool CanConfirm => frozenQuote != null && hoverQuote == null && frozenQuote.IsLegal && encounter.AcceptsPlayerCommand &&
@@ -152,9 +174,10 @@ namespace TianZhang.Features.Adventure
         {
             if (encounter.IsRunning) return;
             PreparationOpen = true;
+            showDetails = false;
+            resultText = null;
             ClearTargeting();
-            message = trialPlayerName == null ? "选段决定固定阵容；浏览预设可查看五人的来源。"
-                : "以本人进入长明挑战；本步开放执火守阵，其他挑战将在后续接入。";
+            message = string.Empty;
             Refresh();
         }
 
@@ -163,10 +186,14 @@ namespace TianZhang.Features.Adventure
             Refresh();
             if (PreparationOpen)
             {
-                if (trialPlayerName != null && key is "stage1" or "stage2" or "stage3" or "preset_next" or "fire_side")
-                { message = "当前试玩角色为长明构筑，保持本人身份与装配。"; Refresh(); return; }
+                if (ShowingResult && key != "retry" && key != "choose_challenge") return;
+                if (IsPlayerChallenge && key is "preset_next" or "fire_side") return;
+                if (key is "basic" or "stage1" or "stage2" or "stage3") { showDetails = false; message = string.Empty; }
                 switch (key)
                 {
+                    case "choose_challenge": OpenPreparation(); break;
+                    case "prep_details": showDetails = !showDetails; break;
+                    case "basic": if (IsPlayerChallenge) { segmentIndex = -1; SelectSegmentPreset(); } break;
                     case "stage1": segmentIndex = 0; SelectSegmentPreset(); break;
                     case "stage2": segmentIndex = 1; SelectSegmentPreset(); break;
                     case "stage3": segmentIndex = 2; SelectSegmentPreset(); break;
@@ -174,7 +201,8 @@ namespace TianZhang.Features.Adventure
                     case "earth_toggle": earthEffect = earthEffect == "EARTH_GRAVITY" ? "EARTH_MANIFEST" : "EARTH_GRAVITY"; break;
                     case "fire_side": segmentIndex = 1; ControlFire = !ControlFire; SelectSegmentPreset(); break;
                     case "cancel_preparation": PreparationOpen = false; message = string.Empty; break;
-                    case "enter":
+                    case "retry": case "enter":
+                        resultText = null;
                         enter(segmentIndex, earthEffect);
                         PreparationOpen = false;
                         ClearTargeting();
@@ -185,7 +213,7 @@ namespace TianZhang.Features.Adventure
                 return;
             }
             if (encounter.CurrentSession?.Jindan == null) return;
-            if (key is "flight_tab" or "earth_tab" or "scale_tab" or "tide_tab" or "visibility_tab" or "fire_tab" or "close_tab")
+            if (key is "flight_tab" or "earth_tab" or "scale_tab" or "seal_tab" or "tide_tab" or "visibility_tab" or "fire_tab" or "close_tab")
             { earthPage = key == "earth_tab"; tidePage = key == "tide_tab"; ClearTargeting(); message = "选择能力操作"; Refresh(); return; }
             if (key == "cancel_targeting")
             { ClearTargeting(); message = "已取消，未扣费。"; Refresh(); return; }
@@ -195,6 +223,8 @@ namespace TianZhang.Features.Adventure
             {
                 case "visibility_deploy": PreviewVisibility(CombatCommandKind.JindanAbility); break;
                 case "visibility_close": PreviewVisibility(CombatCommandKind.CloseJindan); break;
+                case "seal_deploy": PreviewVisibility(CombatCommandKind.JindanAbility, true); break;
+                case "seal_close": PreviewVisibility(CombatCommandKind.CloseJindan, true); break;
                 case "tide_rise": case "tide_ebb": case "tide_eye":
                     ClearTargeting(); tidePage = true; earthPage = false;
                     tideAction = key == "tide_ebb" ? CombatTideAction.Ebb : CombatTideAction.Rise;
@@ -377,7 +407,7 @@ namespace TianZhang.Features.Adventure
             }
             else if (hoverQuote != null && hoverQuote.StateVersion != session.StateVersion)
                 ClearHover();
-            PreparationDetails = PreparationText();
+            if (PreparationOpen) PreparationDetails = resultText ?? PreparationText();
             CombatDetails = JindanVisibilityPresentation.Details(session) + CombatText(session, actorId);
             QuoteDetails = QuoteText();
             return invalidated;
@@ -448,16 +478,16 @@ namespace TianZhang.Features.Adventure
             else { message = Explain(result.RejectionReason); ClearQuote(); }
         }
 
-        private void PreviewVisibility(CombatCommandKind kind)
+        private void PreviewVisibility(CombatCommandKind kind, bool seal = false)
         {
             ClearTargeting();
             var seat = encounter.CurrentSession.Jindan.Seats.FirstOrDefault(value =>
-                value.Definition.ActorId == encounter.ControlledActorId && CombatVisibility.IsEffect(value.EffectId));
-            if (seat == null) { message = "此角色没有显隐领域装配。"; return; }
+                value.Definition.ActorId == encounter.ControlledActorId && (seal ? value.EffectId == "SPACE_SEAL" : CombatVisibility.IsEffect(value.EffectId)));
+            if (seat == null) { message = "当前角色没有本页装配。"; return; }
             frozenCommand = new CombatCommand(kind, encounter.ControlledActorId, profileId: seat.EffectId,
                 jindan: new CombatJindanRequest(seat.Definition.SeatId));
             frozenQuote = encounter.PreviewJindan(frozenCommand);
-            message = frozenQuote?.IsLegal == true ? "固定全图领域；支点和费用已复核，请确认。" : Explain(frozenQuote?.RejectionReason);
+            message = frozenQuote?.IsLegal == true ? "支点和费用已复核，请确认。" : Explain(frozenQuote?.RejectionReason);
         }
 
         private void PreviewFlight(CombatFlightAction action)
@@ -519,6 +549,12 @@ namespace TianZhang.Features.Adventure
         { ClearQuote(); path.Clear(); remoteOrigin = null; earthCell=null; earthTarget=null; tideSource = null; selection = SelectionMode.None; }
         private void SelectSegmentPreset()
         {
+            if (IsPlayerChallenge)
+            {
+                ControlFire = segmentIndex == 1 && trialPresetId == JindanDemoCatalogData.PlayerFirePresetId;
+                presetIndex = Array.FindIndex(catalog.presets, value => value.characterId == trialPresetId);
+                return;
+            }
             if (segmentIndex != 1) ControlFire = false;
             string id = catalog.segments[segmentIndex].actors.First(value => value.team == (ControlFire ? 1 : 0)).characterId;
             presetIndex = Array.FindIndex(catalog.presets, value => value.characterId == id);
@@ -527,34 +563,58 @@ namespace TianZhang.Features.Adventure
         private string PreparationText()
         {
             var preset = catalog.presets[presetIndex];
-            var segment = catalog.segments[segmentIndex];
             var result = new StringBuilder();
-            if (trialPlayerName != null)
-                result.AppendLine("试玩角色：" + trialPlayerName + " · 飞星指／徒手／长明 · 挑战外可保存");
-            result.AppendLine("当前选段：" + Local(segment.displayNameKey));
-            if (segmentIndex == 1) result.AppendLine(ControlFire ? "执火守阵：操控火修，可展开、维持和关闭长明。" : "破火阵：操控土／水修，可绕行、灭火或破中心。");
-            result.AppendLine("阵容：" + string.Join("、", segment.actors.Select(value =>
-                (value.team == (ControlFire ? 1 : 0) ? "我方·" : "对手·") + (trialPlayerName != null && value.characterId == JindanDemoCatalogData.PlayerFirePresetId
-                    ? trialPlayerName : Local(catalog.GetPreset(value.characterId).displayNameKey)))));
-            result.AppendLine("土系战前装配：" + Effect(earthEffect) + "；浏览预设 " + (presetIndex + 1) + "/" + catalog.presets.Length);
+            if (IsPlayerChallenge)
+            {
+                var roster = JindanRehearsalFactory.PlayerPlacements(catalog, segmentIndex, trialPresetId);
+                string Fighters(int team) => string.Join("、", roster.Where(p => p.team == team && p.characterId != trialPresetId)
+                    .Select(p => JindanRehearsalFactory.RehearsalName(p.characterId) + "（" + Local(catalog.GetPreset(p.characterId).displayNameKey) + "）"));
+                bool defend = ControlFire || segmentIndex == 2 && preset.seatInstanceIds.Any(id => catalog.GetSeat(id).candidateEffectIds.Contains("SPACE_SEAL"));
+                result.AppendLine(segmentIndex < 0 ? StageName : StageName + "    " + (defend ? "守方" : "突破方"));
+                result.AppendLine("本人  " + trialPlayerName + " · " + Local(preset.displayNameKey));
+                var allies = Fighters(0);
+                result.AppendLine("同伴  " + (allies.Length == 0 ? "独自行动" : allies + " · 由你操控，各自计费"));
+                result.AppendLine("对手  " + Fighters(1) + " · 自主行动");
+                result.AppendLine();
+                result.AppendLine("先做  " + JindanChallengeProgress.FirstAction(segmentIndex, trialPresetId));
+                result.AppendLine("获胜  " + JindanChallengeProgress.DescribeGoal(segmentIndex, trialPresetId));
+                result.AppendLine("失败  " + JindanChallengeProgress.DescribeFailure(segmentIndex, trialPresetId));
+                if (HasEarth) result.AppendLine("土修装配  " + Effect(earthEffect));
+                if (message.Length > 0) result.AppendLine(message);
+                if (!showDetails) return result.ToString();
+                result.Clear();
+                result.AppendLine(StageName + " · " + trialPlayerName + "的装配");
+            }
+            else
+            {
+                var segment = catalog.segments[segmentIndex];
+                result.AppendLine("当前选段：" + Local(segment.displayNameKey));
+                if (segmentIndex == 1) result.AppendLine(ControlFire ? "执火守阵：操控火修，可展开、维持和关闭长明。" : "破火阵：操控土／水修，可绕行、灭火或破中心。");
+                result.AppendLine("阵容：" + string.Join("、", segment.actors.Select(value =>
+                    (value.team == (ControlFire ? 1 : 0) ? "我方·" : "对手·") + Local(catalog.GetPreset(value.characterId).displayNameKey))));
+                result.AppendLine("土系战前装配：" + Effect(earthEffect) + "；浏览预设 " + (presetIndex + 1) + "/" + catalog.presets.Length);
+            }
             result.AppendLine(Local(preset.displayNameKey) + " · " + preset.realmSubstage + " · " + Local(preset.danxiangNameKey));
             result.AppendLine("AP " + Ap(preset.actionPointMaximumUnits) + " · MP " + preset.manaMaximum +
                 " · 视野 " + preset.normalVisionRange + " · 完整紫府容量 " + preset.naturalMansionCapacity);
             result.AppendLine("身份：" + (trialPlayerName == null ? preset.characterId : "player · " + trialPlayerName));
+            string InstanceId(string id) => IsPlayerChallenge ? JindanDemoCatalogData.PlayerInstanceId(preset.characterId, id) : id;
             foreach (string id in preset.seatInstanceIds)
             {
                 var seat = catalog.GetSeat(id);
                 string effect = seat.candidateEffectIds.Contains(earthEffect) ? earthEffect : seat.defaultEffectId;
                 var ability = catalog.GetAbility(seat.guardianDefinitionId);
-                result.AppendLine(Position(seat.positionType.ToString()) + " · " + Effect(effect) + " · " + seat.positionId);
-                result.AppendLine("来源：" + Local(ability.displayNameKey) + "；同源账本 " + Short(trialPlayerName == null ? seat.guardianAbilityInstanceId : JindanDemoCatalogData.PlayerInstanceId(preset.characterId, seat.guardianAbilityInstanceId)));
+                result.AppendLine("席位 " + InstanceId(id) + " · " + Position(seat.positionType.ToString()) + " · " + seat.positionId);
+                result.AppendLine("来源：" + Local(ability.displayNameKey) + " · " + InstanceId(seat.guardianAbilityInstanceId));
                 result.AppendLine("候选：" + string.Join(" / ", seat.candidateEffectIds.Select(Effect)));
                 var command = DeployDefinition(effect);
                 result.AppendLine("展开 " + Ap(command.actionPointCostUnits) + "AP / " + command.manaCost + "MP，CD " +
-                    command.cooldownTicks + "tick；" + (command.enabled ? "已接入" : Explain(command.unavailableReasonKey)));
+                    command.cooldownTicks + "tick · 维护 " + command.upkeepMana + " MP" +
+                    (effect == CombatFireDomainRules.Effect ? "/本人结束" : "/结算") + "；" +
+                    (command.enabled ? "已接入" : Explain(command.unavailableReasonKey)));
             }
             if (!string.IsNullOrEmpty(preset.flightAbilityInstanceId) && preset.flightAbilityInstanceId != "none")
-                result.AppendLine("独立飞行：" + Short(preset.flightAbilityInstanceId) + "；起飞250AP/200MP，后续本人回合开始维护100MP，最多3回合。");
+                result.AppendLine("独立飞行：" + InstanceId(preset.flightAbilityInstanceId) + "；起飞250AP/200MP，后续本人回合开始维护100MP，最多3回合。");
             result.AppendLine("演武徒手允许地面／空中出手与对空，垂直触及1；费用、伤害与射程沿原金丹徒手。");
             result.AppendLine("战中换装：未动用完整本人回合预算；新效果下一本人回合才可发动。结束销毁演武会话。");
             if (PreparationOpen && message.Length > 0) result.Append(message);

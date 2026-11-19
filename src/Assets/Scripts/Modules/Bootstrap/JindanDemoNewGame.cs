@@ -12,22 +12,22 @@ namespace TianZhang.Bootstrap
     public static class JindanDemoNewGame
     {
         public static void Create(string name, JindanDemoCatalogData catalog, CombatRuleSetData rules,
-            out CharacterRuntimeProfile player, out CultivationState cultivation)
+            out CharacterRuntimeProfile player, out CultivationState cultivation, string presetId = JindanDemoCatalogData.PlayerFirePresetId)
         {
-            var preset = RequirePreset(catalog, JindanDemoCatalogData.PlayerFirePresetId, catalog?.contentVersion);
+            var preset = RequirePreset(catalog, presetId, catalog?.contentVersion);
             var source = preset.sourceCharacterDefinition;
             var attributes = new CharacterAttributes(source.rootBone, source.physique, source.spirit, source.mind,
                 source.reaction, source.talent, source.fortune, preset.actionPointMaximumUnits,
                 preset.movementEfficiencyMilliUnits, true);
             var stats = attributes.Derive(preset.realmMultiplier, CharacterAttributeBonuses.Empty);
-            var spells = preset.equippedArtProfileIds.Concat(new[] { "spell_feixingzhi" }).Distinct().ToArray();
+            var spells = TrialSpells(preset, catalog);
             var loadout = new AbilityLoadout(spells, Array.Empty<string>(), 5, 2);
             foreach (string spell in spells) loadout.TryEquipSpell(spell);
             player = new CharacterRuntimeProfile(new CharacterIdentity("player", name), attributes,
                 new CharacterResources(stats.MaxHealth, stats.MaxHealth, preset.manaMaximum, preset.manaMaximum),
                 loadout, new CharacterProgressionRef(preset.sourceGongFaId, preset.realmSubstage, preset.realmMultiplier),
                 CharacterCombatModifiers.Empty, null, null, AppearanceProfileData.NoneId,
-                visibleRootId: "root_fire_middle", visibleRootGrade: "中品", visibleRootElement: "火",
+                visibleRootId: RootId(preset), visibleRootGrade: RootGrade(preset), visibleRootElement: RootElement(preset),
                 growthRules: rules, unarmedAttackFamilyId: "body_human");
             cultivation = CreateCultivation(preset);
         }
@@ -39,19 +39,32 @@ namespace TianZhang.Bootstrap
             var preset = RequirePreset(catalog, presetId, version);
             if (player == null || player.Identity.CharacterId != "player" ||
                 player.Progression.RealmStage != preset.realmSubstage || player.Progression.GongFaId != preset.sourceGongFaId ||
-                player.Progression.RealmMultiplier != preset.realmMultiplier || player.VisibleRootElement != "火" ||
-                player.VisibleRootGrade != "中品" || player.Resources.MaximumSpirit != preset.manaMaximum ||
+                player.Progression.RealmMultiplier != preset.realmMultiplier || player.VisibleRootElement != RootElement(preset) ||
+                player.VisibleRootId != RootId(preset) || player.VisibleRootGrade != RootGrade(preset) || player.Resources.MaximumSpirit != preset.manaMaximum ||
                 player.AbilityLoadout.SpellSlots != 5 || player.AbilityLoadout.SkillSlots != 2 ||
-                !player.AbilityLoadout.KnownSpells.Contains("spell_feixingzhi") ||
+                TrialSpells(preset, catalog).Except(player.AbilityLoadout.KnownSpells).Any() ||
                 !player.AbilityLoadout.EquippedSpells.Contains("spell_feixingzhi") || cultivation == null ||
                 JsonUtility.ToJson(cultivation.CaptureFoundationPurpleMansionSaveData()) !=
                 JsonUtility.ToJson(CreateCultivation(preset).CaptureFoundationPurpleMansionSaveData()))
                 throw new ArgumentException("jindan_player_configuration_invalid");
         }
 
+        private static string[] TrialSpells(JindanDemoPresetDefinition preset, JindanDemoCatalogData catalog)
+        {
+            var spells = preset.equippedArtProfileIds.Append("spell_feixingzhi");
+            if (preset.characterId == catalog.demolition.characterId) spells = spells.Append(catalog.demolition.profileId);
+            return spells.Distinct().ToArray();
+        }
+
+        private static string RootGrade(JindanDemoPresetDefinition preset) => preset.rootGrade == 3 ? "上品" : "中品";
+        private static string RootId(JindanDemoPresetDefinition preset) =>
+            "root_" + string.Join("_", preset.rootElements) + (preset.rootGrade == 3 ? "_high" : "_middle");
+        private static string RootElement(JindanDemoPresetDefinition preset) =>
+            string.Join("/", preset.rootElements.Select(CombatElementFacts.ResolveElement));
+
         private static JindanDemoPresetDefinition RequirePreset(JindanDemoCatalogData catalog, string id, string version)
         {
-            if (catalog == null || !catalog.Validate(out _) || id != JindanDemoCatalogData.PlayerFirePresetId ||
+            if (catalog == null || !catalog.Validate(out _) || catalog.GetPreset(id) == null ||
                 version != catalog.contentVersion) throw new ArgumentException("jindan_player_preset_invalid");
             return catalog.GetPreset(id);
         }

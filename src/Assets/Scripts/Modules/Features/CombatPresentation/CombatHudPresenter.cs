@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using TianZhang.Gameplay.Contracts;
 using UnityEngine;
@@ -15,6 +16,16 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private CombatTimelineView timelineView;
         [SerializeField] private GameObject explorationPanel;
         private CombatBountyTrackerView bountyTracker;
+        public void ConfigureTrialPortraits(JindanDemoView rehearsal)
+        {
+            var badges = new Dictionary<string, Sprite>();
+            foreach (string key in new[] { "earth_tab", "tide_tab", "fire_tab", "visibility_tab", "seal_tab" })
+                badges.Add(key, rehearsal.GetButton(key).transform.Find("ActionIcon").GetComponent<UnityEngine.UI.Image>().sprite);
+            view.BindTrialPortraits(badges);
+            timelineView.TrialPortraits = badges;
+            targetView.TrialPortraits = badges;
+        }
+
         public void ConfigureBountyTracker(CombatBountyTrackerView tracker) => bountyTracker = tracker;
         private CombatTargetView targetView;
         private Static3DCombatUnitPresentationProvider unitProvider;
@@ -64,7 +75,9 @@ namespace TianZhang.Features.CombatPresentation
         {
             CombatantHudSnapshot selected = FindInspectable(InspectedTargetId);
             if (selected == null) InspectedTargetId = null;
-            targetView?.Present(selected, Snapshot?.Player?.Id == InspectedTargetId);
+            bool allied = selected != null && (Snapshot.Player.Id == selected.Id ||
+                Snapshot.Timeline?.Entries.Any(entry => entry.Id == selected.Id && entry.Faction == CombatUnitDisplayFaction.Player) == true);
+            targetView?.Present(selected, allied);
             timelineView?.SetInspectedTarget(InspectedTargetId);
             RefreshInspectionMarker();
         }

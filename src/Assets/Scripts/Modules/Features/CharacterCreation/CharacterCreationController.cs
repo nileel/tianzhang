@@ -15,11 +15,17 @@ namespace TianZhang.Features.CharacterCreation
         private Action<string, CharacterData, string> completed;
 
         public CharacterCreationDraft Draft => draft;
-        public bool IsJindanTrial { get; private set; }
+        public bool IsJindanTrial => !string.IsNullOrEmpty(TrialPresetId);
+        public string TrialPresetId { get; private set; }
         public void SelectStartMode(bool trial)
         {
-            IsJindanTrial = trial;
-            view?.RefreshStartMode(trial);
+            SelectTrialPreset(trial ? JindanDemoCatalogData.PlayerFirePresetId : null);
+        }
+
+        private void SelectTrialPreset(string preset)
+        {
+            TrialPresetId = preset;
+            view?.RefreshStartMode(preset);
             RefreshOrigin();
         }
 
@@ -34,7 +40,7 @@ namespace TianZhang.Features.CharacterCreation
                 throw new ArgumentNullException(nameof(characterCreationPointBuyConfig));
             completed = onCompleted ?? throw new ArgumentNullException(nameof(onCompleted));
             draft = CharacterCreationCatalog.CreateDefaultDraft();
-            view?.Configure(Submit, id => { SelectOrigin(id); });
+            view?.Configure(Submit, id => { SelectOrigin(id); }, SelectTrialPreset);
             view?.ConfigureReturnToMenu(ReturnToMenu);
             view?.ConfigureStartMode(SelectStartMode);
             SelectStartMode(false);

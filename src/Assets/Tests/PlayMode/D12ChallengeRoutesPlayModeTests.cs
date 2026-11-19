@@ -1,0 +1,360 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Globalization;
+using System.Linq;
+using System.Reflection;
+using NUnit.Framework;
+using TianZhang.Bootstrap;
+using TianZhang.Combat;
+using TianZhang.Features.Adventure;
+using TianZhang.Features.CombatPresentation;
+using TianZhang.Features.Settlement;
+using TianZhang.Features.WorldMap;
+using TianZhang.Gameplay.Contracts;
+using TianZhang.Infrastructure.Persistence;
+using TianZhang.Spatial;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.SceneManagement;
+using UnityEngine.TestTools;
+using UnityEngine.UI;
+using Object = UnityEngine.Object;
+
+namespace TianZhang.Tests.PlayMode
+{
+    public sealed partial class D12ChallengeRoutesPlayModeTests
+    {
+        private static readonly int[] Widths = { 1366, 1920 };
+        private static readonly HexCoord High = new HexCoord(8, 12);
+        private static readonly HexCoord GateTo = new HexCoord(9, 12);
+        private static readonly HexCoord Center = new HexCoord(7, 12);
+        private const string Player = "player", Earth = "demo_20261024_earth", Water = "demo_20261024_water";
+        private const string Yang = "demo_20261024_space_yang", Yin = "demo_20261024_seal_yin", Fire = "demo_20261024_fire";
+        private const string Star = "spell_feixingzhi", Stone = "spell_guanshiji", Demolish = "demo_20261026_polei";
+
+        private InputSettings.BackgroundBehavior previousBackground;
+        private InputSettings.EditorInputBehaviorInPlayMode previousInput;
+        private Mouse mouse;
+        private Keyboard keyboard;
+        private JindanDemoView view;
+        private EncounterCoordinator encounter;
+        private CombatSession session;
+        private CombatBattlefieldSurface surface;
+        private string output, savedPlayer, savedCultivation;
+        private Coroutine recording;
+        private static T Find<T>() where T : Object => Object.FindFirstObjectByType<T>();
+        private CombatantSnapshot Actor(string id) => session.Combatants.All.Single(a => a.Id == id);
+        private CombatantSnapshot Current => Actor(session.CurrentActorId);
+        private CombatJindanSeatState Seat(string effect) => session.Jindan.Seats.Single(s => s.EffectId == effect);
+        private bool ResultOpen => view?.GetButton("choose_challenge")?.gameObject.activeInHierarchy == true;
+        private static CombatUnitPresentationHex Hex(HexCoord c) => new CombatUnitPresentationHex(c.Q, c.R);
+        private string Panel => GameObject.Find("PreparationDetails")?.GetComponent<Text>().text ?? string.Empty;
+
+        private IEnumerator StartChallenge(int width, string preset, string stage)
+        {
+            output = Path.GetFullPath(Path.Combine("Logs/d12-challenges", TestContext.CurrentContext.Test.MethodName + "-" + width));
+            Directory.CreateDirectory(output);
+            File.WriteAllText(Path.Combine(output, "actions.txt"), "");
+            previousBackground = InputSystem.settings.backgroundBehavior;
+            previousInput = InputSystem.settings.editorInputBehaviorInPlayMode;
+            InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+            InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+            mouse = InputSystem.AddDevice<Mouse>();
+            keyboard = InputSystem.AddDevice<Keyboard>();
+            GuanzhongCombatEquipmentPlayModeTests.SetGameSize(width, width == 1366 ? 768 : 1080);
+            var stale = Find<GameBootstrap>();
+            if (stale != null) { Object.Destroy(stale.gameObject); yield return null; }
+            yield return SceneManager.LoadSceneAsync(GameplaySceneNames.StartMenu); yield return null;
+            var bootstrap = GameBootstrap.RequireInstance();
+            var folder = Path.Combine(Application.temporaryCachePath, "D12Route-" + Guid.NewGuid().ToString("N"));
+            typeof(GameBootstrap).GetField("slotStore", BindingFlags.NonPublic | BindingFlags.Instance)
+                .SetValue(bootstrap, new GameSaveSlotStore(folder));
+            yield return Named("NewPlayerButton");
+            yield return Named("JindanStartButton");
+            string origin = preset switch
+            {
+                Earth => "loose", Water => "sect_servant", Yang => "minor_clan", Yin => "debt_exile", _ => null
+            };
+            if (origin != null) yield return Named("Origin_origin_" + origin);
+            GameObject.Find("SlotIdInput").GetComponent<InputField>().text = "route";
+            GameObject.Find("CharacterNameInput").GetComponent<InputField>().text = "行舟";
+            yield return Named("CreatePlayerButton");
+            yield return Scene(GameplaySceneNames.World);
+            var runtime = GameBootstrap.RequireRuntime();
+            Assert.AreEqual(preset, runtime.JindanDemoPresetId);
+            Assert.IsTrue(Find<WorldMapController>().SelectNode("guanzhong_hub"));
+            Find<WorldMapController>().EnterSelectedLocation();
+            yield return Scene(GameplaySceneNames.Settlement);
+            Assert.IsTrue(bootstrap.SaveActiveSlot().Succeeded);
+            savedPlayer = JsonUtility.ToJson(runtime.CaptureSave().player);
+            savedCultivation = JsonUtility.ToJson(runtime.CaptureSave().cultivation);
+            Assert.IsTrue(Find<SettlementController>().EnterAdventure("guanzhong_wild"));
+            yield return Scene(GameplaySceneNames.Adventure);
+            view = Find<JindanDemoView>();
+            if (!view.GetButton("enter").gameObject.activeInHierarchy) yield return Named("JindanRehearsalButton");
+            yield return Press(stage);
+            string title = stage switch { "stage1" => "一：", "stage2" => "二：", "stage3" => "三：", _ => "基础演练" };
+            for (int frame = 0; frame < 30 && !Panel.Contains(title); frame++) yield return null;
+            StringAssert.Contains(title, Panel);
+            Record("准备 " + Panel);
+            if (Environment.GetEnvironmentVariable("TZ_D12_RECORD") == "1")
+                recording = bootstrap.StartCoroutine(RecordFrames());
+            yield return Capture("00-preparation");
+            yield return Press("enter");
+            yield return Entered();
+        }
+
+        private IEnumerator Entered()
+        {
+            encounter = Find<EncounterCoordinator>();
+            session = encounter.CurrentSession;
+            Assert.NotNull(session);
+            Assert.AreEqual("行舟", GameBootstrap.RequireRuntime().Player.Identity.DisplayName);
+            Assert.AreEqual(Player, Actor(Player).Id);
+            surface = Find<CombatBattlefieldSurface>();
+            float limit = Time.realtimeSinceStartup + 35;
+            while ((ResultOpen || !encounter.AcceptsPlayerCommand) && Time.realtimeSinceStartup < limit) yield return null;
+            Assert.IsTrue(!ResultOpen && encounter.AcceptsPlayerCommand, "新局首个可控行动");
+            yield return null;
+            Record("入场 " + string.Join(", ", session.Combatants.All.Select(a => $"{a.Id}/{a.Team} {a.Position}")));
+        }
+
+        private static IEnumerator Scene(string name)
+        {
+            for (int i = 0; i < 400 && SceneManager.GetActiveScene().name != name; i++) yield return null;
+            yield return null; yield return null;
+            Assert.AreEqual(name, SceneManager.GetActiveScene().name);
+        }
+
+        private IEnumerator Ready()
+        {
+            float end = Time.realtimeSinceStartup + 50;
+            while (!ResultOpen && !encounter.AcceptsPlayerCommand && session.Visibility?.IsPaused != true &&
+                Time.realtimeSinceStartup < end) yield return null;
+            Assert.IsTrue(ResultOpen || encounter.AcceptsPlayerCommand || session.Visibility?.IsPaused == true,
+                "等待正式行动、结局或观察窗口超时");
+            yield return null;
+        }
+
+        private IEnumerator Press(string key) => Click(view.GetButton(key), key);
+        private static IEnumerator Named(string name) => Click(GameObject.Find(name)?.GetComponent<Button>(), name);
+        private static IEnumerator Click(Button button, string label = null)
+        {
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+            Assert.NotNull(button, label);
+            Assert.IsTrue(button.gameObject.activeInHierarchy && button.IsInteractable(), label ?? button.name);
+            var rect = (RectTransform)button.transform;
+            Vector2 point = RectTransformUtility.WorldToScreenPoint(null, rect.TransformPoint(rect.rect.center));
+            var hits = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current) { position = point }, hits);
+            Assert.AreSame(button, hits.FirstOrDefault().gameObject?.GetComponentInParent<Button>(), label ?? button.name);
+            yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(point, true);
+            yield return null; // Allow the presenter to project the action into the next rendered HUD.
+        }
+
+        private IEnumerator Pick(HexCoord cell)
+        {
+            var center = surface.Center(Hex(cell));
+            var movement = Find<CombatMovementView>();
+            if (!GuanzhongMovementPlayModeTests.TryFindCellPoint(movement, Camera.main, center,
+                new Vector2Int(cell.Q, cell.R), out var point) || movement.UiOwnsPointer(point))
+            {
+                // Reframe an off-screen or HUD-covered tile at the same production zoom, as in the D9 movement proof.
+                Camera.main.transform.position = center - Camera.main.transform.forward * 20;
+                yield return null;
+                Assert.IsTrue(GuanzhongMovementPlayModeTests.TryFindCellPoint(movement, Camera.main, center,
+                    new Vector2Int(cell.Q, cell.R), out point), cell.ToString());
+                Assert.IsFalse(movement.UiOwnsPointer(point), "棋盘落点被界面遮挡 " + cell);
+            }
+            yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(point, true);
+        }
+
+        private IEnumerator Pay(CombatCommandPreview quote, string label)
+        {
+            Assert.NotNull(quote, label);
+            Assert.IsTrue(quote.IsLegal, label + ": " + quote.RejectionReason);
+            var actor = Current;
+            int ap = actor.ActionPointsRemainingUnits, mp = actor.CurrentSpirit;
+            long turn = session.TurnSequence;
+            var confirm = view.GetButton("confirm");
+            for (int i = 0; i < 30 && (!confirm.gameObject.activeInHierarchy || !confirm.IsInteractable()); i++) yield return null;
+            Assert.IsTrue(confirm.gameObject.activeInHierarchy && confirm.IsInteractable(),
+                label + " 统一报价未显示，当前页 " + view.SelectedKey + "，状态 " + view.PersistentStatus);
+            D12PlayerStartPlayModeTests.AssertPrice(quote.ActionPointCostUnits, quote.SpiritCost);
+            yield return Press("confirm");
+            if (session.TurnSequence == turn && !ResultOpen)
+            {
+                Assert.AreEqual(ap - quote.ActionPointCostUnits, actor.ActionPointsRemainingUnits, label + " AP");
+                Assert.AreEqual(mp - quote.SpiritCost, actor.CurrentSpirit, label + " MP");
+            }
+            Record($"{actor.Id} {label} 报价 {quote.ActionPointCostUnits / 1000f} AP/{quote.SpiritCost} MP, " +
+                $"AP {ap / 1000f}→{actor.ActionPointsRemainingUnits / 1000f}, MP {mp}→{actor.CurrentSpirit}, 格 {actor.Position}");
+            yield return Ready();
+        }
+
+        private IEnumerator Move(HexCoord cell)
+        {
+            if (Current.Position == cell) yield break;
+            var actor = Current;
+            var quote = Movement(cell);
+            Assert.IsTrue(quote.IsLegal, $"移动 {actor.Id} {actor.Position}→{cell}: {quote.RejectionReason}");
+            yield return Click(Find<CombatActionBarView>().MoveButton);
+            yield return Pick(cell);
+            yield return Pay(quote, "移动 " + cell);
+            Assert.AreEqual(cell, actor.Position);
+        }
+        private CombatCommandPreview Movement(HexCoord cell) => encounter.PreviewJindan(
+            new CombatCommand(CombatCommandKind.Move, session.CurrentActorId, destination: cell));
+
+        private IEnumerator End()
+        {
+            Assert.IsFalse(ResultOpen, Panel);
+            long turn = session.TurnSequence;
+            RecordTurn("结束前");
+            yield return Click(Find<CombatActionBarView>().WaitButton);
+            yield return Press("confirm");
+            yield return Ready();
+            RecordTurn("结束后");
+            Assert.IsTrue(ResultOpen || session.TurnSequence > turn || session.Visibility.IsPaused);
+        }
+
+        private IEnumerator UntilActor(string id)
+        {
+            for (int i = 0; i < 12 && !ResultOpen && session.CurrentActorId != id; i++) yield return End();
+            Assert.IsFalse(ResultOpen, Panel);
+            Assert.AreEqual(id, session.CurrentActorId);
+        }
+
+        private IEnumerator UntilNext(string id)
+        {
+            yield return End(); yield return UntilActor(id);
+        }
+
+        private IEnumerator Use(string tab, string option, CombatCommand command, params HexCoord[] cells)
+        {
+            var quote = encounter.PreviewJindan(command);
+            Assert.IsTrue(quote.IsLegal, option + ": " + quote.RejectionReason);
+            yield return Press(tab); yield return Press(option);
+            foreach (var cell in cells) yield return Pick(cell);
+            yield return Pay(quote, command.ProfileId + "/" + option);
+        }
+
+        private CombatCommand Jindan(string effect, CombatJindanRequest request = null, bool close = false) =>
+            new CombatCommand(close ? CombatCommandKind.CloseJindan : CombatCommandKind.JindanAbility,
+                session.CurrentActorId, profileId: effect, jindan: request ?? new CombatJindanRequest(Seat(effect).Definition.SeatId));
+        private IEnumerator Fly(CombatFlightAction action) => Use("flight_tab", "flight_" + action.ToString().ToLowerInvariant(),
+            new CombatCommand(CombatCommandKind.Flight, session.CurrentActorId, profileId: CombatFlight.ProfileId, flightAction: action));
+
+        private IEnumerator Attack(string profile, HexCoord target)
+        {
+            var bar = Find<CombatActionBarView>();
+            int index = Find<CombatHudPresenter>().Snapshot.ArtActions.ToList().FindIndex(a => a.ProfileId == profile);
+            var button = bar.BasicAttackButton;
+            if (profile != Current.BasicAttackProfileId)
+            {
+                Assert.That(index, Is.InRange(0, 4), "本人装配 " + profile);
+                button = new[] { bar.ArtButton, bar.SecondArtButton, bar.ThirdArtButton, bar.FourthArtButton, bar.FifthArtButton }[index];
+            }
+            yield return Click(button);
+            yield return Pick(target);
+            var input = Find<CombatCommandInput>();
+            Assert.IsTrue(input.IsTargetLocked && input.Preview?.CanConfirm == true, input.Preview?.Reason + " " + target);
+            Assert.AreEqual(profile, input.Candidate.ProfileId);
+            var preview = input.Preview;
+            long turn = session.TurnSequence;
+            var actor = Current;
+            int ap = actor.ActionPointsRemainingUnits, mp = actor.CurrentSpirit;
+            D12PlayerStartPlayModeTests.AssertPrice(preview.ActionPointCostUnits, preview.SpiritCost);
+            yield return Press("confirm");
+            Record($"{actor.Id} {profile} {target}, AP {ap / 1000f}→{actor.ActionPointsRemainingUnits / 1000f}, MP {mp}→{actor.CurrentSpirit}");
+            if (!ResultOpen && session.TurnSequence == turn)
+            {
+                Assert.AreEqual(ap - preview.ActionPointCostUnits, actor.ActionPointsRemainingUnits);
+                Assert.AreEqual(mp - preview.SpiritCost, actor.CurrentSpirit);
+            }
+            yield return Ready();
+        }
+
+        private IEnumerator Victory()
+        {
+            for (int i = 0; i < 120 && !ResultOpen; i++) yield return null;
+            Assert.IsTrue(ResultOpen, "行动已执行，未达成挑战；" + Find<CombatBountyTrackerView>()?.Summary);
+            StringAssert.Contains("挑战达成", Panel);
+            Assert.IsTrue(view.GetButton("retry").IsInteractable());
+            Assert.IsTrue(view.GetButton("choose_challenge").IsInteractable());
+            Record("正式结局 " + Panel);
+            yield return Capture("99-victory");
+            yield return Press("choose_challenge");
+            for (int i = 0; i < 30 && !view.GetButton("enter").gameObject.activeInHierarchy; i++) yield return null;
+            Assert.IsTrue(view.GetButton("enter").gameObject.activeInHierarchy, "结局返回演武准备");
+            Assert.AreEqual(savedPlayer, JsonUtility.ToJson(GameBootstrap.RequireRuntime().CaptureSave().player));
+            Assert.AreEqual(savedCultivation, JsonUtility.ToJson(GameBootstrap.RequireRuntime().CaptureSave().cultivation));
+        }
+
+        private void RecordTurn(string label)
+        {
+            var units = string.Join(" / ", session.Combatants.All.Select(a =>
+                $"{a.Id}{a.Position} 高{a.AltitudeBand} HP{a.CurrentHealth} AP{a.ActionPointsRemainingUnits / 1000f}"));
+            var states = string.Join(" / ", session.Jindan.Seats.Select(s =>
+                $"{s.EffectId} 维护{s.MaintenancePayments}" +
+                (s.FireDomain == null ? "" : $" 心{s.FireDomain.Support.Durability} 主{s.FireDomain.Main != null} 余{s.FireDomain.Tails.Count}") +
+                (s.ActiveSeal == null ? "" : $" 门{s.ActiveSeal.Support.Durability}") +
+                (s.ActiveVisibility == null ? "" : " 坛在")));
+            Record($"{label} tick{session.TurnScheduler.CurrentTick} {units} | {states}");
+        }
+
+        private void Record(string text) => File.AppendAllText(Path.Combine(output, "actions.txt"), text + "\n");
+        private IEnumerator Capture(string name)
+        {
+            yield return new WaitForEndOfFrame();
+            var image = ScreenCapture.CaptureScreenshotAsTexture();
+            try { File.WriteAllBytes(Path.Combine(output, name + ".png"), image.EncodeToPNG()); }
+            finally { Object.Destroy(image); }
+        }
+
+        private IEnumerator RecordFrames()
+        {
+            // The render tap uses the project evidence format without changing game or input time.
+            string folder = Path.Combine(output, "frames");
+            Directory.CreateDirectory(folder);
+            string manifest = Path.Combine(folder, "captures.csv");
+            File.WriteAllText(manifest, "file,realtime,frame\n");
+            var endOfFrame = new WaitForEndOfFrame();
+            double next = 0;
+            for (int index = 0; ; )
+            {
+                yield return endOfFrame;
+                double now = Time.realtimeSinceStartupAsDouble;
+                if (now < next) continue;
+                next = now + 1d / 12;
+                string name = "frame-" + (++index).ToString("D5") + ".jpg";
+                var image = ScreenCapture.CaptureScreenshotAsTexture();
+                try { File.WriteAllBytes(Path.Combine(folder, name), image.EncodeToJPG(82)); }
+                finally { Object.Destroy(image); }
+                File.AppendAllText(manifest, name + "," + now.ToString("F6", CultureInfo.InvariantCulture) +
+                    "," + Time.frameCount + "\n");
+            }
+        }
+
+        [UnityTearDown] public IEnumerator Cleanup()
+        {
+            if (recording != null && Find<GameBootstrap>() != null)
+                Find<GameBootstrap>().StopCoroutine(recording);
+            recording = null;
+            if (mouse != null)
+            {
+                InputSystem.RemoveDevice(mouse); InputSystem.RemoveDevice(keyboard);
+                InputSystem.settings.backgroundBehavior = previousBackground;
+                InputSystem.settings.editorInputBehaviorInPlayMode = previousInput;
+            }
+            var bootstrap = Find<GameBootstrap>();
+            if (bootstrap != null) Object.Destroy(bootstrap.gameObject);
+            yield return null;
+        }
+    }
+}

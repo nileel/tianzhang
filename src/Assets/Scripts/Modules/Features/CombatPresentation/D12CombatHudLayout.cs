@@ -21,6 +21,7 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private RectTransform ordinaryQuote;
         [SerializeField] private RectTransform jindanQuote;
         [SerializeField] private JindanDemoView jindan;
+        internal Image ResourcePortrait => portrait.GetComponent<Image>();
         private Canvas canvas;
         private Button[] slots;
         private int lastWidth, lastHeight, lastCount = -1;

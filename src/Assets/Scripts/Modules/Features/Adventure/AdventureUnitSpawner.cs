@@ -23,7 +23,7 @@ namespace TianZhang.Features.Adventure
             EnemyCombatStats enemyStats = null,
             IReadOnlyList<EnemyData> additionalEnemyData = null,
             IReadOnlyList<CombatantSnapshot> additionalPlayers = null,
-            IReadOnlyDictionary<string, string> rehearsalNames = null)
+            IReadOnlyDictionary<string, string> rehearsalNames = null, string playerTrialPresetId = null)
         {
             Player = player;
             Enemy = enemy;
@@ -36,11 +36,13 @@ namespace TianZhang.Features.Adventure
             PlayerDivineProfileIds = playerDivineProfileIds ?? Array.Empty<string>();
             Players = new[] { player }.Concat(additionalPlayers ?? Array.Empty<CombatantSnapshot>()).ToArray();
             RehearsalNames = rehearsalNames;
+            PlayerTrialPresetId = playerTrialPresetId;
         }
 
         public CombatantSnapshot Player { get; }
         public IReadOnlyList<CombatantSnapshot> Players { get; }
         public IReadOnlyDictionary<string, string> RehearsalNames { get; }
+        public string PlayerTrialPresetId { get; }
         public bool IsJindanRehearsal => RehearsalNames != null;
         public CombatantSnapshot Enemy { get; }
         public IReadOnlyList<CombatantSnapshot> Enemies { get; }

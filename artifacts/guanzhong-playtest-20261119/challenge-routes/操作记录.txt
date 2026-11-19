@@ -1,0 +1,688 @@
+01  01-stairs  1366×768
+HighGroundByStairsAndAirAttack
+
+准备 一：登高与飞行／压落    突破方
+本人  行舟 · 厚载演武者
+同伴  独自行动
+对手  江汐（蓄澜演武者） · 自主行动
+
+先做  沿坡阶向高台 (8,12) 移动，或让持有御风的角色起飞。
+获胜  登上高台 (8,12)，命中飞行对手或用极重将其压低。
+失败  本人倒下，或未达成目标就击败全部对手。
+土修装配  厚载·重力
+
+入场 player/Player (4, 0, -4), demo_20261024_water/Enemy (7, 12, -19)
+player 移动 (8, 12, -20) 报价 406.247 AP/0 MP, AP 1000→593.753, MP 6000→6000, 格 (8, 12, -20)
+player basic_body_human_jindan (7, 12, -19), AP 593.753→343.753, MP 6000→6000
+正式结局 挑战达成
+一：登高与飞行／压落
+
+沿地面登上高台，完成对空命中。
+
+配置 v1 · 种子 20261120
+
+
+01  01-stairs  1920×1080
+HighGroundByStairsAndAirAttack
+
+准备 一：登高与飞行／压落    突破方
+本人  行舟 · 厚载演武者
+同伴  独自行动
+对手  江汐（蓄澜演武者） · 自主行动
+
+先做  沿坡阶向高台 (8,12) 移动，或让持有御风的角色起飞。
+获胜  登上高台 (8,12)，命中飞行对手或用极重将其压低。
+失败  本人倒下，或未达成目标就击败全部对手。
+土修装配  厚载·重力
+
+入场 player/Player (4, 0, -4), demo_20261024_water/Enemy (7, 12, -19)
+player 移动 (8, 12, -20) 报价 406.247 AP/0 MP, AP 1000→593.753, MP 6000→6000, 格 (8, 12, -20)
+player basic_body_human_jindan (7, 12, -19), AP 593.753→343.753, MP 6000→6000
+正式结局 挑战达成
+一：登高与飞行／压落
+
+沿地面登上高台，完成对空命中。
+
+
+02  02-flight  1366×768
+HighGroundByFlightAndHeavyLanding
+
+准备 一：登高与飞行／压落    突破方
+本人  行舟 · 厚载演武者
+同伴  独自行动
+对手  江汐（蓄澜演武者） · 自主行动
+
+先做  沿坡阶向高台 (8,12) 移动，或让持有御风的角色起飞。
+获胜  登上高台 (8,12)，命中飞行对手或用极重将其压低。
+失败  本人倒下，或未达成目标就击败全部对手。
+土修装配  厚载·重力
+
+入场 player/Player (4, 0, -4), demo_20261024_water/Enemy (7, 12, -19)
+player demo_20261024_yufeng_flight/flight_takeoff 报价 250 AP/200 MP, AP 1000→750, MP 6000→5800, 格 (4, 0, -4)
+player 移动 (8, 12, -20) 报价 333.328 AP/0 MP, AP 750→416.672, MP 5800→5800, 格 (8, 12, -20)
+player demo_20261024_yufeng_flight/flight_land 报价 50 AP/0 MP, AP 416.672→366.672, MP 5800→5800, 格 (8, 12, -20)
+player EARTH_GRAVITY/earth_heavy 报价 250 AP/400 MP, AP 366.672→116.672, MP 5800→5400, 格 (8, 12, -20)
+正式结局 挑战达成
+一：登高与飞行／压落
+
+高台已到达，极重实际压低了飞行对手。
+
+配置 v1 · 种子 20261120
+
+
+02  02-flight  1920×1080
+HighGroundByFlightAndHeavyLanding
+
+准备 一：登高与飞行／压落    突破方
+本人  行舟 · 厚载演武者
+同伴  独自行动
+对手  江汐（蓄澜演武者） · 自主行动
+
+先做  沿坡阶向高台 (8,12) 移动，或让持有御风的角色起飞。
+获胜  登上高台 (8,12)，命中飞行对手或用极重将其压低。
+失败  本人倒下，或未达成目标就击败全部对手。
+土修装配  厚载·重力
+
+入场 player/Player (4, 0, -4), demo_20261024_water/Enemy (7, 12, -19)
+player demo_20261024_yufeng_flight/flight_takeoff 报价 250 AP/200 MP, AP 1000→750, MP 6000→5800, 格 (4, 0, -4)
+player 移动 (8, 12, -20) 报价 333.328 AP/0 MP, AP 750→416.672, MP 5800→5800, 格 (8, 12, -20)
+player demo_20261024_yufeng_flight/flight_land 报价 50 AP/0 MP, AP 416.672→366.672, MP 5800→5800, 格 (8, 12, -20)
+player EARTH_GRAVITY/earth_heavy 报价 250 AP/400 MP, AP 366.672→116.672, MP 5800→5400, 格 (8, 12, -20)
+正式结局 挑战达成
+一：登高与飞行／压落
+
+高台已到达，极重实际压低了飞行对手。
+
+
+03  03-tide  1366×768
+TidalPassageByWater
+
+准备 二：地表、筑路与破火域    突破方
+本人  行舟 · 蓄澜演武者
+同伴  石衡（厚载演武者） · 由你操控，各自计费
+对手  明烛（长明演武者） · 自主行动
+
+先做  用蓄澜涨潮浇灭 (5,6) 的火，或让厚载飞至阵心 (7,12) 附近。
+获胜  用潮水灭火后走过该格，或破坏阵心、处理余火后步行通过。
+失败  本人倒下，或未达成目标就击败全部对手。
+土修装配  厚载·重力
+
+入场 player/Player (4, 5, -9), demo_20261024_earth/Player (4, 4, -8), demo_20261024_fire/Enemy (7, 7, -14)
+结束前 tick10 player(4, 5, -9) 高0 HP3474 AP0 / demo_20261024_earth(4, 4, -8) 高0 HP3474 AP1000 / demo_20261024_fire(7, 7, -14) 高0 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主False 余0
+结束后 tick10 player(4, 5, -9) 高0 HP3474 AP1000 / demo_20261024_earth(4, 4, -8) 高0 HP3474 AP0 / demo_20261024_fire(4, 6, -10) 高0 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主True 余0
+player WATER_TIDE/tide_rise 报价 250 AP/400 MP, AP 1000→750, MP 6000→5600, 格 (4, 5, -9)
+player 移动 (5, 6, -11) 报价 62.5 AP/0 MP, AP 750→687.5, MP 5600→5600, 格 (5, 6, -11)
+正式结局 挑战达成
+二：地表、筑路与破火域
+
+潮水将燃烧格转湿，已沿地面通过这条路线。
+
+配置 v1 · 种子 20261121
+
+
+03  03-tide  1920×1080
+TidalPassageByWater
+
+准备 二：地表、筑路与破火域    突破方
+本人  行舟 · 蓄澜演武者
+同伴  石衡（厚载演武者） · 由你操控，各自计费
+对手  明烛（长明演武者） · 自主行动
+
+先做  用蓄澜涨潮浇灭 (5,6) 的火，或让厚载飞至阵心 (7,12) 附近。
+获胜  用潮水灭火后走过该格，或破坏阵心、处理余火后步行通过。
+失败  本人倒下，或未达成目标就击败全部对手。
+土修装配  厚载·重力
+
+入场 player/Player (4, 5, -9), demo_20261024_earth/Player (4, 4, -8), demo_20261024_fire/Enemy (7, 7, -14)
+player WATER_TIDE/tide_rise 报价 250 AP/400 MP, AP 1000→750, MP 6000→5600, 格 (4, 5, -9)
+player 移动 (5, 6, -11) 报价 62.5 AP/0 MP, AP 750→687.5, MP 5600→5600, 格 (5, 6, -11)
+正式结局 挑战达成
+二：地表、筑路与破火域
+
+潮水将燃烧格转湿，已沿地面通过这条路线。
+
+
+04  04-break-fire  1366×768
+TidalPassageByBreakingCenter
+
+准备 二：地表、筑路与破火域    突破方
+本人  行舟 · 厚载演武者
+同伴  江汐（蓄澜演武者） · 由你操控，各自计费
+对手  明烛（长明演武者） · 自主行动
+
+先做  用蓄澜涨潮浇灭 (5,6) 的火，或让厚载飞至阵心 (7,12) 附近。
+获胜  用潮水灭火后走过该格，或破坏阵心、处理余火后步行通过。
+失败  本人倒下，或未达成目标就击败全部对手。
+土修装配  厚载·重力
+
+入场 player/Player (4, 4, -8), demo_20261024_water/Player (4, 5, -9), demo_20261024_fire/Enemy (4, 6, -10)
+结束前 tick10 player(4, 4, -8) 高0 HP3474 AP0 / demo_20261024_water(4, 5, -9) 高0 HP3474 AP1000 / demo_20261024_fire(4, 6, -10) 高0 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主True 余0
+结束后 tick10 player(4, 4, -8) 高0 HP3474 AP1000 / demo_20261024_water(4, 5, -9) 高0 HP3474 AP0 / demo_20261024_fire(4, 6, -10) 高0 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主True 余0
+结束前 tick10 player(4, 4, -8) 高0 HP3474 AP1000 / demo_20261024_water(4, 5, -9) 高0 HP3474 AP0 / demo_20261024_fire(4, 6, -10) 高0 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主True 余0
+结束后 tick20 player(4, 4, -8) 高0 HP3474 AP0 / demo_20261024_water(4, 5, -9) 高0 HP2919 AP1000 / demo_20261024_fire(4, 6, -10) 高0 HP3473 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护1 心600 主True 余0
+结束前 tick20 player(4, 4, -8) 高0 HP3474 AP0 / demo_20261024_water(4, 5, -9) 高0 HP2919 AP1000 / demo_20261024_fire(4, 6, -10) 高0 HP3473 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护1 心600 主True 余0
+结束后 tick20 player(4, 4, -8) 高0 HP3474 AP1000 / demo_20261024_water(4, 5, -9) 高0 HP2919 AP0 / demo_20261024_fire(4, 6, -10) 高0 HP3473 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护1 心600 主True 余0
+player demo_20261024_yufeng_flight/flight_takeoff 报价 250 AP/200 MP, AP 1000→750, MP 6000→5800, 格 (4, 4, -8)
+player 移动 (7, 11, -18) 报价 208.33 AP/0 MP, AP 750→541.67, MP 5800→5800, 格 (7, 11, -18)
+player demo_20261024_yufeng_flight/flight_land 报价 50 AP/0 MP, AP 541.67→491.67, MP 5800→5800, 格 (7, 11, -18)
+player demo_20261026_polei (7, 12, -19), AP 491.67→441.67, MP 5800→5788
+player demo_20261026_polei (7, 12, -19), AP 441.67→391.67, MP 5788→5776
+结束前 tick20 player(7, 11, -18) 高0 HP3474 AP391.67 / demo_20261024_water(4, 5, -9) 高0 HP2919 AP0 / demo_20261024_fire(4, 6, -10) 高0 HP3473 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护1 心0 主False 余1
+结束后 tick30 player(7, 11, -18) 高0 HP3474 AP0 / demo_20261024_water(4, 5, -9) 高0 HP2364 AP1000 / demo_20261024_fire(4, 6, -10) 高0 HP3472 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护1 心0 主False 余1
+demo_20261024_water 移动 (8, 7, -15) 报价 135.415 AP/0 MP, AP 1000→864.585, MP 6000→6000, 格 (8, 7, -15)
+demo_20261024_water WATER_TIDE/tide_eye 报价 375 AP/600 MP, AP 864.585→489.585, MP 6000→5400, 格 (8, 6, -14)
+demo_20261024_water 移动 (9, 8, -17) 报价 93.75 AP/0 MP, AP 489.585→395.835, MP 5400→5400, 格 (9, 8, -17)
+正式结局 挑战达成
+二：地表、筑路与破火域
+
+破坏阵心、处理余火后，已从地面穿过原余火格。
+
+配置 v1 · 种子 20261121
+
+
+04  04-break-fire  1920×1080
+TidalPassageByBreakingCenter
+
+准备 二：地表、筑路与破火域    突破方
+本人  行舟 · 厚载演武者
+同伴  江汐（蓄澜演武者） · 由你操控，各自计费
+对手  明烛（长明演武者） · 自主行动
+
+先做  用蓄澜涨潮浇灭 (5,6) 的火，或让厚载飞至阵心 (7,12) 附近。
+获胜  用潮水灭火后走过该格，或破坏阵心、处理余火后步行通过。
+失败  本人倒下，或未达成目标就击败全部对手。
+土修装配  厚载·重力
+
+入场 player/Player (4, 4, -8), demo_20261024_water/Player (4, 5, -9), demo_20261024_fire/Enemy (4, 6, -10)
+player demo_20261024_yufeng_flight/flight_takeoff 报价 250 AP/200 MP, AP 1000→750, MP 6000→5800, 格 (4, 4, -8)
+player 移动 (7, 11, -18) 报价 208.33 AP/0 MP, AP 750→541.67, MP 5800→5800, 格 (7, 11, -18)
+player demo_20261024_yufeng_flight/flight_land 报价 50 AP/0 MP, AP 541.67→491.67, MP 5800→5800, 格 (7, 11, -18)
+player demo_20261026_polei (7, 12, -19), AP 491.67→441.67, MP 5800→5788
+player demo_20261026_polei (7, 12, -19), AP 441.67→391.67, MP 5788→5776
+demo_20261024_water 移动 (8, 7, -15) 报价 135.415 AP/0 MP, AP 1000→864.585, MP 6000→6000, 格 (8, 7, -15)
+demo_20261024_water WATER_TIDE/tide_eye 报价 375 AP/600 MP, AP 864.585→489.585, MP 6000→5400, 格 (8, 6, -14)
+demo_20261024_water 移动 (9, 8, -17) 报价 93.75 AP/0 MP, AP 489.585→395.835, MP 5400→5400, 格 (9, 8, -17)
+正式结局 挑战达成
+二：地表、筑路与破火域
+
+破坏阵心、处理余火后，已从地面穿过原余火格。
+
+
+05  05-detour  1366×768
+GateByDetourAndNearSight
+
+准备 三：空间／封锁与显隐    突破方
+本人  行舟 · 尺度与阳照演武者
+同伴  独自行动
+对手  朔宁（封关与藏真演武者） · 自主行动
+
+先做  先到 (8,12)，再绕过封边到 (9,12)，或用贯石击破锚。
+获胜  绕过封边近距看见隐者，或破锚过门、用定尺与阳照完成观察。
+失败  本人倒下，或未达成目标就击败全部对手。
+
+入场 player/Player (4, 14, -18), demo_20261024_seal_yin/Enemy (7, 14, -21)
+player 移动 (8, 12, -20) 报价 83.332 AP/0 MP, AP 1000→916.668, MP 6000→6000, 格 (8, 12, -20)
+player 移动 (9, 12, -21) 报价 41.666 AP/0 MP, AP 916.668→875.002, MP 6000→6000, 格 (9, 12, -21)
+player 移动 (8, 13, -21) 报价 20.833 AP/0 MP, AP 875.002→854.169, MP 6000→6000, 格 (8, 13, -21)
+正式结局 挑战达成
+三：空间／封锁与显隐
+
+绕过禁入边后，近距观察使藏真对手自然现形。
+
+配置 v1 · 种子 20261122
+
+
+05  05-detour  1920×1080
+GateByDetourAndNearSight
+
+准备 三：空间／封锁与显隐    突破方
+本人  行舟 · 尺度与阳照演武者
+同伴  独自行动
+对手  朔宁（封关与藏真演武者） · 自主行动
+
+先做  先到 (8,12)，再绕过封边到 (9,12)，或用贯石击破锚。
+获胜  绕过封边近距看见隐者，或破锚过门、用定尺与阳照完成观察。
+失败  本人倒下，或未达成目标就击败全部对手。
+
+入场 player/Player (4, 14, -18), demo_20261024_seal_yin/Enemy (7, 14, -21)
+player 移动 (8, 12, -20) 报价 83.332 AP/0 MP, AP 1000→916.668, MP 6000→6000, 格 (8, 12, -20)
+player 移动 (9, 12, -21) 报价 41.666 AP/0 MP, AP 916.668→875.002, MP 6000→6000, 格 (9, 12, -21)
+player 移动 (8, 13, -21) 报价 20.833 AP/0 MP, AP 875.002→854.169, MP 6000→6000, 格 (8, 13, -21)
+正式结局 挑战达成
+三：空间／封锁与显隐
+
+绕过禁入边后，近距观察使藏真对手自然现形。
+
+
+06  06-break-seal  1366×768
+GateByAnchorAndSunObservation
+
+准备 三：空间／封锁与显隐    突破方
+本人  行舟 · 尺度与阳照演武者
+同伴  独自行动
+对手  朔宁（封关与藏真演武者） · 自主行动
+
+先做  先到 (8,12)，再绕过封边到 (9,12)，或用贯石击破锚。
+获胜  绕过封边近距看见隐者，或破锚过门、用定尺与阳照完成观察。
+失败  本人倒下，或未达成目标就击败全部对手。
+
+入场 player/Player (4, 14, -18), demo_20261024_seal_yin/Enemy (7, 14, -21)
+player 付费定尺 报价 250 AP/400 MP, AP 1000→750, MP 6000→5600, 格 (4, 14, -18)
+player YANG_RADIANCE/visibility_deploy 报价 250 AP/400 MP, AP 750→500, MP 5600→5200, 格 (4, 14, -18)
+显隐结算 query:player:demo_20261024_seal_yin:10:player:trial:demo_20261024_space_yang_yang_guardian:reveal_support:1:demo_20261024_seal_yin_yin_guardian:conceal_support:1:(4, 14, -18):0:(7, 14, -21):0:5:600:600:player:demo_20261024_seal_yin | sources:player:trial:demo_20261024_space_yang_yang_guardian:demo_20261024_seal_yin_yin_guardian | priorities:True,1,1,250000AP/400MP,1|True,1,1,250000AP/400MP,1 | priority:equal:0 | pulse:1:50:50 | input:1:A:50 | pulse:2:50:50 | input:2:D:100 | result:Left:gauge
+结束前 tick10 player(4, 14, -18) 高0 HP3474 AP500 / demo_20261024_seal_yin(7, 14, -21) 高0 HP3474 AP0 | SPACE_SCALE 维护0 / YANG_RADIANCE 维护0 坛在 / SPACE_SEAL 维护0 门200 / YIN_CONCEAL 维护0 坛在
+结束后 tick20 player(4, 14, -18) 高0 HP3474 AP1000 / demo_20261024_seal_yin(7, 14, -21) 高0 HP3474 AP0 | SPACE_SCALE 维护10 / YANG_RADIANCE 维护5 / SPACE_SEAL 维护5 门200 / YIN_CONCEAL 维护5 坛在
+player 移动 (8, 12, -20) 报价 72.915 AP/0 MP, AP 1000→927.085, MP 4500→4500, 格 (8, 12, -20)
+player spell_guanshiji (9, 12, -21), AP 927.085→877.085, MP 4500→4488
+player spell_guanshiji (9, 12, -21), AP 877.085→827.085, MP 4488→4476
+player spell_guanshiji (9, 12, -21), AP 827.085→764.585, MP 4476→4464
+player spell_guanshiji (9, 12, -21), AP 764.585→689.585, MP 4464→4452
+player spell_guanshiji (9, 12, -21), AP 689.585→614.585, MP 4452→4440
+player spell_guanshiji (9, 12, -21), AP 614.585→539.585, MP 4440→4428
+player spell_guanshiji (9, 12, -21), AP 539.585→464.585, MP 4428→4416
+player 移动 (9, 12, -21) 报价 20.833 AP/0 MP, AP 464.585→443.752, MP 4416→4416, 格 (9, 12, -21)
+正式结局 挑战达成
+三：空间／封锁与显隐
+
+两层门锚已破，已过封边；定尺与阳照配合完成有效观察。
+
+配置 v1 · 种子 20261122
+
+
+06  06-break-seal  1920×1080
+GateByAnchorAndSunObservation
+
+准备 三：空间／封锁与显隐    突破方
+本人  行舟 · 尺度与阳照演武者
+同伴  独自行动
+对手  朔宁（封关与藏真演武者） · 自主行动
+
+先做  先到 (8,12)，再绕过封边到 (9,12)，或用贯石击破锚。
+获胜  绕过封边近距看见隐者，或破锚过门、用定尺与阳照完成观察。
+失败  本人倒下，或未达成目标就击败全部对手。
+
+入场 player/Player (4, 14, -18), demo_20261024_seal_yin/Enemy (7, 14, -21)
+player 付费定尺 报价 250 AP/400 MP, AP 1000→750, MP 6000→5600, 格 (4, 14, -18)
+player YANG_RADIANCE/visibility_deploy 报价 250 AP/400 MP, AP 750→500, MP 5600→5200, 格 (4, 14, -18)
+显隐结算 query:player:demo_20261024_seal_yin:10:player:trial:demo_20261024_space_yang_yang_guardian:reveal_support:1:demo_20261024_seal_yin_yin_guardian:conceal_support:1:(4, 14, -18):0:(7, 14, -21):0:5:600:600:player:demo_20261024_seal_yin | sources:player:trial:demo_20261024_space_yang_yang_guardian:demo_20261024_seal_yin_yin_guardian | priorities:True,1,1,250000AP/400MP,1|True,1,1,250000AP/400MP,1 | priority:equal:0 | pulse:1:50:50 | input:1:A:50 | pulse:2:50:50 | input:2:D:100 | result:Left:gauge
+player 移动 (8, 12, -20) 报价 72.915 AP/0 MP, AP 1000→927.085, MP 4500→4500, 格 (8, 12, -20)
+player spell_guanshiji (9, 12, -21), AP 927.085→877.085, MP 4500→4488
+player spell_guanshiji (9, 12, -21), AP 877.085→827.085, MP 4488→4476
+player spell_guanshiji (9, 12, -21), AP 827.085→764.585, MP 4476→4464
+player spell_guanshiji (9, 12, -21), AP 764.585→689.585, MP 4464→4452
+player spell_guanshiji (9, 12, -21), AP 689.585→614.585, MP 4452→4440
+player spell_guanshiji (9, 12, -21), AP 614.585→539.585, MP 4440→4428
+player spell_guanshiji (9, 12, -21), AP 539.585→464.585, MP 4428→4416
+player 移动 (9, 12, -21) 报价 20.833 AP/0 MP, AP 464.585→443.752, MP 4416→4416, 格 (9, 12, -21)
+正式结局 挑战达成
+三：空间／封锁与显隐
+
+两层门锚已破，已过封边；定尺与阳照配合完成有效观察。
+
+
+07  07-guard-fire  1366×768
+DefendFireByMaintaining
+
+准备 二：地表、筑路与破火域    守方
+本人  行舟 · 长明演武者
+同伴  独自行动
+对手  石衡（厚载演武者）、江汐（蓄澜演武者） · 自主行动
+
+先做  守阵 · 接近阵心 (7,12)，展开长明。
+获胜  守住阵心，使火域阻滞通路，再从陆路撤到 (8,12)。
+失败  本人倒下、阵心被毁，或未达成守阵目标就击败全部对手。
+
+入场 player/Player (7, 7, -14), demo_20261024_earth/Enemy (4, 4, -8), demo_20261024_water/Enemy (6, 7, -13)
+player 移动 (9, 13, -22) 报价 187.498 AP/0 MP, AP 1000→812.502, MP 6000→6000, 格 (9, 13, -22)
+player FIRE_MANIFEST/fire_preview 报价 500 AP/1000 MP, AP 812.502→312.502, MP 6000→5000, 格 (9, 13, -22)
+player 防御 报价 50 AP/0 MP, AP 312.502→262.502, MP 5000→5000, 格 (9, 13, -22)
+结束前 tick10 player(9, 13, -22) 高0 HP2991 AP262.502 / demo_20261024_earth(4, 4, -8) 高0 HP3474 AP0 / demo_20261024_water(6, 7, -13) 高0 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主True 余0
+结束后 tick20 player(9, 13, -22) 高0 HP2172 AP1000 / demo_20261024_earth(8, 13, -21) 高0 HP3474 AP0 / demo_20261024_water(9, 12, -21) 高0 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主True 余0
+player 移动 (6, 14, -20) 报价 62.499 AP/0 MP, AP 1000→937.501, MP 5000→5000, 格 (6, 14, -20)
+player 防御 报价 50 AP/0 MP, AP 937.501→887.501, MP 5000→5000, 格 (6, 14, -20)
+结束前 tick20 player(6, 14, -20) 高0 HP2172 AP887.501 / demo_20261024_earth(8, 13, -21) 高0 HP3474 AP0 / demo_20261024_water(9, 12, -21) 高0 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主True 余0
+结束后 tick30 player(6, 14, -20) 高0 HP1233 AP1000 / demo_20261024_earth(7, 13, -20) 高0 HP3474 AP0 / demo_20261024_water(7, 14, -21) 高0 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护1 心225 主True 余0
+player 移动 (8, 12, -20) 报价 104.165 AP/0 MP, AP 1000→895.835, MP 4800→4800, 格 (8, 12, -20)
+正式结局 挑战达成
+二：地表、筑路与破火域
+
+长明维护生效，阵心仍在，已沿陆路撤至高台。
+
+配置 v1 · 种子 20261121
+
+
+07  07-guard-fire  1920×1080
+DefendFireByMaintaining
+
+准备 二：地表、筑路与破火域    守方
+本人  行舟 · 长明演武者
+同伴  独自行动
+对手  石衡（厚载演武者）、江汐（蓄澜演武者） · 自主行动
+
+先做  守阵 · 接近阵心 (7,12)，展开长明。
+获胜  守住阵心，使火域阻滞通路，再从陆路撤到 (8,12)。
+失败  本人倒下、阵心被毁，或未达成守阵目标就击败全部对手。
+
+入场 player/Player (7, 7, -14), demo_20261024_earth/Enemy (4, 4, -8), demo_20261024_water/Enemy (6, 7, -13)
+player 移动 (9, 13, -22) 报价 187.498 AP/0 MP, AP 1000→812.502, MP 6000→6000, 格 (9, 13, -22)
+player FIRE_MANIFEST/fire_preview 报价 500 AP/1000 MP, AP 812.502→312.502, MP 6000→5000, 格 (9, 13, -22)
+player 防御 报价 50 AP/0 MP, AP 312.502→262.502, MP 5000→5000, 格 (9, 13, -22)
+结束前 tick10 player(9, 13, -22) 高0 HP2991 AP262.502 / demo_20261024_earth(4, 4, -8) 高0 HP3474 AP0 / demo_20261024_water(6, 7, -13) 高0 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主True 余0
+结束后 tick20 player(9, 13, -22) 高0 HP2172 AP1000 / demo_20261024_earth(8, 13, -21) 高0 HP3474 AP0 / demo_20261024_water(9, 12, -21) 高0 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主True 余0
+player 移动 (6, 14, -20) 报价 62.499 AP/0 MP, AP 1000→937.501, MP 5000→5000, 格 (6, 14, -20)
+player 防御 报价 50 AP/0 MP, AP 937.501→887.501, MP 5000→5000, 格 (6, 14, -20)
+结束前 tick20 player(6, 14, -20) 高0 HP2172 AP887.501 / demo_20261024_earth(8, 13, -21) 高0 HP3474 AP0 / demo_20261024_water(9, 12, -21) 高0 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主True 余0
+结束后 tick30 player(6, 14, -20) 高0 HP1233 AP1000 / demo_20261024_earth(7, 13, -20) 高0 HP3474 AP0 / demo_20261024_water(7, 14, -21) 高0 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护1 心225 主True 余0
+player 移动 (8, 12, -20) 报价 104.165 AP/0 MP, AP 1000→895.835, MP 4800→4800, 格 (8, 12, -20)
+正式结局 挑战达成
+二：地表、筑路与破火域
+
+长明维护生效，阵心仍在，已沿陆路撤至高台。
+
+配置 v1 · 种子 20261121
+
+
+08  08-rekindle  1366×768
+DefendFireByClosingAndRekindling
+
+准备 二：地表、筑路与破火域    守方
+本人  行舟 · 长明演武者
+同伴  独自行动
+对手  石衡（厚载演武者）、江汐（蓄澜演武者） · 自主行动
+
+先做  守阵 · 接近阵心 (7,12)，展开长明。
+获胜  守住阵心，使火域阻滞通路，再从陆路撤到 (8,12)。
+失败  本人倒下、阵心被毁，或未达成守阵目标就击败全部对手。
+
+入场 player/Player (7, 7, -14), demo_20261024_earth/Enemy (4, 4, -8), demo_20261024_water/Enemy (6, 7, -13)
+player 移动 (9, 13, -22) 报价 187.498 AP/0 MP, AP 1000→812.502, MP 6000→6000, 格 (9, 13, -22)
+player FIRE_MANIFEST/fire_preview 报价 500 AP/1000 MP, AP 812.502→312.502, MP 6000→5000, 格 (9, 13, -22)
+player 防御 报价 50 AP/0 MP, AP 312.502→262.502, MP 5000→5000, 格 (9, 13, -22)
+结束前 tick10 player(9, 13, -22) 高0 HP2991 AP262.502 / demo_20261024_earth(4, 4, -8) 高0 HP3474 AP0 / demo_20261024_water(6, 7, -13) 高0 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主True 余0
+结束后 tick20 player(9, 13, -22) 高0 HP2172 AP1000 / demo_20261024_earth(8, 13, -21) 高0 HP3474 AP0 / demo_20261024_water(9, 12, -21) 高0 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主True 余0
+player 移动 (6, 14, -20) 报价 62.499 AP/0 MP, AP 1000→937.501, MP 5000→5000, 格 (6, 14, -20)
+player 防御 报价 50 AP/0 MP, AP 937.501→887.501, MP 5000→5000, 格 (6, 14, -20)
+结束前 tick20 player(6, 14, -20) 高0 HP2172 AP887.501 / demo_20261024_earth(8, 13, -21) 高0 HP3474 AP0 / demo_20261024_water(9, 12, -21) 高0 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主True 余0
+结束后 tick30 player(6, 14, -20) 高0 HP1233 AP1000 / demo_20261024_earth(7, 13, -20) 高0 HP3474 AP0 / demo_20261024_water(7, 14, -21) 高0 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护1 心225 主True 余0
+player FIRE_MANIFEST/fire_close 报价 25 AP/0 MP, AP 1000→975, MP 4800→4800, 格 (6, 14, -20)
+player 移动 (8, 12, -20) 报价 104.165 AP/0 MP, AP 975→870.835, MP 4800→4800, 格 (8, 12, -20)
+重展开报价 fire_no_eligible_surface，当前 CD 0 tick，防御等待
+player 防御 报价 50 AP/0 MP, AP 870.835→820.835, MP 4800→4800, 格 (8, 12, -20)
+结束前 tick30 player(8, 12, -20) 高0 HP1233 AP820.835 / demo_20261024_earth(7, 13, -20) 高0 HP3474 AP0 / demo_20261024_water(7, 14, -21) 高0 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护1 心225 主False 余1
+结束后 tick40 player(8, 12, -20) 高0 HP224 AP1000 / demo_20261024_earth(7, 13, -20) 高0 HP3474 AP0 / demo_20261024_water(8, 13, -21) 高0 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护1 心225 主False 余1
+player FIRE_MANIFEST/fire_preview 报价 500 AP/1000 MP, AP 1000→500, MP 4800→3800, 格 (8, 12, -20)
+正式结局 挑战达成
+二：地表、筑路与破火域
+
+收势留下余火，借余火转移后重新展开，已安全撤至高台。
+
+配置 v1 · 种子 20261121
+
+
+08  08-rekindle  1920×1080
+DefendFireByClosingAndRekindling
+
+准备 二：地表、筑路与破火域    守方
+本人  行舟 · 长明演武者
+同伴  独自行动
+对手  石衡（厚载演武者）、江汐（蓄澜演武者） · 自主行动
+
+先做  守阵 · 接近阵心 (7,12)，展开长明。
+获胜  守住阵心，使火域阻滞通路，再从陆路撤到 (8,12)。
+失败  本人倒下、阵心被毁，或未达成守阵目标就击败全部对手。
+
+入场 player/Player (7, 7, -14), demo_20261024_earth/Enemy (4, 4, -8), demo_20261024_water/Enemy (6, 7, -13)
+player 移动 (9, 13, -22) 报价 187.498 AP/0 MP, AP 1000→812.502, MP 6000→6000, 格 (9, 13, -22)
+player FIRE_MANIFEST/fire_preview 报价 500 AP/1000 MP, AP 812.502→312.502, MP 6000→5000, 格 (9, 13, -22)
+player 防御 报价 50 AP/0 MP, AP 312.502→262.502, MP 5000→5000, 格 (9, 13, -22)
+结束前 tick10 player(9, 13, -22) 高0 HP2991 AP262.502 / demo_20261024_earth(4, 4, -8) 高0 HP3474 AP0 / demo_20261024_water(6, 7, -13) 高0 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主True 余0
+结束后 tick20 player(9, 13, -22) 高0 HP2172 AP1000 / demo_20261024_earth(8, 13, -21) 高0 HP3474 AP0 / demo_20261024_water(9, 12, -21) 高0 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主True 余0
+player 移动 (6, 14, -20) 报价 62.499 AP/0 MP, AP 1000→937.501, MP 5000→5000, 格 (6, 14, -20)
+player 防御 报价 50 AP/0 MP, AP 937.501→887.501, MP 5000→5000, 格 (6, 14, -20)
+结束前 tick20 player(6, 14, -20) 高0 HP2172 AP887.501 / demo_20261024_earth(8, 13, -21) 高0 HP3474 AP0 / demo_20261024_water(9, 12, -21) 高0 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主True 余0
+结束后 tick30 player(6, 14, -20) 高0 HP1233 AP1000 / demo_20261024_earth(7, 13, -20) 高0 HP3474 AP0 / demo_20261024_water(7, 14, -21) 高0 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护1 心225 主True 余0
+player FIRE_MANIFEST/fire_close 报价 25 AP/0 MP, AP 1000→975, MP 4800→4800, 格 (6, 14, -20)
+player 移动 (8, 12, -20) 报价 104.165 AP/0 MP, AP 975→870.835, MP 4800→4800, 格 (8, 12, -20)
+重展开报价 fire_no_eligible_surface，当前 CD 0 tick，防御等待
+player 防御 报价 50 AP/0 MP, AP 870.835→820.835, MP 4800→4800, 格 (8, 12, -20)
+结束前 tick30 player(8, 12, -20) 高0 HP1233 AP820.835 / demo_20261024_earth(7, 13, -20) 高0 HP3474 AP0 / demo_20261024_water(7, 14, -21) 高0 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护1 心225 主False 余1
+结束后 tick40 player(8, 12, -20) 高0 HP224 AP1000 / demo_20261024_earth(7, 13, -20) 高0 HP3474 AP0 / demo_20261024_water(8, 13, -21) 高0 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护1 心225 主False 余1
+player FIRE_MANIFEST/fire_preview 报价 500 AP/1000 MP, AP 1000→500, MP 4800→3800, 格 (8, 12, -20)
+正式结局 挑战达成
+二：地表、筑路与破火域
+
+收势留下余火，借余火转移后重新展开，已安全撤至高台。
+
+配置 v1 · 种子 20261121
+
+
+09  09-hold-seal  1366×768
+DefendYinByHoldingGate
+
+准备 三：空间／封锁与显隐    守方
+本人  行舟 · 封关与藏真演武者
+同伴  独自行动
+对手  晏衡（尺度与阳照演武者） · 自主行动
+
+先做  在门枢 (9,12) 附近展开封关，并在月坛旁展开藏真。
+获胜  封关延缓对手，利用藏真从近距观察中撤出。
+失败  本人倒下，或未达成目标就击败全部对手。
+
+入场 player/Player (7, 14, -21), demo_20261024_space_yang/Enemy (4, 14, -18)
+player SPACE_SEAL/seal_deploy 报价 250 AP/400 MP, AP 1000→750, MP 6000→5600, 格 (7, 14, -21)
+player YIN_CONCEAL/visibility_deploy 报价 250 AP/400 MP, AP 750→500, MP 5600→5200, 格 (7, 14, -21)
+player 移动 (8, 14, -22) 报价 20.833 AP/0 MP, AP 500→479.167, MP 5200→5200, 格 (8, 14, -22)
+结束前 tick10 player(8, 14, -22) 高0 HP3474 AP479.167 / demo_20261024_space_yang(4, 14, -18) 高0 HP3474 AP0 | SPACE_SCALE 维护0 / YANG_RADIANCE 维护0 / SPACE_SEAL 维护0 门200 / YIN_CONCEAL 维护0 坛在
+结束后 tick20 player(8, 14, -22) 高0 HP3474 AP1000 / demo_20261024_space_yang(9, 12, -21) 高0 HP3474 AP0 | SPACE_SCALE 维护0 / YANG_RADIANCE 维护5 坛在 / SPACE_SEAL 维护5 / YIN_CONCEAL 维护5
+player 移动 (8, 13, -21) 报价 20.833 AP/0 MP, AP 1000→979.167, MP 4800→4800, 格 (8, 13, -21)
+近距观察 (8, 13, -21) 对 (9, 12, -21) @ tick 20
+player SPACE_SEAL/seal_deploy 报价 250 AP/400 MP, AP 979.167→729.167, MP 4800→4400, 格 (8, 13, -21)
+player YIN_CONCEAL/visibility_deploy 报价 250 AP/400 MP, AP 729.167→479.167, MP 4400→4000, 格 (8, 13, -21)
+player 移动 (7, 13, -20) 报价 20.833 AP/0 MP, AP 479.167→458.334, MP 4000→4000, 格 (7, 13, -20)
+撤出后阳方可见=True，近距=False，观察=paid_cost:Right/paid_cost:Right/paid_cost:Right/paid_cost:Left
+结束前 tick20 player(7, 13, -20) 高0 HP3474 AP458.334 / demo_20261024_space_yang(9, 12, -21) 高0 HP3474 AP0 | SPACE_SCALE 维护0 / YANG_RADIANCE 维护5 坛在 / SPACE_SEAL 维护5 门200 / YIN_CONCEAL 维护5 坛在
+结束后 tick25 player(7, 13, -20) 高0 HP3474 AP0 / demo_20261024_space_yang(9, 12, -21) 高0 HP3474 AP1000 | SPACE_SCALE 维护0 / YANG_RADIANCE 维护5 / SPACE_SEAL 维护10 / YIN_CONCEAL 维护10
+正式结局 挑战达成
+三：空间／封锁与显隐
+
+门枢仍在封关，已利用藏真撤出对手的近距观察。
+
+配置 v1 · 种子 20261122
+
+
+09  09-hold-seal  1920×1080
+DefendYinByHoldingGate
+
+准备 三：空间／封锁与显隐    守方
+本人  行舟 · 封关与藏真演武者
+同伴  独自行动
+对手  晏衡（尺度与阳照演武者） · 自主行动
+
+先做  在门枢 (9,12) 附近展开封关，并在月坛旁展开藏真。
+获胜  封关延缓对手，利用藏真从近距观察中撤出。
+失败  本人倒下，或未达成目标就击败全部对手。
+
+入场 player/Player (7, 14, -21), demo_20261024_space_yang/Enemy (4, 14, -18)
+player SPACE_SEAL/seal_deploy 报价 250 AP/400 MP, AP 1000→750, MP 6000→5600, 格 (7, 14, -21)
+player YIN_CONCEAL/visibility_deploy 报价 250 AP/400 MP, AP 750→500, MP 5600→5200, 格 (7, 14, -21)
+player 移动 (8, 14, -22) 报价 20.833 AP/0 MP, AP 500→479.167, MP 5200→5200, 格 (8, 14, -22)
+结束前 tick10 player(8, 14, -22) 高0 HP3474 AP479.167 / demo_20261024_space_yang(4, 14, -18) 高0 HP3474 AP0 | SPACE_SCALE 维护0 / YANG_RADIANCE 维护0 / SPACE_SEAL 维护0 门200 / YIN_CONCEAL 维护0 坛在
+结束后 tick20 player(8, 14, -22) 高0 HP3474 AP1000 / demo_20261024_space_yang(9, 12, -21) 高0 HP3474 AP0 | SPACE_SCALE 维护0 / YANG_RADIANCE 维护5 坛在 / SPACE_SEAL 维护5 / YIN_CONCEAL 维护5
+player 移动 (8, 13, -21) 报价 20.833 AP/0 MP, AP 1000→979.167, MP 4800→4800, 格 (8, 13, -21)
+近距观察 (8, 13, -21) 对 (9, 12, -21) @ tick 20
+player SPACE_SEAL/seal_deploy 报价 250 AP/400 MP, AP 979.167→729.167, MP 4800→4400, 格 (8, 13, -21)
+player YIN_CONCEAL/visibility_deploy 报价 250 AP/400 MP, AP 729.167→479.167, MP 4400→4000, 格 (8, 13, -21)
+player 移动 (7, 13, -20) 报价 20.833 AP/0 MP, AP 479.167→458.334, MP 4000→4000, 格 (7, 13, -20)
+撤出后阳方可见=True，近距=False，观察=paid_cost:Right/paid_cost:Right/paid_cost:Right/paid_cost:Left
+结束前 tick20 player(7, 13, -20) 高0 HP3474 AP458.334 / demo_20261024_space_yang(9, 12, -21) 高0 HP3474 AP0 | SPACE_SCALE 维护0 / YANG_RADIANCE 维护5 坛在 / SPACE_SEAL 维护5 门200 / YIN_CONCEAL 维护5 坛在
+结束后 tick25 player(7, 13, -20) 高0 HP3474 AP0 / demo_20261024_space_yang(9, 12, -21) 高0 HP3474 AP1000 | SPACE_SCALE 维护0 / YANG_RADIANCE 维护5 / SPACE_SEAL 维护10 / YIN_CONCEAL 维护10
+正式结局 挑战达成
+三：空间／封锁与显隐
+
+门枢仍在封关，已利用藏真撤出对手的近距观察。
+
+配置 v1 · 种子 20261122
+
+
+10  10-open-seal  1366×768
+DefendYinByOpeningGate
+
+准备 三：空间／封锁与显隐    守方
+本人  行舟 · 封关与藏真演武者
+同伴  独自行动
+对手  晏衡（尺度与阳照演武者） · 自主行动
+
+先做  在门枢 (9,12) 附近展开封关，并在月坛旁展开藏真。
+获胜  封关延缓对手，利用藏真从近距观察中撤出。
+失败  本人倒下，或未达成目标就击败全部对手。
+
+入场 player/Player (7, 14, -21), demo_20261024_space_yang/Enemy (4, 14, -18)
+player SPACE_SEAL/seal_deploy 报价 250 AP/400 MP, AP 1000→750, MP 6000→5600, 格 (7, 14, -21)
+player YIN_CONCEAL/visibility_deploy 报价 250 AP/400 MP, AP 750→500, MP 5600→5200, 格 (7, 14, -21)
+player 移动 (8, 14, -22) 报价 20.833 AP/0 MP, AP 500→479.167, MP 5200→5200, 格 (8, 14, -22)
+结束前 tick10 player(8, 14, -22) 高0 HP3474 AP479.167 / demo_20261024_space_yang(4, 14, -18) 高0 HP3474 AP0 | SPACE_SCALE 维护0 / YANG_RADIANCE 维护0 / SPACE_SEAL 维护0 门200 / YIN_CONCEAL 维护0 坛在
+结束后 tick20 player(8, 14, -22) 高0 HP3474 AP1000 / demo_20261024_space_yang(9, 12, -21) 高0 HP3474 AP0 | SPACE_SCALE 维护0 / YANG_RADIANCE 维护5 坛在 / SPACE_SEAL 维护5 / YIN_CONCEAL 维护5
+player 移动 (8, 13, -21) 报价 20.833 AP/0 MP, AP 1000→979.167, MP 4800→4800, 格 (8, 13, -21)
+近距观察 (8, 13, -21) 对 (9, 12, -21) @ tick 20
+player SPACE_SEAL/seal_deploy 报价 250 AP/400 MP, AP 979.167→729.167, MP 4800→4400, 格 (8, 13, -21)
+player SPACE_SEAL/seal_close 报价 25 AP/0 MP, AP 729.167→704.167, MP 4400→4400, 格 (8, 13, -21)
+player 移动 (6, 14, -20) 报价 41.666 AP/0 MP, AP 704.167→662.501, MP 4400→4400, 格 (6, 14, -20)
+结束前 tick20 player(6, 14, -20) 高0 HP3474 AP662.501 / demo_20261024_space_yang(9, 12, -21) 高0 HP3474 AP0 | SPACE_SCALE 维护0 / YANG_RADIANCE 维护5 坛在 / SPACE_SEAL 维护5 / YIN_CONCEAL 维护5
+结束后 tick30 player(6, 14, -20) 高0 HP2994 AP1000 / demo_20261024_space_yang(7, 13, -20) 高0 HP3474 AP0 | SPACE_SCALE 维护0 / YANG_RADIANCE 维护10 坛在 / SPACE_SEAL 维护5 / YIN_CONCEAL 维护5
+player 移动 (8, 12, -20) 报价 62.499 AP/0 MP, AP 1000→937.501, MP 4400→4400, 格 (8, 12, -20)
+player 移动 (9, 12, -21) 报价 20.833 AP/0 MP, AP 937.501→916.668, MP 4400→4400, 格 (9, 12, -21)
+player YIN_CONCEAL/visibility_deploy 报价 250 AP/400 MP, AP 916.668→666.668, MP 4400→4000, 格 (9, 12, -21)
+player 移动 (9, 14, -23) 报价 41.666 AP/0 MP, AP 666.668→625.002, MP 4000→4000, 格 (9, 14, -23)
+正式结局 挑战达成
+三：空间／封锁与显隐
+
+封关延缓对手，收关通行后以藏真撤出了近距观察。
+
+配置 v1 · 种子 20261122
+
+
+10  10-open-seal  1920×1080
+DefendYinByOpeningGate
+
+准备 三：空间／封锁与显隐    守方
+本人  行舟 · 封关与藏真演武者
+同伴  独自行动
+对手  晏衡（尺度与阳照演武者） · 自主行动
+
+先做  在门枢 (9,12) 附近展开封关，并在月坛旁展开藏真。
+获胜  封关延缓对手，利用藏真从近距观察中撤出。
+失败  本人倒下，或未达成目标就击败全部对手。
+
+入场 player/Player (7, 14, -21), demo_20261024_space_yang/Enemy (4, 14, -18)
+player SPACE_SEAL/seal_deploy 报价 250 AP/400 MP, AP 1000→750, MP 6000→5600, 格 (7, 14, -21)
+player YIN_CONCEAL/visibility_deploy 报价 250 AP/400 MP, AP 750→500, MP 5600→5200, 格 (7, 14, -21)
+player 移动 (8, 14, -22) 报价 20.833 AP/0 MP, AP 500→479.167, MP 5200→5200, 格 (8, 14, -22)
+结束前 tick10 player(8, 14, -22) 高0 HP3474 AP479.167 / demo_20261024_space_yang(4, 14, -18) 高0 HP3474 AP0 | SPACE_SCALE 维护0 / YANG_RADIANCE 维护0 / SPACE_SEAL 维护0 门200 / YIN_CONCEAL 维护0 坛在
+结束后 tick20 player(8, 14, -22) 高0 HP3474 AP1000 / demo_20261024_space_yang(9, 12, -21) 高0 HP3474 AP0 | SPACE_SCALE 维护0 / YANG_RADIANCE 维护5 坛在 / SPACE_SEAL 维护5 / YIN_CONCEAL 维护5
+player 移动 (8, 13, -21) 报价 20.833 AP/0 MP, AP 1000→979.167, MP 4800→4800, 格 (8, 13, -21)
+近距观察 (8, 13, -21) 对 (9, 12, -21) @ tick 20
+player SPACE_SEAL/seal_deploy 报价 250 AP/400 MP, AP 979.167→729.167, MP 4800→4400, 格 (8, 13, -21)
+player SPACE_SEAL/seal_close 报价 25 AP/0 MP, AP 729.167→704.167, MP 4400→4400, 格 (8, 13, -21)
+player 移动 (6, 14, -20) 报价 41.666 AP/0 MP, AP 704.167→662.501, MP 4400→4400, 格 (6, 14, -20)
+结束前 tick20 player(6, 14, -20) 高0 HP3474 AP662.501 / demo_20261024_space_yang(9, 12, -21) 高0 HP3474 AP0 | SPACE_SCALE 维护0 / YANG_RADIANCE 维护5 坛在 / SPACE_SEAL 维护5 / YIN_CONCEAL 维护5
+结束后 tick30 player(6, 14, -20) 高0 HP2994 AP1000 / demo_20261024_space_yang(7, 13, -20) 高0 HP3474 AP0 | SPACE_SCALE 维护0 / YANG_RADIANCE 维护10 坛在 / SPACE_SEAL 维护5 / YIN_CONCEAL 维护5
+player 移动 (8, 12, -20) 报价 62.499 AP/0 MP, AP 1000→937.501, MP 4400→4400, 格 (8, 12, -20)
+player 移动 (9, 12, -21) 报价 20.833 AP/0 MP, AP 937.501→916.668, MP 4400→4400, 格 (9, 12, -21)
+player YIN_CONCEAL/visibility_deploy 报价 250 AP/400 MP, AP 916.668→666.668, MP 4400→4000, 格 (9, 12, -21)
+player 移动 (9, 14, -23) 报价 41.666 AP/0 MP, AP 666.668→625.002, MP 4000→4000, 格 (9, 14, -23)
+正式结局 挑战达成
+三：空间／封锁与显隐
+
+封关延缓对手，收关通行后以藏真撤出了近距观察。
+
+配置 v1 · 种子 20261122
+
+
+11  基础演练、撤离、保存和读档  1366×768
+BasicPracticeWithdrawRetryReloadAndWin
+
+准备 基础演练
+本人  行舟 · 蓄澜演武者
+同伴  独自行动
+对手  晏衡（尺度与阳照演武者） · 自主行动
+
+先做  点移动，走到浅水格 (4,1)。
+获胜  本人到达 (4,1)，施放飞星指，主动结束行动。
+失败  本人倒下，或未达成目标就击败全部对手。
+
+入场 player/Player (4, 0, -4), demo_20261024_space_yang/Enemy (5, -1, -4)
+player 移动 (4, 1, -5) 报价 31.25 AP/0 MP, AP 1000→968.75, MP 6000→6000, 格 (4, 1, -5)
+player spell_feixingzhi (5, 1, -6), AP 968.75→918.75, MP 6000→5990
+入场 player/Player (4, 0, -4), demo_20261024_space_yang/Enemy (5, -1, -4)
+入场 player/Player (4, 0, -4), demo_20261024_space_yang/Enemy (5, -1, -4)
+player 移动 (4, 1, -5) 报价 31.25 AP/0 MP, AP 1000→968.75, MP 6000→6000, 格 (4, 1, -5)
+player spell_feixingzhi (5, 1, -6), AP 968.75→918.75, MP 6000→5990
+正式结局 挑战达成
+基础演练
+
+到达浅水格，飞星已施放，并已主动结束行动。
+
+
+11  基础演练、撤离、保存和读档  1920×1080
+BasicPracticeWithdrawRetryReloadAndWin
+
+准备 基础演练
+本人  行舟 · 蓄澜演武者
+同伴  独自行动
+对手  晏衡（尺度与阳照演武者） · 自主行动
+
+先做  点移动，走到浅水格 (4,1)。
+获胜  本人到达 (4,1)，施放飞星指，主动结束行动。
+失败  本人倒下，或未达成目标就击败全部对手。
+
+入场 player/Player (4, 0, -4), demo_20261024_space_yang/Enemy (5, -1, -4)
+player 移动 (4, 1, -5) 报价 31.25 AP/0 MP, AP 1000→968.75, MP 6000→6000, 格 (4, 1, -5)
+player spell_feixingzhi (5, 1, -6), AP 968.75→918.75, MP 6000→5990
+入场 player/Player (4, 0, -4), demo_20261024_space_yang/Enemy (5, -1, -4)
+入场 player/Player (4, 0, -4), demo_20261024_space_yang/Enemy (5, -1, -4)
+player 移动 (4, 1, -5) 报价 31.25 AP/0 MP, AP 1000→968.75, MP 6000→6000, 格 (4, 1, -5)
+player spell_feixingzhi (5, 1, -6), AP 968.75→918.75, MP 6000→5990
+正式结局 挑战达成
+基础演练
+
+到达浅水格，飞星已施放，并已主动结束行动。
+
+
+12  阵心失守及重试  1366×768
+FireDefeatAndRetry
+
+准备 二：地表、筑路与破火域    守方
+本人  行舟 · 长明演武者
+同伴  独自行动
+对手  石衡（厚载演武者）、江汐（蓄澜演武者） · 自主行动
+
+先做  守阵 · 接近阵心 (7,12)，展开长明。
+获胜  守住阵心，使火域阻滞通路，再从陆路撤到 (8,12)。
+失败  本人倒下、阵心被毁，或未达成守阵目标就击败全部对手。
+
+入场 player/Player (7, 7, -14), demo_20261024_earth/Enemy (4, 4, -8), demo_20261024_water/Enemy (6, 7, -13)
+player 移动 (7, 12, -19) 报价 145.832 AP/0 MP, AP 1000→854.168, MP 6000→6000, 格 (7, 12, -19)
+player FIRE_MANIFEST/fire_preview 报价 500 AP/1000 MP, AP 854.168→354.168, MP 6000→5000, 格 (7, 12, -19)
+入场 player/Player (7, 7, -14), demo_20261024_earth/Enemy (4, 4, -8), demo_20261024_water/Enemy (6, 7, -13)
+
+
+12  阵心失守及重试  1920×1080
+FireDefeatAndRetry
+
+准备 二：地表、筑路与破火域    守方
+本人  行舟 · 长明演武者
+同伴  独自行动
+对手  石衡（厚载演武者）、江汐（蓄澜演武者） · 自主行动
+
+先做  守阵 · 接近阵心 (7,12)，展开长明。
+获胜  守住阵心，使火域阻滞通路，再从陆路撤到 (8,12)。
+失败  本人倒下、阵心被毁，或未达成守阵目标就击败全部对手。
+
+入场 player/Player (7, 7, -14), demo_20261024_earth/Enemy (4, 4, -8), demo_20261024_water/Enemy (6, 7, -13)
+player 移动 (7, 12, -19) 报价 145.832 AP/0 MP, AP 1000→854.168, MP 6000→6000, 格 (7, 12, -19)
+player FIRE_MANIFEST/fire_preview 报价 500 AP/1000 MP, AP 854.168→354.168, MP 6000→5000, 格 (7, 12, -19)
+结束前 tick10 player(7, 12, -19) 高0 HP2991 AP354.168 / demo_20261024_earth(4, 4, -8) 高0 HP3474 AP0 / demo_20261024_water(6, 7, -13) 高0 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主True 余0
+结束后 tick20 player(7, 12, -19) 高0 HP2004 AP1000 / demo_20261024_earth(7, 13, -20) 高0 HP3474 AP0 / demo_20261024_water(7, 11, -18) 高0 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心225 主True 余0
+结束前 tick20 player(7, 12, -19) 高0 HP2004 AP1000 / demo_20261024_earth(7, 13, -20) 高0 HP3474 AP0 / demo_20261024_water(7, 11, -18) 高0 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心225 主True 余0
+结束后 tick30 player(7, 12, -19) 高0 HP1956 AP0 / demo_20261024_earth(7, 13, -20) 高0 HP3474 AP950 / demo_20261024_water(7, 11, -18) 高0 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护1 心0 主False 余0
+入场 player/Player (7, 7, -14), demo_20261024_earth/Enemy (4, 4, -8), demo_20261024_water/Enemy (6, 7, -13)
