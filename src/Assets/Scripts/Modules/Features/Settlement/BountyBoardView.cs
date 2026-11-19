@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text;
 using TianZhang.Content;
@@ -29,6 +30,7 @@ namespace TianZhang.Features.Settlement
 
         private ContentCatalogData catalog;
         private BountyUseCase useCase;
+        private Action rewardClaimed;
         private string settlementId;
         private string currentBountyId;
         private string lastResultReason;
@@ -57,11 +59,13 @@ namespace TianZhang.Features.Settlement
             nextButton = next;
         }
 
-        public void Show(ContentCatalogData nextCatalog, string nextSettlementId, BountyUseCase nextUseCase)
+        public void Show(ContentCatalogData nextCatalog, string nextSettlementId, BountyUseCase nextUseCase,
+            Action onRewardClaimed = null)
         {
             catalog = nextCatalog;
             settlementId = nextSettlementId;
             useCase = nextUseCase;
+            rewardClaimed = onRewardClaimed;
             lastResultReason = null;
             BindButtonListeners();
             gameObject.SetActive(true);
@@ -143,6 +147,8 @@ namespace TianZhang.Features.Settlement
             BountyActionResult result = useCase.Claim(catalog, bountyId);
             SetResult(result.Succeeded ? null : result.FailureReason);
             Refresh();
+            if (result.Succeeded)
+                rewardClaimed?.Invoke();
         }
 
         private void Refresh()

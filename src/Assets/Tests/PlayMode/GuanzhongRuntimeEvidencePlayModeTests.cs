@@ -559,6 +559,79 @@ namespace TianZhang.Tests.PlayMode
             }
         }
 
+        [UnityTest]
+        public IEnumerator ClaimedSwordCanBeEquippedInTownAndCarriedIntoTheNextEncounter()
+        {
+            yield return EnterSettlement();
+            yield return SetGameSize(new Vector2Int(1366, 768));
+            yield return ClaimSwordAtBoard();
+            GameRuntime runtime = GameBootstrap.RequireRuntime();
+            Assert.That(runtime.Player.MainEquipmentItemId, Is.EqualTo("item_iron_sword"));
+            yield return Capture("claimed-sword-in-town");
+            yield return Click(GameObject.Find("SettlementEquip_item_qingfeng_jian").GetComponent<Button>());
+            Assert.That(runtime.Player.MainEquipmentItemId, Is.EqualTo("item_qingfeng_jian"));
+            Assert.That(GameObject.Find("SettlementEquipmentStatus").GetComponent<Text>().text, Is.EqualTo("主手：青锋剑"));
+
+            yield return Click(Get<Button>(Find<SettlementView>(), "adventureButton"));
+            yield return SceneReady(GameplaySceneNames.Adventure);
+            var adventure = Find<AdventureController>();
+            for (int frame = 0; frame < 180 && adventure.CurrentState != AdventureSceneState.Exploration; frame++)
+                yield return null;
+            adventure.SetEncounterRandomSource(new EncounterRandom());
+            Assert.That(Find<AdventureInputController>().SelectNode("shijiahou_encounter"), Is.True);
+            var spawned = Get<AdventureSpawnSet>(Find<EncounterCoordinator>(), "spawned");
+            Assert.That(spawned.Player.BasicAttackProfileId, Is.EqualTo("basic_qingfeng_jian"));
+        }
+
+        [UnityTest]
+        public IEnumerator MortalCanClaimTheSwordButCannotEquipIt()
+        {
+            yield return EnterSettlement("origin_loose");
+            yield return SetGameSize(new Vector2Int(1366, 768));
+            yield return ClaimSwordAtBoard();
+            yield return Click(GameObject.Find("SettlementEquip_item_qingfeng_jian").GetComponent<Button>());
+            var runtime = GameBootstrap.RequireRuntime();
+            Assert.That(runtime.GetItemQuantity("item_qingfeng_jian"), Is.EqualTo(1));
+            Assert.That(runtime.Player.MainEquipmentItemId, Is.Null.Or.Empty);
+            Assert.That(GameObject.Find("SettlementStatusText").GetComponent<Text>().text, Is.EqualTo("境界不满足装备要求"));
+        }
+
+        private IEnumerator ClaimSwordAtBoard()
+        {
+            const string bounty = "bounty_guanzhong_lieshijia";
+            var runtime = GameBootstrap.RequireRuntime();
+            var settlement = Find<SettlementController>();
+            var catalog = Get<ContentCatalogData>(settlement, "contentCatalog");
+            yield return Click(Get<Button>(Find<SettlementView>(), "featureButton"));
+            var board = Find<BountyBoardView>();
+            Assert.That(board.CurrentBountyId, Is.EqualTo(bounty));
+            yield return Click(Get<Button>(board, "acceptButton"));
+            // Prepare the completed objective through the production use case before testing reward collection.
+            Assert.That(runtime.Bounties.RecordDefeat(catalog, "guanzhong_wild", "enemy_lieshijia").Succeeded, Is.True);
+            yield return Click(Get<Button>(board, "closeButton"));
+            yield return Click(Get<Button>(Find<SettlementView>(), "featureButton"));
+            Assert.That(GameObject.Find("SettlementEquip_item_qingfeng_jian"), Is.Null);
+            var claim = Get<Button>(board, "claimButton");
+            yield return Click(claim);
+            Assert.That(runtime.Bounties.GetState(bounty).Status, Is.EqualTo(BountyStatus.Claimed));
+            Assert.That(claim.interactable, Is.False);
+            board.SubmitClaim(bounty);
+            Assert.That(board.LastResultReason, Is.EqualTo(BountyUseCaseReasons.RepeatedClaim));
+            Assert.That(runtime.GetItemQuantity("item_qingfeng_jian"), Is.EqualTo(1));
+            yield return Click(Get<Button>(board, "closeButton"));
+            Assert.That(board.IsOpen, Is.False);
+            Assert.That(Find<SettlementController>(), Is.SameAs(settlement));
+            Assert.That(GameObject.Find("SettlementStatusText").GetComponent<Text>().text, Is.EqualTo("已领取"));
+            var sword = GameObject.Find("SettlementEquip_item_qingfeng_jian");
+            Assert.That(sword, Is.Not.Null, "The reward must appear without leaving town.");
+            Text label = sword.GetComponentInChildren<Text>();
+            Assert.That(label.text, Is.EqualTo("青锋剑\n需练气"));
+            Assert.That(label.cachedTextGenerator.lineCount, Is.EqualTo(2),
+                $"Both lines must be visible: {PathOf(label.transform)} rect={label.rectTransform.rect} " +
+                $"preferredHeight={label.preferredHeight} font={label.fontSize} scale={label.canvas.scaleFactor} " +
+                $"visibleCharacters={label.cachedTextGenerator.characterCountVisible}.");
+        }
+
         // 战斗→收益→成长→再战斗：第一场打石甲兽领灵石，第二场打裂石甲兽领青锋剑，结算换装后
         // 第三场用新武器再战；换装结果还要经保存／读取一次。
         [UnityTest]
@@ -1278,7 +1351,7 @@ namespace TianZhang.Tests.PlayMode
             camera.transform.position += new Vector3(target.x - focus.x, 0f, target.z - focus.z);
         }
 
-        private IEnumerator EnterSettlement()
+        private IEnumerator EnterSettlement(string origin = "origin_minor_clan")
         {
             var stale = Object.FindFirstObjectByType<GameBootstrap>(FindObjectsInactive.Include);
             if (stale != null) { Object.Destroy(stale.gameObject); yield return null; }
@@ -1289,7 +1362,7 @@ namespace TianZhang.Tests.PlayMode
             Set(GameBootstrap.RequireInstance(), "slotStore", new GameSaveSlotStore(directory));
             var creation = Find<CharacterCreationController>();
             creation.Open();
-            Assert.That(creation.SelectOrigin("origin_minor_clan"), Is.True);
+            Assert.That(creation.SelectOrigin(origin), Is.True);
             creation.Submit("runtime-evidence", "运行时取证");
             yield return SceneReady(GameplaySceneNames.World);
             var world = Find<WorldMapController>();

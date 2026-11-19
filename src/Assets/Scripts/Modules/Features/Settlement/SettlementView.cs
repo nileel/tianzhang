@@ -227,7 +227,12 @@ namespace TianZhang.Features.Settlement
                 Button button = Instantiate(featureButton, equipmentContainer);
                 button.name = "SettlementEquip_" + itemId;
                 Text label = button.GetComponentInChildren<Text>();
-                if (label != null) label.text = UiText.Resolve(item.displayNameKey);
+                if (label != null)
+                {
+                    label.resizeTextMaxSize = label.fontSize;
+                    label.resizeTextForBestFit = true;
+                    label.text = UiText.Resolve(item.displayNameKey) + "\n需" + UiText.Resolve(item.equipmentRealmRequirementId);
+                }
                 button.interactable = !string.Equals(itemId, currentItemId, StringComparison.Ordinal);
                 button.onClick.RemoveAllListeners();
                 string captured = itemId;
@@ -370,10 +375,11 @@ namespace TianZhang.Features.Settlement
             SetStatus(UiText.ReasonDisplay(reason, "副本不可用"));
         }
 
-        public void OpenBountyBoard(ContentCatalogData catalog, string settlementId, BountyUseCase useCase)
+        public void OpenBountyBoard(ContentCatalogData catalog, string settlementId, BountyUseCase useCase,
+            Action onRewardClaimed = null)
         {
             if (bountyBoardView != null)
-                bountyBoardView.Show(catalog, settlementId, useCase);
+                bountyBoardView.Show(catalog, settlementId, useCase, onRewardClaimed);
         }
 
         private void SetStatus(string value)

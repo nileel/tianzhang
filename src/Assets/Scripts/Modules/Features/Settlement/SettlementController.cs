@@ -300,8 +300,15 @@ namespace TianZhang.Features.Settlement
                 sceneView?.OpenBountyBoard(
                     contentCatalog,
                     CurrentSettlementId,
-                    bounties);
+                    bounties,
+                    OnBountyRewardClaimed);
             }
+        }
+
+        private void OnBountyRewardClaimed()
+        {
+            BindEquipment();
+            sceneView.ShowFeatureResult("bounty_status_claimed");
         }
 
         private void ShowFailure(string reason)
