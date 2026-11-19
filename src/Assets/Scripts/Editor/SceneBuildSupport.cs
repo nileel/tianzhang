@@ -109,26 +109,28 @@ namespace TianZhang.Editor
             return go.GetComponent<Button>();
         }
 
-        public static InputField CreateInput(string name, Transform parent, string placeholderValue)
+        public static InputField CreateLabeledInput(string name, Transform parent, string labelValue)
         {
             var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(InputField), typeof(LayoutElement));
             go.transform.SetParent(parent, false);
             go.GetComponent<Image>().color = new Color(0.12f, 0.15f, 0.18f, 1f);
             go.GetComponent<LayoutElement>().preferredHeight = 46f;
             Text text = CreateText("Text", go.transform, string.Empty, 18);
-            Text placeholder = CreateText("Placeholder", go.transform, placeholderValue, 18);
-            placeholder.color = new Color(0.7f, 0.7f, 0.7f, 1f);
-            foreach (Text child in new[] { text, placeholder })
-            {
-                child.alignment = TextAnchor.MiddleLeft;
-                child.rectTransform.anchorMin = Vector2.zero;
-                child.rectTransform.anchorMax = Vector2.one;
-                child.rectTransform.offsetMin = new Vector2(12f, 0f);
-                child.rectTransform.offsetMax = new Vector2(-12f, 0f);
-            }
+            text.alignment = TextAnchor.MiddleLeft;
+            text.rectTransform.anchorMin = Vector2.zero;
+            text.rectTransform.anchorMax = Vector2.one;
+            text.rectTransform.offsetMin = new Vector2(104f, 0f);
+            text.rectTransform.offsetMax = new Vector2(-12f, 0f);
+
+            Text label = CreateText("Label", go.transform, labelValue, 18);
+            label.alignment = TextAnchor.MiddleLeft;
+            label.raycastTarget = false;
+            label.rectTransform.anchorMin = Vector2.zero;
+            label.rectTransform.anchorMax = Vector2.up;
+            label.rectTransform.offsetMin = new Vector2(12f, 0f);
+            label.rectTransform.offsetMax = new Vector2(92f, 0f);
             InputField input = go.GetComponent<InputField>();
             input.textComponent = text;
-            input.placeholder = placeholder;
             return input;
         }
 

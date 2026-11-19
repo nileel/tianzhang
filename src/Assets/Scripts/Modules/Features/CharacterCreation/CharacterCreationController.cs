@@ -40,10 +40,10 @@ namespace TianZhang.Features.CharacterCreation
             SelectStartMode(false);
         }
 
-        public void Open()
+        public void Open(string suggestedSlotId = "slot1")
         {
             if (draft == null) draft = CharacterCreationCatalog.CreateDefaultDraft();
-            view?.Show(draft);
+            view?.Show(draft, suggestedSlotId);
             RefreshOrigin();
         }
 

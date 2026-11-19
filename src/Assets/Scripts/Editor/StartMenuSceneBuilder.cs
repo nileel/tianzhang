@@ -43,8 +43,8 @@ namespace TianZhang.Editor
             GameObject creationPanel = SceneBuildSupport.CreatePanel("CharacterCreationPanel", canvas.transform, new Vector2(0.25f, 0.15f), new Vector2(0.75f, 0.85f));
             SceneBuildSupport.AddVerticalLayout(creationPanel);
             SceneBuildSupport.CreateText("CreationTitle", creationPanel.transform, "创建角色", 30);
-            InputField slotInput = SceneBuildSupport.CreateInput("SlotIdInput", creationPanel.transform, "存档编号，例如 slot1");
-            InputField nameInput = SceneBuildSupport.CreateInput("CharacterNameInput", creationPanel.transform, "角色名");
+            InputField slotInput = SceneBuildSupport.CreateLabeledInput("SlotIdInput", creationPanel.transform, "存档编号");
+            InputField nameInput = SceneBuildSupport.CreateLabeledInput("CharacterNameInput", creationPanel.transform, "角色名");
             Text summary = SceneBuildSupport.CreateText("CreationSummary", creationPanel.transform, string.Empty, 16);
             Text creationFailure = SceneBuildSupport.CreateText("CreationFailure", creationPanel.transform, string.Empty, 16);
             Button createButton = SceneBuildSupport.CreateButton("CreatePlayerButton", creationPanel.transform, "创建并进入游戏", out _);

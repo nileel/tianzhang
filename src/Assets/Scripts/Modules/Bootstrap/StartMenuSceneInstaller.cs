@@ -108,7 +108,7 @@ namespace TianZhang.Bootstrap
                     CharacterRuntimeProfile.FromDefinition("player", profile, contentCatalog.CombatRuleSet),
                     CultivationState.FromDefinition(profile.foundationPurpleMansionState),
                     startNodeId, contentCatalog);
-                GameSaveSlotWriteResult write = bootstrap.SlotStore.Write(slotId, runtime.CaptureSave());
+                GameSaveSlotWriteResult write = bootstrap.SlotStore.Create(slotId, runtime.CaptureSave());
                 if (!write.Succeeded)
                 {
                     runtime.Clear();

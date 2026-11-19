@@ -16,6 +16,7 @@ namespace TianZhang.Infrastructure.Persistence
         MissingPlayerPayload = 6,
         WriteFailed = 7,
         DeleteFailed = 8,
+        SlotAlreadyExists = 9,
     }
 
     public sealed class GameSaveSlotSummary
@@ -236,6 +237,16 @@ namespace TianZhang.Infrastructure.Persistence
 
         public GameSaveSlotWriteResult Write(string slotId, GameSaveEnvelope envelope)
         {
+            return Write(slotId, envelope, createOnly: false);
+        }
+
+        public GameSaveSlotWriteResult Create(string slotId, GameSaveEnvelope envelope)
+        {
+            return Write(slotId, envelope, createOnly: true);
+        }
+
+        private GameSaveSlotWriteResult Write(string slotId, GameSaveEnvelope envelope, bool createOnly)
+        {
             if (!TryGetSlotPath(slotId, out string slotPath))
                 return GameSaveSlotWriteResult.Failed(GameSaveSlotFailureReason.InvalidSlotId);
             if (envelope == null)
@@ -272,11 +283,15 @@ namespace TianZhang.Infrastructure.Persistence
             try
             {
                 WriteTemporaryFile(temporaryPath, json);
-                if (File.Exists(slotPath))
+                if (!createOnly && File.Exists(slotPath))
                     File.Replace(temporaryPath, slotPath, null);
                 else
                     File.Move(temporaryPath, slotPath);
                 return GameSaveSlotWriteResult.Success();
+            }
+            catch (IOException) when (createOnly && File.Exists(slotPath))
+            {
+                return GameSaveSlotWriteResult.Failed(GameSaveSlotFailureReason.SlotAlreadyExists);
             }
             catch (Exception exception) when (IsFileSystemFailure(exception))
             {

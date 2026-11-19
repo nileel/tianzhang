@@ -68,10 +68,10 @@ namespace TianZhang.Features.CharacterCreation
             }
         }
 
-        public void Show(CharacterCreationDraft draft)
+        public void Show(CharacterCreationDraft draft, string suggestedSlotId)
         {
             panel?.SetActive(true);
-            if (slotIdInput != null && string.IsNullOrWhiteSpace(slotIdInput.text)) slotIdInput.text = "slot1";
+            if (slotIdInput != null) slotIdInput.text = suggestedSlotId;
             if (characterNameInput != null && string.IsNullOrWhiteSpace(characterNameInput.text))
                 characterNameInput.text = draft.CharacterName;
             if (failureText != null) failureText.text = string.Empty;

@@ -36,7 +36,12 @@ namespace TianZhang.Features.CharacterCreation
 
         public void OpenNewPlayer()
         {
-            characterCreation?.Open();
+            var occupied = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (PlayerSlotSummary slot in host.ListSlots())
+                occupied.Add(slot.SlotId);
+            int number = 1;
+            while (occupied.Contains("slot" + number)) number++;
+            characterCreation?.Open("slot" + number);
         }
 
         public void LoadPlayer(string slotId)
@@ -76,7 +81,9 @@ namespace TianZhang.Features.CharacterCreation
             PlayerEntryResult result = host.CreateNewPlayer(slotId, profile, startNodeId);
             if (!result.Succeeded)
             {
-                characterCreation?.ShowFailure(result.FailureReason);
+                characterCreation?.ShowFailure(result.FailureReason == "SlotAlreadyExists"
+                    ? "该存档编号已被使用，请换一个编号。"
+                    : result.FailureReason);
                 return;
             }
             RefreshSlots();

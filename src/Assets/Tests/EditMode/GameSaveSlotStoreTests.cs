@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using TianZhang.Bootstrap;
 using TianZhang.Character;
@@ -92,6 +94,35 @@ namespace TianZhang.Tests
             Assert.That(read.Envelope.player.characterId, Is.EqualTo("player"));
             Assert.That(read.Envelope.player.displayName, Is.EqualTo("新角色"));
             Assert.That(Directory.GetFiles(temporaryDirectory, "*.tmp"), Is.Empty);
+        }
+
+        [Test]
+        public void ConcurrentCreatesPublishOnlyTheWinningCharacter()
+        {
+            var store = new GameSaveSlotStore(temporaryDirectory);
+            var otherStore = new GameSaveSlotStore(temporaryDirectory);
+            GameSaveEnvelope first = CreateEnvelope("player", "先行者");
+            GameSaveEnvelope second = CreateEnvelope("player", "同行者");
+            using (var start = new Barrier(2))
+            {
+                var rival = Task.Run(() =>
+                {
+                    start.SignalAndWait();
+                    return otherStore.Create("shared", second);
+                });
+                start.SignalAndWait();
+                GameSaveSlotWriteResult firstResult = store.Create("shared", first);
+                GameSaveSlotWriteResult secondResult = rival.GetAwaiter().GetResult();
+                Assert.That(firstResult.Succeeded, Is.Not.EqualTo(secondResult.Succeeded),
+                    $"{firstResult.FailureReason}, {secondResult.FailureReason}");
+                var loser = firstResult.Succeeded ? secondResult : firstResult;
+                Assert.That(loser.FailureReason, Is.EqualTo(GameSaveSlotFailureReason.SlotAlreadyExists));
+                var winner = firstResult.Succeeded ? first : second;
+                Assert.That(GameSaveSerializer.Serialize(store.Read("shared").Envelope),
+                    Is.EqualTo(GameSaveSerializer.Serialize(winner)));
+                Assert.That(Directory.GetFiles(temporaryDirectory).Select(Path.GetFileName),
+                    Is.EquivalentTo(new[] { "shared.json" }));
+            }
         }
 
         [Test]

@@ -177,6 +177,8 @@ namespace TianZhang.Tests.PlayMode
                 Canvas.ForceUpdateCanvases();
                 Assert.IsTrue(creationPanel.activeSelf);
                 Assert.IsTrue(menuPanel.activeSelf, "the existing start menu stays behind the creation panel");
+                AssertFieldLabel(Find("SlotIdInput").GetComponent<InputField>(), "存档编号");
+                AssertFieldLabel(nameInput, "角色名");
                 AssertReachable(Find("ReturnToMenuButton").GetComponent<Button>());
                 nameInput.text = "暂存角色" + size.x;
                 yield return Click(view.GetOriginButton("origin_debt_exile"));
@@ -207,6 +209,75 @@ namespace TianZhang.Tests.PlayMode
                 "loading the preserved save must not rewrite it");
             Log("creation return resolutions=" + string.Join(",", sizes.Select(size => size.x + "x" + size.y)) +
                 " loaded=return_read draft=" + retainedOrigin);
+        }
+
+        [UnityTest]
+        public IEnumerator NewCharacterKeepsOccupiedSlotsAndCanContinueItsOwnSave()
+        {
+            GameBootstrap bootstrap = GameBootstrap.RequireInstance();
+            yield return RefreshMenu();
+            yield return Click(Find("NewPlayerButton").GetComponent<Button>());
+            Assert.AreEqual("slot1", Find("SlotIdInput").GetComponent<InputField>().text);
+            Find("CharacterNameInput").GetComponent<InputField>().text = "岑一";
+            yield return Click(Find("CreatePlayerButton").GetComponent<Button>());
+            yield return SceneReady(GameplaySceneNames.World);
+            yield return Click(Find("WorldNodeButton_1").GetComponent<Button>());
+            yield return Click(Find("EnterLocationButton").GetComponent<Button>());
+            yield return SceneReady(GameplaySceneNames.Settlement);
+            int savedDay = GameBootstrap.RequireRuntime().AdvanceWorldDay().Day;
+            yield return Click(Find("SaveAndReturnButton").GetComponent<Button>());
+            yield return SceneReady(GameplaySceneNames.StartMenu);
+            string oldPath = Path.Combine(directory, "slot1.json");
+            byte[] savedBytes = File.ReadAllBytes(oldPath);
+
+            yield return Click(Find("NewPlayerButton").GetComponent<Button>());
+            InputField slot = Find("SlotIdInput").GetComponent<InputField>();
+            Assert.AreEqual("slot2", slot.text);
+            slot.text = "slot1";
+            Find("CharacterNameInput").GetComponent<InputField>().text = "岑二";
+            yield return Click(Find("CreatePlayerButton").GetComponent<Button>());
+            Assert.IsTrue(Find("CharacterCreationPanel").gameObject.activeInHierarchy);
+            Assert.That(Find("CreationFailure").GetComponent<Text>().text, Does.Contain("编号已被使用"));
+            Assert.IsNull(GameBootstrap.RequireRuntime().Player);
+            Assert.That(File.ReadAllBytes(oldPath), Is.EqualTo(savedBytes));
+
+            yield return Click(Find("ReturnToMenuButton").GetComponent<Button>());
+            Assert.AreEqual(1, Directory.GetFiles(directory).Length);
+            // A later arrival, even unreadable and differently cased, occupies its number.
+            string unreadablePath = Path.Combine(directory, "SLOT2.json");
+            File.WriteAllText(unreadablePath, "broken");
+            yield return Click(Find("NewPlayerButton").GetComponent<Button>());
+            Assert.AreEqual("slot3", slot.text);
+            yield return Click(Find("CreatePlayerButton").GetComponent<Button>());
+            yield return SceneReady(GameplaySceneNames.World);
+            Assert.AreEqual("岑二", bootstrap.SlotStore.Read("slot3").Envelope.player.displayName);
+            Assert.AreEqual("broken", File.ReadAllText(unreadablePath));
+            Assert.That(File.ReadAllBytes(oldPath), Is.EqualTo(savedBytes));
+
+            SceneManager.LoadScene(GameplaySceneNames.StartMenu);
+            yield return SceneReady(GameplaySceneNames.StartMenu);
+            yield return Click(Find("SaveSlot_slot1").GetComponent<Button>());
+            yield return SceneReady(GameplaySceneNames.Settlement);
+            GameRuntime restored = GameBootstrap.RequireRuntime();
+            Assert.AreEqual("岑一", restored.Player.Identity.DisplayName);
+            Assert.AreEqual(savedDay, restored.WorldClock.Capture().Day);
+            Assert.AreEqual("guanzhong_city", restored.Navigation.SettlementId);
+            Assert.That(File.ReadAllBytes(oldPath), Is.EqualTo(savedBytes));
+        }
+
+        private static void AssertFieldLabel(InputField input, string expected)
+        {
+            Text label = input.transform.Find("Label").GetComponent<Text>();
+            Assert.AreEqual(expected, label.text);
+            Assert.IsTrue(label.isActiveAndEnabled);
+            Assert.IsNotEmpty(input.text);
+            Assert.That(label.preferredWidth, Is.LessThanOrEqualTo(label.rectTransform.rect.width + .1f));
+            Assert.That(label.preferredHeight, Is.LessThanOrEqualTo(label.rectTransform.rect.height + .1f));
+            var corners = new Vector3[4];
+            label.rectTransform.GetWorldCorners(corners);
+            float labelRight = corners[2].x;
+            input.textComponent.rectTransform.GetWorldCorners(corners);
+            Assert.Less(labelRight, corners[0].x, expected);
         }
 
         [UnityTest]
