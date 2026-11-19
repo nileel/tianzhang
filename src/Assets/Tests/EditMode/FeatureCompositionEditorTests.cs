@@ -198,11 +198,11 @@ namespace TianZhang.Tests
             var profile = ScriptableObject.CreateInstance<CharacterData>();
             profile.unarmedAttackFamilyId = "body_human";
             profile.realmStage = "凡人";
-            var catalog = ScriptableObject.CreateInstance<ContentCatalogData>();
-            catalog.SetCombatRuleSet(GrowthRules);
+            var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>("Assets/Data/ContentCatalog/ContentCatalog.asset");
             try
             {
                 var bootstrap = bootstrapObject.AddComponent<GameBootstrap>();
+                bootstrap.ConfigureContentCatalog(catalog);
                 SetPrivateField(bootstrap, "slotStore", new GameSaveSlotStore(directory));
                 profile.charName = "旧档角色";
                 profile.unarmedBasicAttackProfileId = string.Empty;
@@ -218,26 +218,33 @@ namespace TianZhang.Tests
                 bootstrap.ActivateSlot("slot_round_trip");
 
                 GameSaveSlotWriteResult write = bootstrap.SaveActiveSlot();
+                Assert.IsTrue(write.Succeeded, write.FailureReason.ToString());
                 GameSaveSlotReadResult read = bootstrap.SlotStore.Read("slot_round_trip");
+                Assert.IsTrue(read.Succeeded, read.FailureReason.ToString());
                 runtime.Clear();
                 runtime.RestoreSave(read.Envelope, catalog);
 
-                Assert.IsTrue(write.Succeeded, write.FailureReason.ToString());
-                Assert.IsTrue(read.Succeeded, read.FailureReason.ToString());
                 Assert.AreEqual("旧档角色", runtime.Player.Identity.DisplayName);
                 Assert.AreEqual("guanzhong_city", runtime.Navigation.SettlementId);
             }
             finally
             {
-                UnityEngine.Object.DestroyImmediate(catalog);
                 UnityEngine.Object.DestroyImmediate(profile);
                 UnityEngine.Object.DestroyImmediate(bootstrapObject);
                 DeleteTemporaryDirectory(directory);
             }
         }
 
-        [Test]
-        public void ExistingSaveWithUnknownAdventureStaysAtStartMenuBoundary()
+        [TestCase("guanzhong_hub", null, "adventure_missing", "guanzhong_hub", null)]
+        [TestCase("jiangzuo_hub", "unknown_city", null, "jiangzuo_hub", null)]
+        [TestCase("guanzhong_hub", "taiyi_sect", null, "guanzhong_hub", null)]
+        [TestCase("jiangzuo_hub", "taiyi_sect", null, "zhongzhou_hub", null)]
+        [TestCase("jiangzuo_hub", "taiyi_sect", "guanzhong_wild", "jiangzuo_hub", null)]
+        [TestCase("unknown_world", "guanzhong_city", null, "unknown_world", null)]
+        [TestCase("guanzhong_hub", null, "guanzhong_wild", "unknown_world", null)]
+        [TestCase("guanzhong_hub", "guanzhong_city", "guanzhong_wild", null, "unknown_city")]
+        public void UnresolvedNavigationCannotReplaceAnExistingSaveOrLoad(
+            string world, string settlement, string adventure, string returnWorld, string returnSettlement)
         {
             string directory = CreateTemporaryDirectoryPath();
             var bootstrapObject = new GameObject("GameBootstrapInvalidNavigationTest");
@@ -245,12 +252,12 @@ namespace TianZhang.Tests
             var profile = ScriptableObject.CreateInstance<CharacterData>();
             profile.unarmedAttackFamilyId = "body_human";
             profile.realmStage = "凡人";
-            var catalog = ScriptableObject.CreateInstance<ContentCatalogData>();
-            catalog.SetCombatRuleSet(GrowthRules);
+            var catalog = AssetDatabase.LoadAssetAtPath<ContentCatalogData>("Assets/Data/ContentCatalog/ContentCatalog.asset");
             try
             {
                 installerObject.SetActive(false);
                 var bootstrap = bootstrapObject.AddComponent<GameBootstrap>();
+                bootstrap.ConfigureContentCatalog(catalog);
                 SetPrivateField(bootstrap, "slotStore", new GameSaveSlotStore(directory));
                 profile.charName = "坏目标旧档";
                 profile.unarmedBasicAttackProfileId = string.Empty;
@@ -262,9 +269,20 @@ namespace TianZhang.Tests
                     CharacterRuntimeProfile.FromDefinition("player", profile, GrowthRules),
                     CultivationState.CreateEmpty(),
                     "guanzhong_hub");
-                runtime.EnterAdventure(
-                    "adventure_missing",
-                    SceneReturnTarget.World("guanzhong_hub"));
+                bootstrap.ActivateSlot("playable");
+                Assert.IsTrue(bootstrap.SaveActiveSlot().Succeeded);
+                string path = Path.Combine(directory, "playable.json");
+                byte[] original = File.ReadAllBytes(path);
+                GameSaveEnvelope bad = runtime.CaptureSave();
+                bad.navigation = new NavigationRecord
+                {
+                    worldNodeId = world, settlementId = settlement, adventureId = adventure,
+                    returnSceneName = returnSettlement == null ? GameplaySceneNames.World : GameplaySceneNames.Settlement,
+                    returnWorldNodeId = returnWorld, returnSettlementId = returnSettlement,
+                };
+                runtime.RestoreSave(bad, catalog);
+                Assert.AreEqual(GameSaveSlotFailureReason.NavigationTargetUnresolved, bootstrap.SaveActiveSlot().FailureReason);
+                Assert.That(File.ReadAllBytes(path), Is.EqualTo(original));
                 Assert.IsTrue(bootstrap.SlotStore.Write("slot_bad_target", runtime.CaptureSave()).Succeeded);
                 runtime.Clear();
 
@@ -280,7 +298,6 @@ namespace TianZhang.Tests
             }
             finally
             {
-                UnityEngine.Object.DestroyImmediate(catalog);
                 UnityEngine.Object.DestroyImmediate(profile);
                 UnityEngine.Object.DestroyImmediate(installerObject);
                 UnityEngine.Object.DestroyImmediate(bootstrapObject);

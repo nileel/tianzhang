@@ -78,6 +78,11 @@ namespace TianZhang.Content
             return TryFind(settlements, settlementId, value => value.settlementId, out settlement);
         }
 
+        public bool CanEnterSettlement(string settlementId)
+        {
+            return TryGetSettlement(settlementId, out SettlementData settlement) && settlement.IsPlayable;
+        }
+
         public bool TryGetAdventureMap(string adventureId, out AdventureMapData adventureMap)
         {
             return TryFind(adventureMaps, adventureId, value => value.adventureId, out adventureMap);

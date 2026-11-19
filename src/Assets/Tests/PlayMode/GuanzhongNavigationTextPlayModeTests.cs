@@ -10,6 +10,7 @@ using TianZhang.Features.CharacterCreation;
 using TianZhang.Features.Settlement;
 using TianZhang.Features.WorldMap;
 using TianZhang.Gameplay.Contracts;
+using TianZhang.Infrastructure.Persistence;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -32,7 +33,7 @@ namespace TianZhang.Tests.PlayMode
         [UnityTest] public IEnumerator Navigation1920() => Navigate(1920, 1080);
         [UnityTest] public IEnumerator Navigation1366() => Navigate(1366, 768);
 
-        private IEnumerator Navigate(int width, int height)
+        private IEnumerator OpenMenu(int width, int height)
         {
             directory = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/navigation/" +
                 DateTime.Now.ToString("yyyyMMdd-HHmmss") + "-" + width));
@@ -49,6 +50,11 @@ namespace TianZhang.Tests.PlayMode
             yield return SceneReady(GameplaySceneNames.StartMenu);
             Assert.AreEqual(width, Screen.width);
             Assert.AreEqual(height, Screen.height);
+        }
+
+        private IEnumerator Navigate(int width, int height)
+        {
+            yield return OpenMenu(width, height);
             string slot = "nav-" + width + "-" + Guid.NewGuid().ToString("N").Substring(0, 8);
             Log("Unity=" + Application.unityVersion + " size=" + width + "x" + height +
                 " entry=Assets/Scenes/StartMenuScene.unity slot=" + slot +
@@ -92,6 +98,99 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual("可返回主世界", Text("SettlementDetailText").text);
             Assert.AreEqual(saved, GameBootstrap.RequireRuntime().CaptureSaveJson());
             Log("PASS navigation, persisted JSON and failure-display isolation");
+        }
+
+        [UnityTest]
+        public IEnumerator LegacyJiangzuoSaveReturnsToItsWorldNodeAndRoundTrips()
+        {
+            yield return OpenMenu(1366, 768);
+            string saves = UseIsolatedSlots();
+            string original = Path.Combine(Application.dataPath,
+                "../../artifacts/guanzhong-playtest-20261119/jiangzuo-qa-save.json");
+            string copy = Path.Combine(saves, "jiangzuo_qa.json");
+            File.Copy(original, copy);
+            byte[] before = File.ReadAllBytes(copy);
+            Find<StartMenuController>().RefreshSlots();
+            yield return null;
+            yield return Click(Button("SaveSlot_jiangzuo_qa"));
+            Assert.AreEqual(GameplaySceneNames.World, SceneManager.GetActiveScene().name,
+                "The recorded Jiangzuo save must open its original world node.");
+            yield return SceneReady(GameplaySceneNames.World);
+            GameRuntime runtime = GameBootstrap.RequireRuntime();
+            AssertJiangzuoWorld();
+            Assert.AreEqual("岑二", runtime.Player.Identity.DisplayName);
+            Assert.That(File.ReadAllBytes(copy), Is.EqualTo(before));
+
+            GameSaveEnvelope expected = GameSaveSerializer.Deserialize(File.ReadAllText(original));
+            expected.navigation = NavigationRecord.Capture(runtime.Navigation);
+            Assert.AreEqual(GameSaveSerializer.Serialize(expected), runtime.CaptureSaveJson());
+            yield return Click(Button("WorldNodeButton_1"));
+            yield return Click(Button("EnterLocationButton"));
+            yield return SceneReady(GameplaySceneNames.Settlement);
+            AssertSettlement();
+            expected.navigation = NavigationRecord.Capture(runtime.Navigation);
+            yield return Click(Button("SaveAndReturnButton"));
+            yield return SceneReady(GameplaySceneNames.StartMenu);
+            Assert.AreEqual(GameSaveSerializer.Serialize(expected), File.ReadAllText(copy));
+            yield return Click(Button("SaveSlot_jiangzuo_qa"));
+            yield return SceneReady(GameplaySceneNames.Settlement);
+            AssertSettlement();
+            Assert.AreEqual(GameSaveSerializer.Serialize(expected), runtime.CaptureSaveJson());
+
+            // Recreate the exact legacy navigation and try saving over the now playable slot.
+            runtime.EnterWorld("jiangzuo_hub");
+            runtime.EnterSettlement("taiyi_sect");
+            Assert.AreEqual(GameSaveSlotFailureReason.NavigationTargetUnresolved,
+                GameBootstrap.RequireInstance().SaveActiveSlot().FailureReason);
+            Assert.AreEqual(GameSaveSerializer.Serialize(expected), File.ReadAllText(copy));
+        }
+
+        [UnityTest]
+        public IEnumerator DefaultJiangzuoCharacterFollowsMapToBountyAndReloadsInGuanzhong()
+        {
+            yield return OpenMenu(1366, 768);
+            UseIsolatedSlots();
+            yield return Click(Button("NewPlayerButton"));
+            string slot = Node("SlotIdInput").GetComponent<InputField>().text;
+            yield return Click(Button("CreatePlayerButton"));
+            yield return SceneReady(GameplaySceneNames.World);
+            AssertJiangzuoWorld();
+            yield return Capture("jiangzuo-guidance");
+            yield return Click(Button("WorldNodeButton_1"));
+            AssertWorld();
+            yield return Click(Button("EnterLocationButton"));
+            yield return SceneReady(GameplaySceneNames.Settlement);
+            AssertSettlement();
+            yield return Click(Button("SettlementFeature_bounty_board"));
+            string bounty = Find<BountyBoardView>().CurrentBountyId;
+            yield return Click(Button("AcceptBountyButton"));
+            var runtime = GameBootstrap.RequireRuntime();
+            Assert.AreEqual("Accepted", runtime.Bounties.GetState(bounty).Status.ToString());
+            yield return Click(Button("CloseBountyButton"));
+            string saved = runtime.CaptureSaveJson();
+            yield return Click(Button("SaveAndReturnButton"));
+            yield return SceneReady(GameplaySceneNames.StartMenu);
+            yield return Click(Button("SaveSlot_" + slot));
+            yield return SceneReady(GameplaySceneNames.Settlement);
+            AssertSettlement();
+            Assert.AreEqual(saved, runtime.CaptureSaveJson());
+        }
+
+        private string UseIsolatedSlots()
+        {
+            string saves = Path.Combine(directory, Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(saves);
+            typeof(GameBootstrap).GetField("slotStore", BindingFlags.NonPublic | BindingFlags.Instance)
+                .SetValue(GameBootstrap.RequireInstance(), new GameSaveSlotStore(saves));
+            return saves;
+        }
+
+        private static void AssertJiangzuoWorld()
+        {
+            Assert.AreEqual("jiangzuo_hub", Find<WorldMapController>().SelectedNodeId);
+            Assert.That(GameBootstrap.RequireRuntime().Navigation.SettlementId, Is.Null.Or.Empty);
+            Assert.IsFalse(Button("EnterLocationButton").interactable);
+            Assert.That(Text("SelectedWorldNodeDescription").text, Does.Contain("关陇玄域").And.Contain("关中城"));
         }
 
         private static void AssertWorld()

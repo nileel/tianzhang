@@ -1,5 +1,8 @@
 using System;
 using System.IO;
+using TianZhang.Content;
+using TianZhang.Features.WorldMap;
+using TianZhang.Gameplay.Contracts;
 using TianZhang.Infrastructure.Persistence;
 using UnityEngine;
 
@@ -13,6 +16,12 @@ namespace TianZhang.Bootstrap
         private string activeSlotId;
 
         public static GameRuntime Runtime { get; private set; }
+        internal ContentCatalogData ContentCatalog { get; private set; }
+
+        public void ConfigureContentCatalog(ContentCatalogData catalog)
+        {
+            ContentCatalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
+        }
 
         public static GameRuntime RequireRuntime()
         {
@@ -53,7 +62,20 @@ namespace TianZhang.Bootstrap
         {
             if (Runtime == null || Runtime.Player == null || string.IsNullOrWhiteSpace(activeSlotId))
                 return GameSaveSlotWriteResult.Failed(GameSaveSlotFailureReason.InvalidSaveData);
+            if (!CanRestoreNavigation(Runtime.Navigation, ContentCatalog))
+                return GameSaveSlotWriteResult.Failed(GameSaveSlotFailureReason.NavigationTargetUnresolved);
             return SlotStore.Write(activeSlotId, Runtime.CaptureSave());
+        }
+
+        internal static bool CanRestoreNavigation(NavigationStateSnapshot navigation, ContentCatalogData catalog)
+        {
+            if (catalog == null || !WorldMapController.TryGetNode(navigation.WorldNodeId, out _))
+                return false;
+            SceneReturnTarget target = navigation.ReturnTarget;
+            return (navigation.SettlementId == null || catalog.CanEnterSettlement(navigation.SettlementId)) &&
+                (navigation.AdventureId == null || catalog.TryGetAdventureMap(navigation.AdventureId, out _)) &&
+                (string.IsNullOrEmpty(target.WorldNodeId) || WorldMapController.TryGetNode(target.WorldNodeId, out _)) &&
+                (string.IsNullOrEmpty(target.SettlementId) || catalog.CanEnterSettlement(target.SettlementId));
         }
 
         /// <summary>

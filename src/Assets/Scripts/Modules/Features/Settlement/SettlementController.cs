@@ -8,8 +8,8 @@ namespace TianZhang.Features.Settlement
 {
     public sealed class SettlementController : MonoBehaviour
     {
-        public const string GuanzhongSettlementId = "guanzhong_city";
-        public const string ProductionContentScope = "content_scope_production";
+        public const string GuanzhongSettlementId = SettlementData.GuanzhongId;
+        public const string ProductionContentScope = SettlementData.ProductionScope;
         public const string CatalogMissingReason = "settlement_catalog_missing";
         public const string SettlementMissingReason = "settlement_not_found";
         public const string SettlementOutOfScopeReason = "settlement_not_in_first_batch_production_scope";
@@ -223,8 +223,7 @@ namespace TianZhang.Features.Settlement
                 return false;
             }
 
-            if (!string.Equals(settlement.settlementId, GuanzhongSettlementId, StringComparison.Ordinal) ||
-                !string.Equals(settlement.contentScope, ProductionContentScope, StringComparison.Ordinal))
+            if (!settlement.IsPlayable)
             {
                 settlement = null;
                 reason = SettlementOutOfScopeReason;

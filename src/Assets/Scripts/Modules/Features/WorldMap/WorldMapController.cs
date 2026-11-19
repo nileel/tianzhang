@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using TianZhang.Content;
 using TianZhang.Gameplay.Contracts;
 using UnityEngine;
 
@@ -16,6 +17,7 @@ namespace TianZhang.Features.WorldMap
         };
 
         private INavigationUseCase navigation;
+        private ContentCatalogData catalog;
         private WorldMapView view;
         private Action<string> loadScene;
         private string initialNodeId;
@@ -28,12 +30,14 @@ namespace TianZhang.Features.WorldMap
             INavigationUseCase navigationUseCase,
             WorldMapView worldMapView,
             string currentNodeId,
-            Action<string> sceneLoader)
+            Action<string> sceneLoader,
+            ContentCatalogData contentCatalog)
         {
             navigation = navigationUseCase ?? throw new ArgumentNullException(nameof(navigationUseCase));
             view = worldMapView;
             initialNodeId = currentNodeId;
             loadScene = sceneLoader ?? throw new ArgumentNullException(nameof(sceneLoader));
+            catalog = contentCatalog ?? throw new ArgumentNullException(nameof(contentCatalog));
         }
 
         private void Start()
@@ -45,12 +49,10 @@ namespace TianZhang.Features.WorldMap
 
         public static string NodeDisplayName(string nodeId)
         {
-            foreach (WorldNodeDefinition node in PrototypeNodes)
-                if (node.id == nodeId) return node.displayName;
-            return nodeId;
+            return TryGetNode(nodeId, out var node) ? node.displayName : nodeId;
         }
 
-        public bool TryGetNode(string nodeId, out WorldNodeDefinition node)
+        public static bool TryGetNode(string nodeId, out WorldNodeDefinition node)
         {
             node = null;
             if (string.IsNullOrWhiteSpace(nodeId)) return false;
@@ -69,30 +71,41 @@ namespace TianZhang.Features.WorldMap
             SelectedNode = node;
             SelectedNodeId = node.id;
             navigation?.EnterWorld(node.id);
-            view?.ShowSelectedNode(node);
+            bool hasSettlement = catalog.CanEnterSettlement(node.settlementId);
+            bool hasAdventure = OpenAdventure(node) != null;
+            view?.ShowSelectedNode(node, hasSettlement, hasAdventure, catalog.CanEnterSettlement(SettlementData.GuanzhongId));
             return true;
         }
 
         public void EnterSelectedLocation()
         {
             if (SelectedNode == null && !SelectNode(SelectedNodeId)) return;
-            if (!string.IsNullOrWhiteSpace(SelectedNode.settlementId))
+            if (catalog.CanEnterSettlement(SelectedNode.settlementId))
             {
                 loadScene(navigation.EnterSettlement(SelectedNode.settlementId));
                 return;
             }
-            if (SelectedNode.adventureIds != null && SelectedNode.adventureIds.Length > 0)
-                loadScene(navigation.EnterAdventure(SelectedNode.adventureIds[0], BuildAdventureReturnTarget()));
+            string adventureId = OpenAdventure(SelectedNode);
+            if (adventureId != null)
+                loadScene(navigation.EnterAdventure(adventureId, BuildAdventureReturnTarget()));
+        }
+
+        private string OpenAdventure(WorldNodeDefinition node)
+        {
+            return node.adventureIds == null ? null :
+                Array.Find(node.adventureIds, id => catalog.TryGetAdventureMap(id, out _));
         }
 
         public void EnterSettlement(string settlementId)
         {
-            loadScene(navigation.EnterSettlement(settlementId));
+            if (catalog.CanEnterSettlement(settlementId))
+                loadScene(navigation.EnterSettlement(settlementId));
         }
 
         public void EnterAdventure(string adventureId)
         {
-            loadScene(navigation.EnterAdventure(adventureId, BuildAdventureReturnTarget()));
+            if (catalog.TryGetAdventureMap(adventureId, out _))
+                loadScene(navigation.EnterAdventure(adventureId, BuildAdventureReturnTarget()));
         }
 
         public SceneReturnTarget BuildAdventureReturnTarget()

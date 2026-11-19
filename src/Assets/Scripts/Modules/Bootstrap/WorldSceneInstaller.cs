@@ -18,8 +18,10 @@ namespace TianZhang.Bootstrap
                 if (languageTable == null) throw new InvalidOperationException("world_language_table_missing");
                 if (controller == null) throw new InvalidOperationException("world_controller_missing");
                 if (view == null) throw new InvalidOperationException("world_view_missing");
+                var catalog = GameBootstrap.RequireInstance().ContentCatalog;
+                if (catalog == null) throw new InvalidOperationException("world_content_catalog_missing");
                 GameRuntime runtime = GameBootstrap.RequireRuntime();
-                controller.Configure(runtime, view, runtime.Navigation.WorldNodeId, SceneManager.LoadScene);
+                controller.Configure(runtime, view, runtime.Navigation.WorldNodeId, SceneManager.LoadScene, catalog);
             }
             catch (InvalidOperationException exception)
             {

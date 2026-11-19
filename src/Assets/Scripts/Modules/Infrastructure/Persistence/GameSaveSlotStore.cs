@@ -17,6 +17,7 @@ namespace TianZhang.Infrastructure.Persistence
         WriteFailed = 7,
         DeleteFailed = 8,
         SlotAlreadyExists = 9,
+        NavigationTargetUnresolved = 10,
     }
 
     public sealed class GameSaveSlotSummary

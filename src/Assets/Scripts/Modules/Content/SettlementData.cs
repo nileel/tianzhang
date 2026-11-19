@@ -15,6 +15,10 @@ namespace TianZhang.Content
     [CreateAssetMenu(fileName = "Settlement_", menuName = "天章/内容/据点数据")]
     public sealed class SettlementData : ScriptableObject
     {
+        public const string GuanzhongId = "guanzhong_city";
+        public const string ProductionScope = "content_scope_production";
+        public bool IsPlayable => settlementId == GuanzhongId && contentScope == ProductionScope;
+
         public string settlementId;
         public string displayNameKey;
         public string contentScope;

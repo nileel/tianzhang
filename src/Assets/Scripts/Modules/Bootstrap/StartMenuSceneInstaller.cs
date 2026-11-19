@@ -43,6 +43,7 @@ namespace TianZhang.Bootstrap
                 RequireReference(characterCreationController, "character_creation_controller_missing");
                 RequireReference(characterCreationView, "character_creation_view_missing");
                 bootstrap = GameBootstrap.RequireInstance();
+                bootstrap.ConfigureContentCatalog(contentCatalog);
                 GameRuntime runtime = GameBootstrap.RequireRuntime();
                 runtime.Clear();
                 runtime.ConfigureGrowth(contentCatalog.CombatRuleSet);
@@ -108,6 +109,11 @@ namespace TianZhang.Bootstrap
                     CharacterRuntimeProfile.FromDefinition("player", profile, contentCatalog.CombatRuleSet),
                     CultivationState.FromDefinition(profile.foundationPurpleMansionState),
                     startNodeId, contentCatalog);
+                if (!GameBootstrap.CanRestoreNavigation(runtime.Navigation, contentCatalog))
+                {
+                    runtime.Clear();
+                    return PlayerEntryResult.Failed("save_navigation_target_unresolved");
+                }
                 GameSaveSlotWriteResult write = bootstrap.SlotStore.Create(slotId, runtime.CaptureSave());
                 if (!write.Succeeded)
                 {
@@ -135,10 +141,14 @@ namespace TianZhang.Bootstrap
             try
             {
                 runtime.RestoreSave(read.Envelope, contentCatalog, jindanDemoCatalog);
-                if (!TryValidateNavigation(runtime.Navigation))
+                if (!GameBootstrap.CanRestoreNavigation(runtime.Navigation, contentCatalog))
                 {
-                    runtime.Clear();
-                    return PlayerEntryResult.Failed("save_navigation_target_unresolved");
+                    if (!IsLegacyJiangzuoSettlement(runtime.Navigation))
+                    {
+                        runtime.Clear();
+                        return PlayerEntryResult.Failed("save_navigation_target_unresolved");
+                    }
+                    runtime.EnterWorld(runtime.Navigation.WorldNodeId);
                 }
                 bootstrap.ActivateSlot(slotId);
                 SceneManager.LoadScene(ResolveScene(runtime.Navigation));
@@ -167,19 +177,12 @@ namespace TianZhang.Bootstrap
             return GameplaySceneNames.World;
         }
 
-        private bool TryValidateNavigation(NavigationStateSnapshot navigation)
+        private static bool IsLegacyJiangzuoSettlement(NavigationStateSnapshot navigation)
         {
-            if (!string.IsNullOrWhiteSpace(navigation.AdventureId))
-                return contentCatalog.TryGetAdventureMap(navigation.AdventureId, out _);
-            if (!string.IsNullOrWhiteSpace(navigation.SettlementId))
-                return contentCatalog.TryGetSettlement(navigation.SettlementId, out _);
-            return IsKnownWorldNode(navigation.WorldNodeId);
-        }
-
-        private static bool IsKnownWorldNode(string nodeId)
-        {
-            return nodeId == "jiangzuo_hub" || nodeId == "guanzhong_hub" ||
-                   nodeId == "longxi_hub" || nodeId == "zhongzhou_hub";
+            SceneReturnTarget target = navigation.ReturnTarget;
+            return navigation.WorldNodeId == "jiangzuo_hub" && navigation.SettlementId == "taiyi_sect" &&
+                navigation.AdventureId == null && target.SceneName == GameplaySceneNames.World &&
+                target.WorldNodeId == navigation.WorldNodeId && string.IsNullOrEmpty(target.SettlementId);
         }
 
         private static void RequireReference(UnityEngine.Object value, string reason)

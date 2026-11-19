@@ -39,17 +39,17 @@ namespace TianZhang.Features.WorldMap
             }
         }
 
-        public void ShowSelectedNode(WorldNodeDefinition node)
+        public void ShowSelectedNode(WorldNodeDefinition node, bool hasSettlement, bool hasAdventure, bool guanzhongOpen)
         {
             if (node == null) return;
             if (selectedNodeText != null) selectedNodeText.text = node.displayName;
-            bool hasSettlement = !string.IsNullOrWhiteSpace(node.settlementId);
-            bool hasAdventure = node.adventureIds != null && node.adventureIds.Length > 0;
             if (selectedNodeDescription != null)
             {
                 string entry = hasSettlement
                     ? "可进入据点"
-                    : hasAdventure ? "可进入副本" : "暂无可进入地点";
+                    : hasAdventure ? "可进入副本"
+                    : guanzhongOpen ? "本地尚未开放。选择「关陇玄域」进入关中城，可在城内接悬赏。"
+                    : "暂无可进入地点";
                 selectedNodeDescription.text = node.displayName + "（区域枢纽）\n" + entry;
             }
             if (enterLocationButton != null) enterLocationButton.interactable = hasSettlement || hasAdventure;
