@@ -82,6 +82,42 @@ namespace TianZhang.Tests
         }
 
         [Test]
+        public void TrialBoardBlocksNewOrdersAndPreservesExistingProgressAndClaims()
+        {
+            GameRuntime runtime = OpenBuiltSettlementScene(out BountyBoardView board, out ContentCatalogData catalog);
+            const string other = "bounty_guanzhong_lieshijia";
+            // A bounty accepted by a trial character in an earlier build.
+            AssertSucceeded(runtime.Bounties.Accept(catalog, BountyId, SettlementId));
+            board.Show(catalog, SettlementId, runtime.Bounties, jindanTrial: true);
+            AssertButtons(board, false, false);
+            board.SubmitAccept(other);
+            Assert.AreEqual(BountyStatus.Available, runtime.Bounties.GetState(other).Status);
+            Assert.AreEqual(BountyStatus.Accepted, runtime.Bounties.GetState(BountyId).Status);
+            AssertSucceeded(runtime.Bounties.RecordDefeat(catalog, AdventureId, EnemyId));
+            GetBoardButton(board, "nextButton").onClick.Invoke();
+            AssertButtons(board, false, true);
+            GetBoardButton(board, "claimButton").onClick.Invoke();
+            Assert.AreEqual(BountyStatus.Claimed, runtime.Bounties.GetState(BountyId).Status);
+            Assert.AreEqual(3, runtime.CaptureSave().inventory[0].quantity);
+            AssertButtons(board, false, false);
+        }
+
+        [Test]
+        public void BoardCanDisplayAnOrderWithMissingRewardData()
+        {
+            GameRuntime runtime = OpenBuiltSettlementScene(out BountyBoardView board, out _);
+            var catalog = CreateCatalogWithOutOfScopeBounties();
+            Assert.IsTrue(catalog.TryGetBounty(BountyId, out var bounty));
+            foreach (var rewards in new BountyRewardEntry[][] { null, new BountyRewardEntry[] { null } })
+            {
+                bounty.rewardEntries = rewards;
+                board.Show(catalog, SettlementId, runtime.Bounties);
+                Assert.AreEqual(BountyId, board.CurrentBountyId);
+                Assert.AreEqual("悬赏奖励不合法", GameObject.Find("BountyResult").GetComponent<Text>().text);
+            }
+        }
+
+        [Test]
         public void ObjectiveCompletedBountyCanBeClaimedFromBoard()
         {
             GameRuntime runtime = OpenBuiltSettlementScene(out BountyBoardView board, out ContentCatalogData catalog);

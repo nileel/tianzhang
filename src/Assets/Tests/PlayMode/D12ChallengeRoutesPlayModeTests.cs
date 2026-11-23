@@ -318,6 +318,7 @@ namespace TianZhang.Tests.PlayMode
             for (int i = 0; i < 120 && !ResultOpen; i++) yield return null;
             Assert.IsTrue(ResultOpen, "行动已执行，未达成挑战；" + Find<CombatBountyTrackerView>()?.Summary);
             StringAssert.Contains("挑战达成", Panel);
+            Assert.AreEqual("关中阶地 · 演武结果", Heading());
             Assert.IsTrue(view.GetButton("retry").IsInteractable());
             Assert.IsTrue(view.GetButton("choose_challenge").IsInteractable());
             Record("正式结局 " + Panel);

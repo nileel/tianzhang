@@ -20,6 +20,7 @@ namespace TianZhang.Features.CombatPresentation
         }
 
         [SerializeField] private GameObject preparationRoot;
+        [SerializeField] private Text preparationHeading;
         [SerializeField] private Text preparationDetails;
         [SerializeField] private GameObject combatRoot;
         [SerializeField] private GameObject combatBody;
@@ -248,6 +249,8 @@ namespace TianZhang.Features.CombatPresentation
         public void PresentPreparation(string details, bool trial, bool result, bool showDetails)
         {
             BindButtons();
+            preparationHeading.text = result ? "关中阶地 · 演武结果"
+                : showDetails ? "关中阶地 · 出战角色" : "关中阶地 · 演武准备";
             if (preparationDetails.text != details)
                 preparationDetails.GetComponentInParent<ScrollRect>(true).verticalNormalizedPosition = 1;
             preparationDetails.text = details ?? string.Empty;

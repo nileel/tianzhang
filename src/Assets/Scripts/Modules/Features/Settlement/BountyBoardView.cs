@@ -19,6 +19,7 @@ namespace TianZhang.Features.Settlement
         public const string BoardNoBountiesReason = "bounty_board_no_bounties";
         public const string BoardCatalogMissingReason = "bounty_board_catalog_missing";
         public const string BoardSessionMissingReason = "bounty_board_session_missing";
+        private const string TrialBountyHint = "bounty_board_jindan_trial";
 
         [SerializeField] private Text titleText;
         [SerializeField] private Text entriesText;
@@ -34,6 +35,7 @@ namespace TianZhang.Features.Settlement
         private string settlementId;
         private string currentBountyId;
         private string lastResultReason;
+        private bool isJindanTrial;
         private readonly List<BountyData> listedBounties = new List<BountyData>();
 
         public bool IsOpen => gameObject.activeSelf;
@@ -60,12 +62,13 @@ namespace TianZhang.Features.Settlement
         }
 
         public void Show(ContentCatalogData nextCatalog, string nextSettlementId, BountyUseCase nextUseCase,
-            Action onRewardClaimed = null)
+            Action onRewardClaimed = null, bool jindanTrial = false)
         {
             catalog = nextCatalog;
             settlementId = nextSettlementId;
             useCase = nextUseCase;
             rewardClaimed = onRewardClaimed;
+            isJindanTrial = jindanTrial;
             lastResultReason = null;
             BindButtonListeners();
             gameObject.SetActive(true);
@@ -124,6 +127,11 @@ namespace TianZhang.Features.Settlement
 
         public void SubmitAccept(string bountyId)
         {
+            if (isJindanTrial)
+            {
+                SetResult(TrialBountyHint);
+                return;
+            }
             if (useCase == null)
             {
                 SetResult(BoardSessionMissingReason);
@@ -195,7 +203,8 @@ namespace TianZhang.Features.Settlement
                     : resolvedTitle;
                 rows.Append(bounty.bountyId == currentBountyId ? "【当前】" : "")
                     .Append(title)
-                    .Append(" | ").Append(StatusDisplay(state.Status))
+                    .Append(" | ").Append(isJindanTrial && state.Status == BountyStatus.Available
+                        ? UiText.Resolve("bounty_board_ordinary_only") : StatusDisplay(state.Status))
                     .Append(" | 进度 ").Append(state.Progress).Append('/').Append(bounty.requiredCount);
             }
 
@@ -203,14 +212,39 @@ namespace TianZhang.Features.Settlement
                 entriesText.text = rows.ToString();
             if (listedBounties.Count == 0 && string.IsNullOrEmpty(lastResultReason))
                 SetResult(BoardNoBountiesReason);
+            else if (lastResultReason == null && resultText != null)
+            {
+                BountyData selected = listedBounties.Find(bounty => bounty.bountyId == currentBountyId);
+                var status = useCase.GetState(currentBountyId).Status;
+                resultText.text = isJindanTrial && (status == BountyStatus.Available || status == BountyStatus.Accepted)
+                    ? UiText.Resolve(TrialBountyHint) : DescribeObjective(selected);
+            }
             UpdateButtons();
+        }
+
+        private static string DescribeObjective(BountyData bounty)
+        {
+            if (bounty.rewardEntries == null || bounty.rewardEntries.Length == 0)
+                return UiText.Resolve(BountyUseCaseReasons.RewardInvalid);
+            var text = new StringBuilder(UiText.ResolveId("adventure_", bounty.allowedAdventureId));
+            text.Append(" · 击败").Append(UiText.Resolve(bounty.targetEnemyId)).Append(" ×").Append(bounty.requiredCount);
+            text.Append("\n悬赏报酬  ");
+            for (int i = 0; i < bounty.rewardEntries.Length; i++)
+            {
+                var reward = bounty.rewardEntries[i];
+                if (reward == null || string.IsNullOrWhiteSpace(reward.itemId) || reward.quantity <= 0)
+                    return UiText.Resolve(BountyUseCaseReasons.RewardInvalid);
+                if (i > 0) text.Append("、");
+                text.Append(UiText.Resolve(reward.itemId)).Append(" ×").Append(reward.quantity);
+            }
+            return text.ToString();
         }
 
         private void UpdateButtons()
         {
             bool hasCurrent = !string.IsNullOrEmpty(currentBountyId);
             BountyStatus status = hasCurrent ? useCase.GetState(currentBountyId).Status : BountyStatus.Available;
-            SetButtonAvailable(acceptButton, hasCurrent && status == BountyStatus.Available);
+            SetButtonAvailable(acceptButton, !isJindanTrial && hasCurrent && status == BountyStatus.Available);
             SetButtonAvailable(claimButton, hasCurrent && status == BountyStatus.ObjectiveCompleted);
             SetButtonAvailable(nextButton, listedBounties.Count > 1);
         }

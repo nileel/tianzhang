@@ -142,6 +142,9 @@ namespace TianZhang.Features.Settlement
         [SerializeField] private CharterSiteView charterSiteView;
         [SerializeField] private RectTransform equipmentContainer;
         [SerializeField] private Text equipmentStatusText;
+        private bool isJindanTrial;
+
+        public void ConfigureTrialRoute(bool jindanTrial) => isJindanTrial = jindanTrial;
 
         private void Start()
         {
@@ -346,7 +349,9 @@ namespace TianZhang.Features.Settlement
             }
 
             bool enabled = string.Equals(feature.availability, "enabled", StringComparison.Ordinal);
-            SetButton(featureButton, featureButtonText, UiText.Resolve(feature.displayNameKey), enabled, () => onClick?.Invoke(feature));
+            string label = isJindanTrial && feature.featureId == SettlementFeatureDispatcher.BountyBoardFeatureId
+                ? UiText.Resolve("settlement_review_bounties") : UiText.Resolve(feature.displayNameKey);
+            SetButton(featureButton, featureButtonText, label, enabled, () => onClick?.Invoke(feature));
             if (!enabled)
                 ShowFeatureResult(SettlementFeatureDispatcher.FeatureDisabledReason + ":" + feature.disabledReasonKey);
         }
@@ -355,10 +360,13 @@ namespace TianZhang.Features.Settlement
         {
             EnsureLanguageLoaded();
             bool available = !string.IsNullOrWhiteSpace(adventureId);
+            string destination = isJindanTrial
+                ? UiText.Resolve("settlement_enter_jindan_trial")
+                : "进入副本: " + UiText.ResolveId("adventure_", adventureId);
             SetButton(
                 adventureButton,
                 adventureButtonText,
-                available ? "进入副本: " + UiText.ResolveId("adventure_", adventureId) : "副本不可用",
+                available ? destination : "副本不可用",
                 available,
                 () => onClick?.Invoke(adventureId));
         }
@@ -379,7 +387,7 @@ namespace TianZhang.Features.Settlement
             Action onRewardClaimed = null)
         {
             if (bountyBoardView != null)
-                bountyBoardView.Show(catalog, settlementId, useCase, onRewardClaimed);
+                bountyBoardView.Show(catalog, settlementId, useCase, onRewardClaimed, isJindanTrial);
         }
 
         private void SetStatus(string value)

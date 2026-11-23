@@ -29,6 +29,7 @@ namespace TianZhang.Tests.PlayMode
             yield return Ready();
             Assert.IsTrue(ResultOpen);
             StringAssert.Contains("已撤离", Panel);
+            Assert.AreEqual("关中阶地 · 演武结果", Heading());
             yield return Capture("01-withdrawn");
             yield return Press("retry");
             yield return Entered();
@@ -44,6 +45,7 @@ namespace TianZhang.Tests.PlayMode
             yield return Press("prep_details");
             Assert.That(Panel, Does.Contain("金丹源位 · 渊蓄池").And.Contain("演武·蓄澜")
                 .And.Contain("250 AP / 400 MP").And.Contain("秋水游心经"));
+            Assert.AreEqual("关中阶地 · 出战角色", Heading());
             Assert.That(Panel, Does.Not.Contain("player:").And.Not.Contain("demo_").And.Not.Contain("JD_"));
             yield return Capture("02-details");
             yield return Press("prep_details");
@@ -53,6 +55,7 @@ namespace TianZhang.Tests.PlayMode
             yield return Scene(GameplaySceneNames.Adventure);
             view = Find<JindanDemoView>();
             Assert.IsTrue(view.GetButton("enter").gameObject.activeInHierarchy);
+            Assert.AreEqual("关中阶地 · 演武准备", Heading());
             Assert.IsFalse(Find<TianZhang.Features.Adventure.EncounterCoordinator>().IsRunning);
             Assert.AreEqual(savedPlayer, JsonUtility.ToJson(GameBootstrap.RequireRuntime().CaptureSave().player));
             yield return Press("basic");
@@ -64,7 +67,11 @@ namespace TianZhang.Tests.PlayMode
             yield return Capture("03-basic-action");
             yield return End();
             yield return Victory();
+            Assert.AreEqual("关中阶地 · 演武准备", Heading());
         }
+
+        private static string Heading() => GameObject.Find("JindanPreparationDialog/Heading")
+            .GetComponent<UnityEngine.UI.Text>().text;
 
         [UnityTest, Timeout(300000)]
         public IEnumerator FireDefeatAndRetry([ValueSource(nameof(Widths))] int width)

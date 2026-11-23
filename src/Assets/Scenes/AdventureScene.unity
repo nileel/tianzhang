@@ -39840,6 +39840,7 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier: TianZhang.Features.CombatPresentation::TianZhang.Features.CombatPresentation.JindanDemoView
   preparationRoot: {fileID: 442773168}
+  preparationHeading: {fileID: 1676127690}
   preparationDetails: {fileID: 178823246}
   combatRoot: {fileID: 1421885942}
   combatBody: {fileID: 1849710279}

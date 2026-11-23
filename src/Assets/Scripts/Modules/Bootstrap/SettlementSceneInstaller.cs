@@ -25,6 +25,7 @@ namespace TianZhang.Bootstrap
                 if (view == null) throw new InvalidOperationException("settlement_view_missing");
                 if (dispatcher == null) throw new InvalidOperationException("settlement_dispatcher_missing");
                 GameRuntime runtime = GameBootstrap.RequireRuntime();
+                view.ConfigureTrialRoute(!string.IsNullOrEmpty(runtime.JindanDemoPresetId));
                 controller.ConfigureEquipment(runtime);
                 controller.Configure(
                     contentCatalog,

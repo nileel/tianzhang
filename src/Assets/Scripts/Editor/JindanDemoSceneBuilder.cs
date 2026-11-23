@@ -151,7 +151,9 @@ namespace TianZhang.Editor
                     button.GetComponentInChildren<Text>(true).text = label;
                 }
             }
-            dialog.Find("Heading").GetComponent<Text>().text = "关中阶地 · 演武准备";
+            var heading = dialog.Find("Heading").GetComponent<Text>();
+            heading.text = "关中阶地 · 演武准备";
+            SceneBuildSupport.SetObject(view, "preparationHeading", heading);
             PlaceButton("basic", "基础演练", 32, 742, 286);
             PlaceButton("stage1", "一 · 登高与御风", 342, 742, 286);
             PlaceButton("stage2", "二 · 水火与筑路", 652, 742, 286);

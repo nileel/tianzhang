@@ -163,6 +163,7 @@ namespace TianZhang.Tests.PlayMode
             AssertSettlement();
             yield return Click(Button("SettlementFeature_bounty_board"));
             string bounty = Find<BountyBoardView>().CurrentBountyId;
+            Assert.That(Text("BountyResult").text, Does.Contain("关中野外 · 击败裂石甲兽 ×1").And.Contain("青锋剑 ×1"));
             yield return Click(Button("AcceptBountyButton"));
             var runtime = GameBootstrap.RequireRuntime();
             Assert.AreEqual("Accepted", runtime.Bounties.GetState(bounty).Status.ToString());
