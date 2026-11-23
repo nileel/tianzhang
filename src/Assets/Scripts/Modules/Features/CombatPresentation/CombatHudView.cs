@@ -39,7 +39,17 @@ namespace TianZhang.Features.CombatPresentation
                 string key = snapshot.Player?.PortraitKey;
                 actorPortrait.sprite = key != null && trialPortraits.TryGetValue(key, out var badge) ? badge : playerPortrait;
             }
-            if (playerText != null) playerText.text = snapshot.Player?.DisplayName ?? string.Empty;
+            if (playerText != null)
+            {
+                string name = snapshot.Player?.DisplayName ?? string.Empty;
+                if (trialPortraits != null && snapshot.Player != null)
+                {
+                    string role = snapshot.Player.Id == "player" ? "本人" : "同伴";
+                    if (snapshot.Timeline?.CurrentActorId == snapshot.Player.Id) role += "行动";
+                    name = "<size=16>" + role + "</size>  " + name;
+                }
+                playerText.text = name;
+            }
             PresentResource(healthFill, healthLabel, "生命", snapshot.Player?.CurrentHealth ?? 0,
                 snapshot.Player?.MaximumHealth ?? 0);
             PresentResource(spiritFill, spiritLabel, "灵力", snapshot.Player?.CurrentSpirit ?? 0,

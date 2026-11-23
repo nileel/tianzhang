@@ -159,6 +159,8 @@ namespace TianZhang.Tests.PlayMode
                         yield return Capture("01-locked-blocked-push");
                     }
                     yield return Press("confirm");
+                    Assert.AreEqual(0, CountFronts(front), "起势时潮水尚未到达。");
+                    for (int frame = 0; frame < 150 && CountFronts(front) == 0; frame++) yield return null;
                     Assert.AreEqual(quote.Tide.Changes.Count, CountFronts(front));
                     Assert.AreEqual(quote.Tide.Changes.Count(change => change.Before == CombatSurfaceKind.Burning &&
                         change.After == CombatSurfaceKind.Wet), CountFronts("ExtinguishSteam"));
@@ -390,7 +392,8 @@ namespace TianZhang.Tests.PlayMode
 
         private IEnumerator Enter(bool manifest = false)
         {
-            yield return Click(GameObject.Find("JindanRehearsalButton").GetComponent<Button>());
+            Find<AdventureSceneInstaller>().OpenJindanPreparation();
+            yield return null;
             view = Find<JindanDemoView>(); yield return Press("stage2");
             if (manifest) yield return Press("earth_toggle");
             yield return Press("enter");
@@ -444,7 +447,7 @@ namespace TianZhang.Tests.PlayMode
         private IEnumerator Ready()
         { for (float end = Time.realtimeSinceStartup + 60; Time.realtimeSinceStartup < end && !encounter.AcceptsPlayerCommand;) yield return null;
             Assert.IsTrue(encounter.AcceptsPlayerCommand); yield return null; }
-        private IEnumerator Press(string key) => Click(view.GetButton(key));
+        private IEnumerator Press(string key) => D12PlayerStartPlayModeTests.PressAbilityControl(view, key, Click);
         private IEnumerator Click(Button button)
         {
             Canvas.ForceUpdateCanvases(); Assert.IsNotNull(button); Assert.IsTrue(button.interactable && button.gameObject.activeInHierarchy, button.name);

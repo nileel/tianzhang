@@ -284,7 +284,12 @@ namespace TianZhang.Tests.PlayMode
         private int Metric() => session.SceneObjects.Board.InspectEdge(new HexCoord(4, 14), new HexCoord(5, 14), SpatialQueryKind.Attack).MetricDistanceUnits;
         private static string PlayerSave() => JsonUtility.ToJson(CharacterRecord.Capture(GameBootstrap.RequireRuntime().Player.Capture()));
         private IEnumerator OpenPreparation()
-        { yield return Click(GameObject.Find("JindanRehearsalButton").GetComponent<Button>()); view = Find<JindanDemoView>(); }
+        {
+            Assert.IsNull(GameObject.Find("JindanRehearsalButton"), "An ordinary player cannot enter as a roster character.");
+            Find<AdventureSceneInstaller>().OpenJindanPreparation();
+            yield return null;
+            view = Find<JindanDemoView>();
+        }
         private IEnumerator EnterAdventure()
         { Assert.IsTrue(Find<SettlementController>().EnterAdventure("guanzhong_wild")); yield return SceneReady(GameplaySceneNames.Adventure); }
         private IEnumerator Withdraw()

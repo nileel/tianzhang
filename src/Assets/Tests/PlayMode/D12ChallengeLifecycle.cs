@@ -42,7 +42,9 @@ namespace TianZhang.Tests.PlayMode
                 .And.Contain("先做").And.Contain("获胜").And.Contain("失败"));
             Assert.That(Panel, Does.Not.Contain("_seat"));
             yield return Press("prep_details");
-            Assert.That(Panel, Does.Contain("JD_FiveElements_Water_SOURCE").And.Contain("来源"));
+            Assert.That(Panel, Does.Contain("金丹源位 · 渊蓄池").And.Contain("演武·蓄澜")
+                .And.Contain("250 AP / 400 MP").And.Contain("秋水游心经"));
+            Assert.That(Panel, Does.Not.Contain("player:").And.Not.Contain("demo_").And.Not.Contain("JD_"));
             yield return Capture("02-details");
             yield return Press("prep_details");
             yield return Press("prep_save");

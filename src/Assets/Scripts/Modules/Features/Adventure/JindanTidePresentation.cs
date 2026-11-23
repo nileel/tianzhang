@@ -21,7 +21,8 @@ namespace TianZhang.Features.Adventure
                 session.Surfaces.Cells.Select(value => new CombatSurfaceCellSnapshot(Hex(value.Cell),
                     (CombatSurfaceDisplayKind)value.Kind, value.Fuel)).ToArray(),
                 quote?.IsLegal == true && command.ProfileId == CombatFireDomainRules.Effect && command.Kind == CombatCommandKind.JindanAbility
-                    ? session.Surfaces.Cells.Select(value => Hex(value.Cell)).ToArray()
+                    ? CombatFireDomainRules.Candidates(session, session.Jindan.Find(command.Jindan.SeatId),
+                        session.Jindan.Ability(command.ProfileId), command.Jindan.SelectedTargetCell).Select(Hex).ToArray()
                     : tide?.Changes.Select(value => Hex(value.Cell)).ToArray(),
                 tide?.Pushes.Select(value => new CombatTidePushSnapshot(value.ActorId, Hex(value.Movement.Origin.Anchor),
                     Hex(value.Movement.Destination.Anchor), value.Direction, value.Movement.Reason)).ToArray(),

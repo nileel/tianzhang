@@ -34,7 +34,9 @@ namespace TianZhang.Features.CombatPresentation
                 EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current) { position = point }, uiHits);
                 if (uiHits.Count > 0) return;
             }
-            presenter.InspectTarget(TryPick(point, out string id) ? id : null);
+            if (TryPick(point, out string id)) presenter.InspectTarget(id);
+            else if (TryGetCell(point, out var cell)) presenter.InspectCell(cell);
+            else presenter.ClearInspectedTarget();
         }
 
         public bool TryPick(Vector2 screenPoint, out string id)

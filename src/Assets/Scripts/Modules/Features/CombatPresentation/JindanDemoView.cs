@@ -63,7 +63,8 @@ namespace TianZhang.Features.CombatPresentation
         }
 
         public void PresentFieldLabels(Camera camera, CombatBattlefieldSurface surface, IReadOnlyList<CombatUnitPresentationHex> embers,
-            CombatUnitPresentationHex? sun, CombatUnitPresentationHex? moon, IReadOnlyList<CombatEarthObjectSnapshot> earth)
+            CombatUnitPresentationHex? sun, CombatUnitPresentationHex? moon, IReadOnlyList<CombatEarthObjectSnapshot> earth,
+            IReadOnlyList<CombatUnitPresentationHex> domainFire = null, CombatUnitPresentationHex? movementGoal = null)
         {
             int used = 0;
             void Mark(CombatUnitPresentationHex cell, string caption)
@@ -82,6 +83,8 @@ namespace TianZhang.Features.CombatPresentation
                 label.gameObject.SetActive(true);
             }
             if (embers != null) foreach (var cell in embers) Mark(cell, "余火");
+            if (domainFire != null) foreach (var cell in domainFire) Mark(cell, "长明地火");
+            if (movementGoal.HasValue) Mark(movementGoal.Value, "演练目标");
             if (sun.HasValue) Mark(sun.Value, "日坛");
             if (moon.HasValue) Mark(moon.Value, "月坛");
             if (earth != null)
@@ -242,7 +245,7 @@ namespace TianZhang.Features.CombatPresentation
             return null;
         }
 
-        public void PresentPreparation(string details, bool trial, bool result, bool showDetails, bool hasEarth)
+        public void PresentPreparation(string details, bool trial, bool result, bool showDetails)
         {
             BindButtons();
             if (preparationDetails.text != details)
@@ -252,11 +255,12 @@ namespace TianZhang.Features.CombatPresentation
                 GetButton(key).gameObject.SetActive(!result);
             foreach (string key in new[] { "basic", "prep_details", "prep_save" })
                 GetButton(key).gameObject.SetActive(trial && !result);
-            GetButton("earth_toggle").gameObject.SetActive(!result && (!trial || hasEarth));
+            GetButton("earth_toggle").gameObject.SetActive(!trial && !result);
             GetButton("fire_side").gameObject.SetActive(!trial);
             GetButton("preset_next").gameObject.SetActive(!trial);
             GetButton("cancel_preparation").GetComponentInChildren<Text>(true).text = trial ? "返回关中城" : "返回冒险";
-            GetButton("prep_details").GetComponentInChildren<Text>(true).text = showDetails ? "返回概要" : "装配详情";
+            GetButton("prep_details").GetComponentInChildren<Text>(true).text = showDetails ? "返回遭遇" : "查看角色";
+            GetButton("enter").GetComponentInChildren<Text>(true).text = trial ? "进入此遭遇" : "进入演武";
             GetButton("retry").gameObject.SetActive(result);
             GetButton("choose_challenge").gameObject.SetActive(result);
             preparationRoot.SetActive(true);

@@ -85,7 +85,7 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsFalse(encounter.PreviewJindan(attack).IsLegal);
             Assert.AreEqual(1, Bands("ScaleExpanded", "DirectionalSpaceWave"));
             Record("expanded adjacent edge to range2; adjacent basic attack unavailable"); yield return Capture("02-expanded-adjacent");
-            yield return Press("cancel_targeting");
+            Assert.IsNull(view.SelectedKey, "Successful expansion returns control to the battlefield.");
             yield return Press("toggle_panel");
             var details = GameObject.Find("CombatDetails").GetComponent<Text>();
             Assert.IsTrue(details.text.Contains("扩张2") && details.text.Contains("内100/100"));
@@ -202,7 +202,8 @@ namespace TianZhang.Tests.PlayMode
         }
         private IEnumerator Enter()
         {
-            yield return Click(GameObject.Find("JindanRehearsalButton").GetComponent<Button>());
+            Find<AdventureSceneInstaller>().OpenJindanPreparation();
+            yield return null;
             view = Find<JindanDemoView>(); yield return Press("stage3"); yield return Press("enter");
             encounter = Find<EncounterCoordinator>(); session = encounter.CurrentSession; surface = Find<CombatBattlefieldSurface>();
             yield return Ready(); Assert.AreEqual(Player, session.CurrentActorId);
@@ -252,7 +253,7 @@ namespace TianZhang.Tests.PlayMode
         private IEnumerator Ready()
         { for (float end = Time.realtimeSinceStartup + 60; Time.realtimeSinceStartup < end && !encounter.AcceptsPlayerCommand;) yield return null;
             Assert.IsTrue(encounter.AcceptsPlayerCommand); yield return null; }
-        private IEnumerator Press(string key) => Click(view.GetButton(key));
+        private IEnumerator Press(string key) => D12PlayerStartPlayModeTests.PressAbilityControl(view, key, Click);
         private IEnumerator Click(Button button)
         {
             Canvas.ForceUpdateCanvases(); Assert.IsNotNull(button); Assert.IsTrue(button.interactable && button.gameObject.activeInHierarchy, button.name);

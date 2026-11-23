@@ -242,12 +242,18 @@ namespace TianZhang.Tests.PlayMode
         {
             Assert.AreEqual(Yang, session.CurrentActorId); yield return Press("visibility_tab");
             int ap = Actor(Yang).ActionPointsRemainingUnits, mp = Actor(Yang).CurrentSpirit;
-            yield return Press("visibility_deploy"); Assert.IsTrue(view.GetButton("confirm").interactable);
+            yield return Press("visibility_deploy"); Assert.IsFalse(view.GetButton("confirm").interactable);
+            var altar = session.Jindan.Ability(CombatVisibility.Yang).Visibility.Center;
+            var cell = new CombatUnitPresentationHex(altar.Q, altar.R);
+            yield return D12PlayerStartPlayModeTests.LockAbilityCell(cell);
+            Assert.IsTrue(view.GetButton("confirm").interactable);
             yield return Press("cancel_targeting"); Assert.AreEqual(ap, Actor(Yang).ActionPointsRemainingUnits); Assert.AreEqual(mp, Actor(Yang).CurrentSpirit);
             // Equal-speed CT ordering gives the seal/yin NPC the first turn. Its paid domain
             // already exists when the player's confirmation creates the observation conflict.
             Assert.AreEqual(1, Seat(CombatVisibility.Yin).SuccessfulDeployments);
-            yield return Press("visibility_deploy"); yield return Press("confirm");
+            yield return Press("visibility_deploy");
+            yield return D12PlayerStartPlayModeTests.LockAbilityCell(cell);
+            yield return Press("confirm");
             yield return WaitFor(() => session.Visibility.IsPaused, "paid domains create conflict");
             Assert.AreEqual(ap - 250000, Actor(Yang).ActionPointsRemainingUnits); Assert.AreEqual(mp - 400, Actor(Yang).CurrentSpirit);
             Assert.AreEqual(1, Seat(CombatVisibility.Yang).SuccessfulDeployments);
@@ -260,7 +266,8 @@ namespace TianZhang.Tests.PlayMode
 
         private IEnumerator Enter()
         {
-            yield return Click(GameObject.Find("JindanRehearsalButton").GetComponent<Button>());
+            Find<AdventureSceneInstaller>().OpenJindanPreparation();
+            yield return null;
             view = Find<JindanDemoView>(); yield return Press("stage3"); yield return Press("enter");
             encounter = Find<EncounterCoordinator>(); session = encounter.CurrentSession; visibilityView = Find<JindanVisibilityView>();
             yield return Ready();

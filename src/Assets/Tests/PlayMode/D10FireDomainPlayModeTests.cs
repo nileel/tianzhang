@@ -53,10 +53,15 @@ namespace TianZhang.Tests.PlayMode
             yield return Capture("00-defender-public-center");
             yield return Move(new HexCoord(7, 11)); yield return Press("fire_tab");
             int ap = Actor(FireId).ActionPointsRemainingUnits, mp = Actor(FireId).CurrentSpirit;
-            yield return Press("fire_preview"); Assert.IsTrue(view.GetButton("confirm").interactable);
-            yield return Capture("01-whole-board-preview"); yield return Press("cancel_targeting");
+            yield return Press("fire_preview"); Assert.IsFalse(view.GetButton("confirm").interactable);
+            var center = FireSeat.FireDomain.Support.Cell;
+            yield return D12PlayerStartPlayModeTests.LockAbilityCell(new CombatUnitPresentationHex(center.Q, center.R));
+            Assert.IsTrue(view.GetButton("confirm").interactable);
+            yield return Capture("01-eligible-surfaces-preview"); yield return Press("cancel_targeting");
             Assert.AreEqual(ap, Actor(FireId).ActionPointsRemainingUnits); Assert.AreEqual(mp, Actor(FireId).CurrentSpirit);
-            yield return Press("fire_preview"); yield return Press("confirm"); yield return Ready();
+            yield return Press("fire_preview");
+            yield return D12PlayerStartPlayModeTests.LockAbilityCell(new CombatUnitPresentationHex(center.Q, center.R));
+            yield return Press("confirm"); yield return Ready();
             Assert.AreEqual(ap - 500000, Actor(FireId).ActionPointsRemainingUnits); Assert.AreEqual(mp - 1000, Actor(FireId).CurrentSpirit);
             Assert.AreEqual(6, FireSeat.FireDomain.ReservedFuel); Record("player paid 500AP/1000MP, center600, free9/reserved6");
             CheckFireView(); Assert.AreEqual(0, CombatFireDomainRules.BurningCount(session, FireSeat));
@@ -193,7 +198,8 @@ namespace TianZhang.Tests.PlayMode
 
         private IEnumerator Enter(bool controlFire)
         {
-            yield return Click(GameObject.Find("JindanRehearsalButton").GetComponent<Button>());
+            Find<AdventureSceneInstaller>().OpenJindanPreparation();
+            yield return null;
             view = Find<JindanDemoView>(); yield return Press("stage2");
             if (controlFire) yield return Press("fire_side");
             yield return Press("enter"); encounter = Find<EncounterCoordinator>(); session = encounter.CurrentSession;

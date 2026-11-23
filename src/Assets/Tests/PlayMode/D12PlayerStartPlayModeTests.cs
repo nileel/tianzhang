@@ -181,6 +181,8 @@ namespace TianZhang.Tests.PlayMode
                         yield return MoveToMarkedCenter(encounter, actor, center);
                         yield return Click(view.GetButton("fire_tab"));
                         yield return Click(view.GetButton("fire_preview"));
+                        Assert.IsFalse(shared.ConfirmButton.interactable);
+                        yield return LockAbilityCell(center);
                         Assert.IsTrue(shared.ConfirmButton.interactable);
                         int ap = actor.ActionPointsRemainingUnits;
                         yield return Click(Find<CombatActionBarView>().ArtButton);
@@ -191,6 +193,7 @@ namespace TianZhang.Tests.PlayMode
                         yield return Capture(size.x + "-spell-after-cancel");
                         yield return Click(view.GetButton("fire_tab"));
                         yield return Click(view.GetButton("fire_preview"));
+                        yield return LockAbilityCell(center);
                         Assert.AreEqual(mana, actor.CurrentSpirit);
                         Assert.AreEqual(ap, actor.ActionPointsRemainingUnits);
                         AssertPrice(500000, 1000);
@@ -352,6 +355,33 @@ namespace TianZhang.Tests.PlayMode
                 yield break;
             }
             Assert.Fail("No legal adjacent basic attack could be selected while the fire domain was active.");
+        }
+
+        // A committed ability returns to board inspection. Reopen its tab before the next operation.
+        internal static IEnumerator PressAbilityControl(JindanDemoView view, string key, Func<Button, IEnumerator> click)
+        {
+            if (view.SelectedKey == null && !key.EndsWith("_tab", StringComparison.Ordinal))
+            {
+                string tab = key.EndsWith("_close", StringComparison.Ordinal) ? "close_tab" :
+                    key.StartsWith("flight_", StringComparison.Ordinal) ? "flight_tab" :
+                    key.StartsWith("earth_", StringComparison.Ordinal) ? "earth_tab" :
+                    key.StartsWith("tide_", StringComparison.Ordinal) ? "tide_tab" : null;
+                if (tab != null) yield return click(view.GetButton(tab));
+            }
+            yield return click(view.GetButton(key));
+        }
+
+        internal static IEnumerator LockAbilityCell(CombatUnitPresentationHex cell)
+        {
+            if (!TryGroundPoint(cell, out var point))
+            {
+                var surface = Find<CombatBattlefieldSurface>();
+                Camera.main.transform.position = surface.Center(cell) - Camera.main.transform.forward * 20;
+                yield return null;
+                Assert.IsTrue(TryGroundPoint(cell, out point), "地格可用鼠标锁定 " + cell.Q + "," + cell.R);
+            }
+            yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(point, true);
+            yield return null;
         }
 
         private static bool TryGroundPoint(CombatUnitPresentationHex cell, out Vector2 point)

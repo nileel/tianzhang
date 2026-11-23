@@ -48,10 +48,11 @@ namespace TianZhang.Features.CombatPresentation
             Hide();
         }
 
-        public void Present(CombatantHudSnapshot unit, bool player)
+        public void Present(CombatantHudSnapshot unit, bool player, string effects = null)
         {
             if (unit == null) { Hide(); return; }
             targetId = unit.Id;
+            ShowResourceBars(true);
             factionText.text = player ? "我方" : "敌方";
             nameText.text = unit.DisplayName;
             Sprite sprite = PortraitFor(unit.PortraitKey, player);
@@ -63,8 +64,28 @@ namespace TianZhang.Features.CombatPresentation
             healthLabel.text = "生命 " + unit.CurrentHealth + "/" + unit.MaximumHealth;
             spiritLabel.text = "灵力 " + unit.CurrentSpirit + "/" + unit.MaximumSpirit;
             // Only the fields already public in this HUD stay visible.
-            details.text = "伤害：未探明\n命中：未探明\n能力：未探明";
+            details.text = effects ?? "伤害：未探明\n命中：未探明\n能力：未探明";
             root.SetActive(true);
+        }
+
+        public void PresentCell(CombatUnitPresentationHex cell, string description)
+        {
+            targetId = null;
+            portrait.enabled = false;
+            portrait.sprite = null;
+            nameText.text = $"地块 ({cell.Q},{cell.R})";
+            factionText.text = "战场地形";
+            ShowResourceBars(false);
+            details.text = description;
+            root.SetActive(true);
+        }
+
+        private void ShowResourceBars(bool visible)
+        {
+            healthFill.transform.parent.gameObject.SetActive(visible);
+            spiritFill.transform.parent.gameObject.SetActive(visible);
+            healthLabel.gameObject.SetActive(visible);
+            spiritLabel.gameObject.SetActive(visible);
         }
 
         public void Hide()

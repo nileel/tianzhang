@@ -95,11 +95,16 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsTrue(Find<SettlementController>().EnterAdventure("guanzhong_wild"));
             yield return Scene(GameplaySceneNames.Adventure);
             view = Find<JindanDemoView>();
-            if (!view.GetButton("enter").gameObject.activeInHierarchy) yield return Named("JindanRehearsalButton");
+            Assert.IsTrue(view.GetButton("enter").gameObject.activeInHierarchy, "本人金丹开局直接选择遭遇");
             yield return Press(stage);
             string title = stage switch { "stage1" => "一：", "stage2" => "二：", "stage3" => "三：", _ => "基础演练" };
             for (int frame = 0; frame < 30 && !Panel.Contains(title); frame++) yield return null;
             StringAssert.Contains(title, Panel);
+            StringAssert.Contains("出战角色  行舟 · " + runtime.Player.Progression.RealmStage, Panel);
+            StringAssert.Contains("遭遇  ", Panel);
+            StringAssert.Contains("对手  ", Panel);
+            foreach (string key in new[] { "earth_toggle", "preset_next", "fire_side" })
+                Assert.IsFalse(view.GetButton(key).gameObject.activeInHierarchy, key);
             Record("准备 " + Panel);
             if (Environment.GetEnvironmentVariable("TZ_D12_RECORD") == "1")
                 recording = bootstrap.StartCoroutine(RecordFrames());
@@ -120,7 +125,27 @@ namespace TianZhang.Tests.PlayMode
             while ((ResultOpen || !encounter.AcceptsPlayerCommand) && Time.realtimeSinceStartup < limit) yield return null;
             Assert.IsTrue(!ResultOpen && encounter.AcceptsPlayerCommand, "新局首个可控行动");
             yield return null;
+            StringAssert.Contains(encounter.ControlledActorId == Player ? "本人行动" : "同伴行动",
+                GameObject.Find("CombatPlayerText").GetComponent<Text>().text);
+            AssertVisibleRoleLabels();
             Record("入场 " + string.Join(", ", session.Combatants.All.Select(a => $"{a.Id}/{a.Team} {a.Position}")));
+        }
+
+        private void AssertVisibleRoleLabels()
+        {
+            var provider = Find<Static3DCombatUnitPresentationProvider>();
+            var expected = new List<string>();
+            foreach (var actor in session.Combatants.All)
+            {
+                if (!actor.IsAlive || session.Visibility?.IsVisible(encounter.ControlledActorId, actor.Id) == false ||
+                    !provider.TryGetHeadAnchor(actor.Id, out var anchor)) continue;
+                var position = Camera.main.WorldToViewportPoint(anchor);
+                if (position.z <= 0 || position.x < 0 || position.x > 1 || position.y < 0 || position.y > 1) continue;
+                expected.Add(actor.Id == Player ? "你" : actor.Team == CombatTeam.Player ? "友" : "敌");
+            }
+            var visible = GameObject.Find("CombatUnitHealthBars").GetComponentsInChildren<Text>();
+            CollectionAssert.AreEquivalent(expected, visible.Select(label => label.text));
+            Assert.IsTrue(visible.All(label => !label.raycastTarget));
         }
 
         private static IEnumerator Scene(string name)
@@ -240,6 +265,14 @@ namespace TianZhang.Tests.PlayMode
             var quote = encounter.PreviewJindan(command);
             Assert.IsTrue(quote.IsLegal, option + ": " + quote.RejectionReason);
             yield return Press(tab); yield return Press(option);
+            if (option is "fire_preview" or "visibility_deploy" or "seal_deploy")
+            {
+                Assert.IsFalse(view.GetButton("confirm").interactable);
+                var ability = session.Jindan.Ability(command.ProfileId);
+                var target = option == "fire_preview" ? Seat(command.ProfileId).FireDomain.Support.Cell :
+                    option == "seal_deploy" ? ability.Seal.To : ability.Visibility.Center;
+                yield return Pick(target);
+            }
             foreach (var cell in cells) yield return Pick(cell);
             yield return Pay(quote, command.ProfileId + "/" + option);
         }

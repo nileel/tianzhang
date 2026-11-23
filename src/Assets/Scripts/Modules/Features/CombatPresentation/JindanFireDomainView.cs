@@ -22,11 +22,11 @@ namespace TianZhang.Features.CombatPresentation
         public void ConfigureSurface(CombatBattlefieldSurface value) => surface = value;
 
         public void Present(bool deployed, bool destroyed, IReadOnlyCollection<CombatUnitPresentationHex> tailCells,
-            CombatUnitPresentationHex? centerCell)
+            CombatUnitPresentationHex? centerCell, bool hideUnplacedMarker = false)
         {
             if (!centerCell.HasValue)
             {
-                RestoreMarker();
+                RestoreMarker(!hideUnplacedMarker);
                 return;
             }
             if (!center)
@@ -34,8 +34,10 @@ namespace TianZhang.Features.CombatPresentation
                 center = Instantiate(fireCenterPrefab, surface.Center(centerCell.Value), Quaternion.identity, transform);
                 center.transform.Find("Failed").gameObject.SetActive(false);
                 glow = center.transform.Find("Intact/Glow").gameObject;
+                JindanCastVisual.LightFireLamp(glow.transform);
             }
             supportMarker.SetActive(false);
+            center.transform.position = surface.Center(centerCell.Value);
             center.SetActive(!destroyed);
             glow.SetActive(deployed && !destroyed);
             if (deployed && !warmth) CreateWarmth();
@@ -84,10 +86,10 @@ namespace TianZhang.Features.CombatPresentation
             expired.Clear();
         }
 
-        private void RestoreMarker()
+        private void RestoreMarker(bool showMarker = true)
         {
+            if (supportMarker) supportMarker.SetActive(showMarker);
             if (!center) return;
-            if (supportMarker) supportMarker.SetActive(true);
             center.SetActive(false);
             if (warmth) warmth.SetActive(false);
             UpdateEmbers(System.Array.Empty<CombatUnitPresentationHex>());

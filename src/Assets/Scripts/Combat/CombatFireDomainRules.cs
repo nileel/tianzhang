@@ -8,15 +8,16 @@ namespace TianZhang.Combat
     public sealed class CombatFireDomainDefinition
     {
         public CombatFireDomainDefinition(HexCoord center, string supportId, int fuelBudget, int tailFuel,
-            int tailCycles, int attackCapacity, float damageMultiplier)
+            int tailCycles, int attackCapacity, float damageMultiplier, bool chooseCenter = false)
         {
             if (string.IsNullOrWhiteSpace(supportId) || fuelBudget < tailFuel || tailFuel < 1 || tailCycles < 1 ||
                 attackCapacity < 1 || damageMultiplier <= 0 || float.IsNaN(damageMultiplier) || float.IsInfinity(damageMultiplier))
                 throw new ArgumentException("fire_domain_definition_invalid");
-            Center = center; SupportId = supportId; FuelBudget = fuelBudget; TailFuel = tailFuel;
+            Center = center; ChooseCenter = chooseCenter; SupportId = supportId; FuelBudget = fuelBudget; TailFuel = tailFuel;
             TailCycles = tailCycles; AttackCapacity = attackCapacity; DamageMultiplier = damageMultiplier;
         }
         public HexCoord Center { get; }
+        public bool ChooseCenter { get; }
         public string SupportId { get; }
         public int FuelBudget { get; }
         public int TailFuel { get; }
@@ -43,12 +44,21 @@ namespace TianZhang.Combat
         {
             var rules = ability.FireDomain;
             RemainingFuel = rules.FuelBudget;
+            HasPlacedSupport = !rules.ChooseCenter;
             Support = new CombatSceneObject(seat.AbilityInstanceId + ":" + rules.SupportId,
                 new CombatSceneObjectDefinition("stone_support", "stone", ability.SupportDurability,
                     0, 0, false, false, "none", isSupportMarker: true), rules.Center, sourceRef: seat.AbilityInstanceId);
         }
         internal readonly List<CombatFireDomainInstance> tails = new List<CombatFireDomainInstance>();
-        public CombatSceneObject Support { get; }
+        public CombatSceneObject Support { get; private set; }
+        public bool HasPlacedSupport { get; private set; }
+
+        internal void PlaceSupport(HexCoord center)
+        {
+            if (HasPlacedSupport) return;
+            Support = new CombatSceneObject(Support.Id, Support.Definition, center, sourceRef: Support.SourceRef);
+            HasPlacedSupport = true;
+        }
         public int RemainingFuel { get; internal set; }
         public CombatFireDomainInstance Main { get; internal set; }
         public IReadOnlyList<CombatFireDomainInstance> Tails => tails.AsReadOnly();
@@ -67,7 +77,7 @@ namespace TianZhang.Combat
             CombatJindanRequest request, CombatJindanAbilityDefinition ability)
         {
             if (request.EdgePath.Count != 0 || request.RemoteOrigin.HasValue || request.MetricDistanceUnits != 0 ||
-                request.EarthMode.HasValue || request.TideAction.HasValue || request.SelectedTargetCell.HasValue ||
+                request.EarthMode.HasValue || request.TideAction.HasValue ||
                 request.EarthTargetId != null || request.TideSource.HasValue || request.Charged || request.CreateTideEye)
                 return "fire_fixed_rule_required";
             var fire = seat.FireDomain;
@@ -75,18 +85,25 @@ namespace TianZhang.Combat
             if (fire.Main != null) return "jindan_capacity_full";
             if (fire.Support.IsDestroyed) return "fire_center_destroyed";
             if (fire.RemainingFuel < ability.FireDomain.TailFuel) return "fire_fuel_insufficient";
-            var contact = session.SceneObjects.Board.QueryContact(actor.Pose, new SpatialPose(fire.Support.Cell),
+            if (!fire.HasPlacedSupport && !request.SelectedTargetCell.HasValue) return "fire_center_required";
+            var center = request.SelectedTargetCell ?? fire.Support.Cell;
+            if (fire.HasPlacedSupport && center != fire.Support.Cell) return "fire_fixed_rule_required";
+            if (!fire.HasPlacedSupport && (!session.SceneObjects.Board.TryGetCell(center, out var tile) ||
+                tile.IsEntityObstacle || tile.BlocksMovement || session.Surfaces.Get(center) == null))
+                return "fire_center_invalid";
+            var contact = session.SceneObjects.Board.QueryContact(actor.Pose, new SpatialPose(center),
                 0, ability.Range, new SpatialAttackPolicy(SpatialMovementMode.Ground | SpatialMovementMode.Fly,
                     SpatialMovementMode.Ground, ability.VerticalReach));
             if (!contact.IsInRange || !contact.HasLineOfSight) return contact.Reason;
             if (BurningCount(session, seat) >= ability.Capacity) return "fire_tail_capacity_full";
-            if (Candidates(session, seat, ability).Length == 0) return "fire_no_eligible_surface";
+            if (Candidates(session, seat, ability, center).Length == 0) return "fire_no_eligible_surface";
             return string.Empty;
         }
 
-        internal static void Deploy(CombatantSnapshot actor, CombatJindanSeatState seat, CombatJindanAbilityDefinition ability)
+        internal static void Deploy(CombatantSnapshot actor, CombatJindanSeatState seat, CombatJindanAbilityDefinition ability, HexCoord? selectedCenter)
         {
             var fire = seat.FireDomain;
+            if (selectedCenter.HasValue) fire.PlaceSupport(selectedCenter.Value);
             fire.RemainingFuel -= ability.FireDomain.TailFuel;
             fire.Main = new CombatFireDomainInstance(actor.OwnTurnsStarted, ability.DurationOwnTurnEnds, ability.FireDomain.TailFuel);
         }
@@ -102,22 +119,26 @@ namespace TianZhang.Combat
             if (cell == null) return false;
             bool localFuel = cell.Fuel > 0 && (cell.FuelObjectId == null ||
                 session.SceneObjects.Find(cell.FuelObjectId) is { IsDestroyed: false });
-            return localFuel || session.SceneObjects.All.Any(value => value.Contains(cell.Cell) &&
+            if (localFuel) return true;
+            bool hearth = session.Jindan?.Seats.Any(seat => seat.FireDomain is { HasPlacedSupport: true } fire &&
+                fire.Support.Cell == cell.Cell && !fire.Support.IsDestroyed && session.Jindan.Ability(Effect).FireDomain.ChooseCenter) == true;
+            return hearth || session.SceneObjects.All.Any(value => value.Contains(cell.Cell) &&
                 value.Definition.ContentType == "low_plant" && !value.IsDestroyed);
         }
 
-        public static HexCoord[] Candidates(CombatSession session, CombatJindanSeatState seat, CombatJindanAbilityDefinition ability)
+        public static HexCoord[] Candidates(CombatSession session, CombatJindanSeatState seat, CombatJindanAbilityDefinition ability, HexCoord? prospectiveCenter = null)
         {
             if (session.Surfaces == null || seat.FireDomain == null) return Array.Empty<HexCoord>();
             var fire = seat.FireDomain;
+            var center = prospectiveCenter ?? fire.Support.Cell;
             var tails = fire.tails.SelectMany(value => value.cells).Where(cell => IsOwnedBurning(session.Surfaces.Get(cell), seat)).ToHashSet();
             int capacity = Math.Max(0, ability.Capacity - tails.Count);
             var current = fire.Main?.cells.Where(cell => IsOwnedBurning(session.Surfaces.Get(cell), seat) &&
-                IsBurnable(session, session.Surfaces.Get(cell))).OrderBy(cell => cell.TopologicalDistanceTo(fire.Support.Cell))
+                IsBurnable(session, session.Surfaces.Get(cell))).OrderBy(cell => cell.TopologicalDistanceTo(center))
                 .ThenBy(cell => cell.Q).ThenBy(cell => cell.R).ToArray() ?? Array.Empty<HexCoord>();
-            return current.Concat(session.Surfaces.Cells.Where(value => IsBurnable(session, value) &&
+            return current.Concat(session.Surfaces.Cells.Where(value => (ability.FireDomain.ChooseCenter && value.Cell == center || IsBurnable(session, value)) &&
                     !tails.Contains(value.Cell) && value.Kind != CombatSurfaceKind.Burning)
-                .OrderBy(value => value.Cell.TopologicalDistanceTo(fire.Support.Cell))
+                .OrderBy(value => value.Cell.TopologicalDistanceTo(center))
                 .ThenBy(value => value.Cell.Q).ThenBy(value => value.Cell.R).Select(value => value.Cell))
                 .Take(capacity).ToArray();
         }

@@ -213,7 +213,8 @@ namespace TianZhang.Tests.PlayMode
                 Assert.IsTrue(Find<CombatActionPreviewView>().ConfirmButton.interactable);
                 yield return Capture("ordinary-zero-ap-" + width);
                 yield return Withdraw(); yield return EnterAdventure();
-                yield return Click(GameObject.Find("JindanRehearsalButton").GetComponent<Button>());
+                Find<AdventureSceneInstaller>().OpenJindanPreparation();
+                yield return null;
                 view = Find<JindanDemoView>(); yield return Click(view.GetButton("enter")); yield return Ready();
                 encounter = Find<EncounterCoordinator>(); bar = Find<CombatActionBarView>();
                 Assert.AreEqual("demo_20261024_space_yang", encounter.ControlledActorId);
@@ -227,6 +228,9 @@ namespace TianZhang.Tests.PlayMode
                 yield return Capture("scale-selected-" + width);
                 yield return Click(view.GetButton("visibility_tab"));
                 yield return Click(view.GetButton("visibility_deploy"));
+                var altar = encounter.CurrentSession.Jindan.Ability(CombatVisibility.Yang).Visibility.Center;
+                Assert.IsFalse(Find<CombatActionPreviewView>().ConfirmButton.interactable);
+                yield return D12PlayerStartPlayModeTests.LockAbilityCell(new CombatUnitPresentationHex(altar.Q, altar.R));
                 Assert.IsTrue(Find<CombatActionPreviewView>().ConfirmButton.interactable);
                 yield return Click(bar.ArtButton);
                 Assert.IsNull(view.SelectedKey);

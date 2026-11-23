@@ -60,6 +60,7 @@ namespace TianZhang.Features.Adventure
         private Coroutine surfaceRoutine;
         private readonly CombatSurfacePlayback surfacePlayback = new CombatSurfacePlayback();
         public Action<CombatSurfaceSettlementSnapshot> SurfaceSettled { get; set; }
+        public Action<string, string, CombatUnitPresentationHex, CombatUnitPresentationHex?, string> JindanCastCommitted { get; set; }
         private bool withdrawalPaused;
         private JindanChallengeProgress nextChallenge;
         private ICombatResolutionRandomSource rehearsalRandom;
@@ -158,6 +159,10 @@ namespace TianZhang.Features.Adventure
 
         public bool IsRunning => session != null;
         public CombatSession CurrentSession => session;
+        public string DescribeBattlefieldCell(CombatUnitPresentationHex cell) =>
+            JindanInspection.Cell(session, new HexCoord(cell.Q, cell.R));
+        public string DescribeCombatantEffects(string id) =>
+            session?.Jindan != null && VisibleTo(ControlledActorId, id) ? JindanInspection.Unit(session, id) : null;
         public string ControlledActorId => session != null && session.Combatants.TryGet(session.CurrentActorId, out var current) &&
             current.Team == CombatTeam.Player ? current.Id : spawned?.Player.Id ?? "player";
         private bool IsPlayerActor(string id) => session != null && session.Combatants.TryGet(id, out var actor) && actor.Team == CombatTeam.Player;
@@ -751,6 +756,8 @@ namespace TianZhang.Features.Adventure
             else result = quote == null ? commandService.Execute(session, command) : commandService.Execute(session, command, quote);
             if (result.Succeeded)
             {
+                if (command.Kind == CombatCommandKind.JindanAbility && JindanCastCommitted != null)
+                    ProjectJindanCast(command);
                 string gravityTarget = command.Jindan?.EarthMode == CombatEarthMode.Heavy ? command.Jindan.EarthTargetId : null;
                 int previousTargetAltitude = gravityTarget != null && flightBefore != null &&
                     flightBefore.TryGetValue(gravityTarget, out var gravityBefore) ? gravityBefore.Pose.AltitudeBand : 0;
@@ -763,6 +770,29 @@ namespace TianZhang.Features.Adventure
                 surfaceRoutine = StartCoroutine(surfacePlayback.Play(session, unitPresentation, presentation.AppendLog, SurfaceSettled));
             }
             return result;
+        }
+
+        private void ProjectJindanCast(CombatCommand command)
+        {
+            var request = command.Jindan;
+            var seat = session.Jindan.Find(request.SeatId);
+            HexCoord? target = request.TideSource ?? request.SelectedTargetCell;
+            HexCoord? edgeOther = null;
+            if (request.EdgePath.Count >= 2)
+            {
+                target = request.EdgePath[0];
+                edgeOther = request.EdgePath[1];
+            }
+            else if (seat.ActiveSeal is { } seal)
+            {
+                target = seal.Definition.From;
+                edgeOther = seal.Definition.To;
+            }
+            target ??= seat.ActiveVisibility?.Support.Cell ?? seat.FireDomain?.Support.Cell;
+            if (!target.HasValue) return;
+            string targetUnit = session.Combatants.TryGet(request.EarthTargetId, out _) ? request.EarthTargetId : null;
+            JindanCastCommitted(command.ActorId, seat.EffectId, ToPresentationHex(target.Value),
+                edgeOther.HasValue ? ToPresentationHex(edgeOther.Value) : null, targetUnit);
         }
 
         private bool RefreshGrowth()

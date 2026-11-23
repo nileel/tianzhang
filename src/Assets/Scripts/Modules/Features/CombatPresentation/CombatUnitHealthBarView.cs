@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace TianZhang.Features.CombatPresentation
 {
-    /// <summary>Projects committed health and provider-owned head anchors into the existing overlay Canvas as slim text-free bars.</summary>
+    /// <summary>Projects committed health and provider-owned head anchors into the existing overlay Canvas as slim bars.</summary>
     [DefaultExecutionOrder(100)]
     public sealed class CombatUnitHealthBarView : MonoBehaviour
     {
@@ -21,6 +21,7 @@ namespace TianZhang.Features.CombatPresentation
             public Image healthFill;
             [NonSerialized] internal string Id;
             [NonSerialized] internal bool Alive;
+            [NonSerialized] internal Text Role;
         }
 
         [SerializeField] private Bar[] bars = Array.Empty<Bar>();
@@ -61,6 +62,31 @@ namespace TianZhang.Features.CombatPresentation
             Hide();
         }
 
+        internal void EnableRoleLabels(Font font)
+        {
+            foreach (Bar bar in bars)
+            {
+                if (bar.Role != null) continue;
+                var role = new GameObject("UnitRole", typeof(RectTransform), typeof(Text), typeof(Outline));
+                var rect = (RectTransform)role.transform;
+                rect.SetParent(bar.root, false);
+                rect.anchorMin = rect.anchorMax = new Vector2(0, .5f);
+                rect.pivot = new Vector2(1, .5f);
+                rect.anchoredPosition = new Vector2(-3, 0);
+                rect.sizeDelta = new Vector2(28, 30);
+                var label = role.GetComponent<Text>();
+                label.font = font;
+                label.fontStyle = FontStyle.Bold;
+                label.fontSize = 22;
+                label.alignment = TextAnchor.MiddleCenter;
+                label.raycastTarget = false;
+                var outline = role.GetComponent<Outline>();
+                outline.effectColor = new Color32(21, 20, 20, 255);
+                outline.effectDistance = new Vector2(1.5f, -1.5f);
+                bar.Role = label;
+            }
+        }
+
         public void Present(CombatHudSnapshot snapshot)
         {
             if (!configured) throw new InvalidOperationException("combat_health_bar_not_configured");
@@ -74,7 +100,7 @@ namespace TianZhang.Features.CombatPresentation
             }
             foreach (Bar bar in bars)
                 if (!units.Any(unit => HasId(unit, bar.Id))) Clear(bar);
-            foreach (CombatantHudSnapshot unit in units) UpdateResources(unit);
+            foreach (CombatantHudSnapshot unit in units) UpdateResources(unit, snapshot.Timeline);
         }
 
         public void Hide()
@@ -86,7 +112,7 @@ namespace TianZhang.Features.CombatPresentation
 
         private void OnDisable() => Hide();
 
-        private void UpdateResources(CombatantHudSnapshot value)
+        private void UpdateResources(CombatantHudSnapshot value, CombatTimelineSnapshot timeline)
         {
             if (value == null) return;
             if (string.IsNullOrWhiteSpace(value.Id))
@@ -110,6 +136,14 @@ namespace TianZhang.Features.CombatPresentation
             }
             bar.Id = value.Id;
             bar.Alive = value.CurrentHealth > 0;
+            if (bar.Role != null)
+            {
+                var member = timeline?.Entries.FirstOrDefault(entry => entry.Id == value.Id);
+                bool ally = member?.Faction == CombatUnitDisplayFaction.Player;
+                bar.Role.text = value.Id == "player" ? "你" : ally ? "友" : member != null ? "敌" : string.Empty;
+                bar.Role.color = value.Id == "player" ? new Color32(255, 223, 130, 255) :
+                    ally ? new Color32(169, 241, 224, 255) : new Color32(255, 169, 143, 255);
+            }
             float ratio = (float)value.CurrentHealth / value.MaximumHealth;
             bar.healthFill.fillAmount = ratio;
             bar.healthFill.color = ratio <= 0.25f ? new Color32(205, 61, 51, 255) : new Color32(78, 162, 103, 255);

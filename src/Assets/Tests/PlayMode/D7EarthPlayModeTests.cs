@@ -271,7 +271,8 @@ namespace TianZhang.Tests.PlayMode
 
         private IEnumerator Enter(bool manifest,int stage=1)
         {
-            yield return Click(GameObject.Find("JindanRehearsalButton").GetComponent<Button>());
+            Find<AdventureSceneInstaller>().OpenJindanPreparation();
+            yield return null;
             view=Find<JindanDemoView>();yield return Press("stage"+stage);
             if(manifest)yield return Press("earth_toggle");
             yield return Press("enter");encounter=Find<EncounterCoordinator>();session=encounter.CurrentSession;
@@ -562,7 +563,7 @@ namespace TianZhang.Tests.PlayMode
                 !encounter.AcceptsPlayerCommand;) yield return null;
             Assert.IsTrue(encounter.AcceptsPlayerCommand); yield return null;
         }
-        private IEnumerator Press(string key) => Click(view.GetButton(key));
+        private IEnumerator Press(string key) => D12PlayerStartPlayModeTests.PressAbilityControl(view, key, Click);
         private HexCoord[] Occupied() => session.Combatants.All.Where(a => a.IsAlive && a.Id != Earth).SelectMany(a => a.Pose.OccupiedCells).ToArray();
         private IEnumerator Click(Button button)
         {

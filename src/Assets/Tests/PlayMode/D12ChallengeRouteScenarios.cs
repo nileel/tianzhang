@@ -126,6 +126,7 @@ namespace TianZhang.Tests.PlayMode
             yield return StartChallenge(width, Yang, "stage3");
             var target = Actor(Yin);
             yield return UntilActor(Player);
+            AssertVisibleRoleLabels();
             Assert.NotNull(Seat("SPACE_SEAL").ActiveSeal);
             yield return Move(High);
             var detour = Movement(GateTo);

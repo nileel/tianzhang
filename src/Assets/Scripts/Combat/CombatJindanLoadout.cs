@@ -132,7 +132,7 @@ namespace TianZhang.Combat
                     seat.TotalManaSpent += costs.mana; seat.TotalActionPointSpent += costs.actionPoints;
                     if (command.Kind == CombatCommandKind.JindanAbility)
                     {
-                        CombatFireDomainRules.Deploy(actor, seat, definition);
+                        CombatFireDomainRules.Deploy(actor, seat, definition, command.Jindan.SelectedTargetCell);
                         actor.SetCooldown(seat.EffectId, costs.cooldown); seat.SuccessfulDeployments++; seat.LastEndReason = string.Empty;
                     }
                     else CombatFireDomainRules.EndMain(session, seat, definition, "jindan_closed");

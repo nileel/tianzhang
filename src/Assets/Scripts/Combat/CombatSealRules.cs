@@ -52,9 +52,10 @@ namespace TianZhang.Combat
         {
             var definition = ability.Seal;
             if (request.EdgePath.Count != 0 || request.RemoteOrigin.HasValue || request.MetricDistanceUnits != 0 ||
-                request.EarthMode.HasValue || request.TideAction.HasValue || request.SelectedTargetCell.HasValue ||
+                request.EarthMode.HasValue || request.TideAction.HasValue ||
                 request.EarthTargetId != null || request.TideSource.HasValue || request.Charged || request.CreateTideEye)
                 return "seal_fixed_condition_required";
+            if (request.SelectedTargetCell is { } selected && selected != definition.To) return "seal_support_required";
             if (!definition.ContainsOwner(actor.Position)) return "seal_owner_outside_domain";
             var board = session.SceneObjects.Board;
             var policy = new SpatialAttackPolicy(SpatialMovementMode.Ground | SpatialMovementMode.Fly,

@@ -35,6 +35,39 @@ namespace TianZhang.Tests.EditMode
         }
         private void FirstCycle(CombatSession s) { Commit(s, Deploy()); Next(s); Next(s); }
 
+        [TestCase(0, 0)]
+        [TestCase(1, 0)]
+        public void BasicTrialPlacesAndBurnsAtTheChosenCenterUntilPaidEmbersExpire(int q, int r)
+        {
+            var session = Ready(chooseCenter: true);
+            var center = new HexCoord(q, r);
+            var fire = Fire(session);
+            var command = new CombatCommand(CombatCommandKind.JindanAbility, Owner, profileId: CombatFireDomainRules.Effect,
+                jindan: new CombatJindanRequest(Seat, selectedTargetCell: center));
+            Assert.IsFalse(commands.Preview(session, Deploy()).IsLegal);
+            Assert.IsTrue(commands.Preview(session, command).IsLegal);
+            Assert.AreEqual(15, fire.RemainingFuel);
+            Assert.IsFalse(fire.HasPlacedSupport);
+            Assert.AreEqual(0, session.Surfaces.Get(center).Fuel, "Dry ground has no separate fuel deposit.");
+            Commit(session, command);
+            Assert.IsTrue(fire.HasPlacedSupport);
+            Assert.AreEqual(center, session.SceneObjects.Find(fire.Support.Id).Cell);
+            Assert.AreEqual(9, fire.RemainingFuel);
+            Next(session);
+            Assert.AreEqual(0, State(session).MaintenancePayments);
+            Next(session);
+            Assert.AreEqual(1, State(session).MaintenancePayments);
+            Assert.AreEqual(6, fire.RemainingFuel);
+            Assert.Contains(center, fire.Main.Cells.ToArray());
+            Assert.AreEqual(CombatSurfaceKind.Burning, session.Surfaces.Get(center).Kind);
+            Commit(session, Close());
+            Assert.Contains(center, fire.Tails.Single().Cells.ToArray());
+            Next(session); Next(session); Next(session);
+            Assert.IsEmpty(fire.Tails);
+            Assert.AreEqual(0, CombatFireDomainRules.BurningCount(session, State(session)));
+            Assert.AreEqual(CombatSurfaceKind.Scorched, session.Surfaces.Get(center).Kind);
+        }
+
         [Test]
         public void PrepareIsPureAndDeploymentUsesTheSharedLedgerAndReservesRealFuel()
         {
@@ -195,7 +228,7 @@ namespace TianZhang.Tests.EditMode
         private static void Reconcile(CombatSession s) => typeof(CombatJindanLoadout).GetMethod("Reconcile", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(s.Jindan, new object[] { s });
 
         private CombatSession Ready(int mana = 5000, int ap = 1000000, bool pair = false, bool flying = false,
-            CombatSurfaceKind surface = CombatSurfaceKind.None, bool plantOnly = false, bool foreign = false, int fuelBudget = 15)
+            CombatSurfaceKind surface = CombatSurfaceKind.None, bool plantOnly = false, bool foreign = false, int fuelBudget = 15, bool chooseCenter = false)
         {
             var cells = new Dictionary<HexCoord, SpatialCellRules>();
             for (int q = 0; q <= 4; q++) for (int r = 0; r <= 2; r++) cells.Add(new HexCoord(q, r), new SpatialCellRules(0, false, false, false, 0, true, 4));
@@ -221,7 +254,7 @@ namespace TianZhang.Tests.EditMode
                 new CombatJindanSeatDefinition(Owner, Seat, "fire", "Domain", Source, new[] { CombatFireDomainRules.Effect }, CombatFireDomainRules.Effect),
                 new CombatJindanSeatDefinition(Enemy, "water_seat", "water", "Source", "water_guardian", new[] { "WATER_TIDE" }, "WATER_TIDE") },
                 new[] { new CombatJindanAbilityDefinition(CombatFireDomainRules.Effect, true, 500000, 1000, 1, 25000, 200, 4, 3, 3, 600, 0, 6,
-                    Array.Empty<int>(), "", 3, fireDomain: new CombatFireDomainDefinition(Center, "center", fuelBudget, 6, 2, 2400, .01f)),
+                    Array.Empty<int>(), "", 3, fireDomain: new CombatFireDomainDefinition(Center, "center", fuelBudget, 6, 2, 2400, .01f, chooseCenter)),
                     new CombatJindanAbilityDefinition("WATER_TIDE", true, 250000, 400, 1, 25000, 0, 4, 3, 7, 0, 0, 6, Array.Empty<int>(), "",
                         tide: new CombatTideDefinition(1, 1, 2, 1, 125000, 200, 1, 125000, 200, 2400, 13f/280, 1.25f, 150)) }, 1));
             var definitions = cells.Keys.Select(cell => new CombatSurfaceDefinition(cell,

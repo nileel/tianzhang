@@ -134,7 +134,8 @@ namespace TianZhang.Features.Adventure
                 additionalPlayers: players.Skip(1).ToArray(), rehearsalNames: names, playerTrialPresetId: presetId);
         }
 
-        public static CombatJindanLoadout CreateLoadout(JindanDemoCatalogData catalog, AdventureSpawnSet spawned, string earthEffect)
+        public static CombatJindanLoadout CreateLoadout(JindanDemoCatalogData catalog, AdventureSpawnSet spawned,
+            string earthEffect, bool chooseFireCenter = false)
         {
             var actors = new HashSet<string>(spawned.Players.Concat(spawned.Enemies).Select(value => value.Id));
             if (spawned.PlayerTrialPresetId != null) actors.Add(spawned.PlayerTrialPresetId);
@@ -165,7 +166,7 @@ namespace TianZhang.Features.Adventure
                     effect == CombatFireDomainRules.Effect ? new CombatFireDomainDefinition(
                         new HexCoord(catalog.fireDomainRules.centerQ, catalog.fireDomainRules.centerR), catalog.fireDomainRules.supportId,
                         catalog.fireDomainRules.fuelBudget, catalog.fireDomainRules.tailFuel, catalog.fireDomainRules.tailCycles,
-                        catalog.fireDomainRules.attackCapacity, catalog.fireDomainRules.damageMultiplier) : null,
+                        catalog.fireDomainRules.attackCapacity, catalog.fireDomainRules.damageMultiplier, chooseFireCenter) : null,
                     CombatVisibility.IsEffect(effect) ? CreateVisibility(catalog.visibilityRules, effect, deploy.durationCount) : null));
             }
             return new CombatJindanLoadout(seats, abilities, catalog.loadoutTuning.maxSwitchesPerOwnAction);

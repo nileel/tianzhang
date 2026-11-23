@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using TianZhang.Gameplay.Contracts;
@@ -21,6 +22,7 @@ namespace TianZhang.Features.CombatPresentation
             var badges = new Dictionary<string, Sprite>();
             foreach (string key in new[] { "earth_tab", "tide_tab", "fire_tab", "visibility_tab", "seal_tab" })
                 badges.Add(key, rehearsal.GetButton(key).transform.Find("ActionIcon").GetComponent<UnityEngine.UI.Image>().sprite);
+            healthBars.EnableRoleLabels(rehearsal.GetButton("enter").GetComponentInChildren<UnityEngine.UI.Text>(true).font);
             view.BindTrialPortraits(badges);
             timelineView.TrialPortraits = badges;
             targetView.TrialPortraits = badges;
@@ -32,15 +34,21 @@ namespace TianZhang.Features.CombatPresentation
         private CombatMovementView movementView;
         public CombatHudSnapshot Snapshot { get; private set; }
         public string InspectedTargetId { get; private set; }
+        public CombatUnitPresentationHex? InspectedCell { get; private set; }
+        private Func<CombatUnitPresentationHex, string> describeCell;
+        private Func<string, string> describeUnit;
         public bool IsPresenting => timelineView != null && timelineView.IsPresenting;
         public bool CanInspect => Snapshot != null && !Snapshot.IsPresenting && !IsPresenting &&
             (commandInput == null || !commandInput.IsSelectingAttack) &&
             unitProvider != null && !unitProvider.IsPresenting && movementView != null && !movementView.IsSelecting;
 
         public void ConfigureTargets(CombatTargetView targets, Static3DCombatUnitPresentationProvider provider,
-            CombatMovementView movement)
+            CombatMovementView movement, Func<CombatUnitPresentationHex, string> cellDetails = null,
+            Func<string, string> unitDetails = null)
         {
             targetView = targets;
+            describeCell = cellDetails;
+            describeUnit = unitDetails;
             unitProvider = provider;
             commandInput.ConfigureTargetPreview(provider);
             movementView = movement;
@@ -61,12 +69,22 @@ namespace TianZhang.Features.CombatPresentation
         public void InspectTarget(string id)
         {
             if (!CanInspect) return;
+            InspectedCell = null;
             InspectedTargetId = FindInspectable(id)?.Id;
+            RefreshTarget();
+        }
+
+        public void InspectCell(CombatUnitPresentationHex cell)
+        {
+            if (!CanInspect) return;
+            InspectedTargetId = null;
+            InspectedCell = cell;
             RefreshTarget();
         }
 
         public void ClearInspectedTarget()
         {
+            InspectedCell = null;
             InspectedTargetId = null;
             RefreshTarget();
         }
@@ -77,7 +95,13 @@ namespace TianZhang.Features.CombatPresentation
             if (selected == null) InspectedTargetId = null;
             bool allied = selected != null && (Snapshot.Player.Id == selected.Id ||
                 Snapshot.Timeline?.Entries.Any(entry => entry.Id == selected.Id && entry.Faction == CombatUnitDisplayFaction.Player) == true);
-            targetView?.Present(selected, allied);
+            string cellDetails = InspectedCell.HasValue && Snapshot != null ? describeCell?.Invoke(InspectedCell.Value) : null;
+            if (cellDetails != null) targetView?.PresentCell(InspectedCell.Value, cellDetails);
+            else
+            {
+                InspectedCell = null;
+                targetView?.Present(selected, allied, selected == null ? null : describeUnit?.Invoke(selected.Id));
+            }
             timelineView?.SetInspectedTarget(InspectedTargetId);
             RefreshInspectionMarker();
         }
@@ -90,7 +114,9 @@ namespace TianZhang.Features.CombatPresentation
             if (commandInput?.IsSelectingAttack != true && InspectedTargetId != null && unitProvider != null &&
                 unitProvider.TryGetPresentedPose(InspectedTargetId, out CombatUnitPresentationPose presented))
                 pose = presented;
-            movementView.SetInspectionPose(pose);
+            if (InspectedCell.HasValue && commandInput?.IsSelectingAttack != true)
+                movementView.SetInspectionHighlight(InspectedCell);
+            else movementView.SetInspectionPose(pose);
         }
 
         private void LateUpdate()

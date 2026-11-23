@@ -54,7 +54,8 @@ namespace TianZhang.Features.Adventure
             var actors = usePlayer ? JindanRehearsalFactory.CreateForPlayer(demo, earthEffect, text, player, segmentIndex, playerPresetId)
                 : JindanRehearsalFactory.Create(demo, segmentIndex, earthEffect, text, controlFire);
             if (!combatEntry.TryCreateSession(actors, attackProfiles, environment, out var prepared, out reason, demo)) return false;
-            prepared.ConfigureJindan(JindanRehearsalFactory.CreateLoadout(demo, actors, earthEffect));
+            prepared.ConfigureJindan(JindanRehearsalFactory.CreateLoadout(demo, actors, earthEffect,
+                usePlayer && segmentIndex < 0 && playerPresetId == JindanDemoCatalogData.PlayerFirePresetId));
             prepared.ConfigureFlight(JindanRehearsalFactory.CreateFlight(demo, actors));
             if (!environment.TryCreateDefinition(out var surfaceEnvironment, out reason)) return false;
             prepared.ConfigureSurfaces(JindanRehearsalFactory.CreateSurfaces(demo, surfaceEnvironment, Math.Max(0, segmentIndex),

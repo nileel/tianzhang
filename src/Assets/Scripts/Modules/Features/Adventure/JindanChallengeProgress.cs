@@ -11,6 +11,16 @@ namespace TianZhang.Features.Adventure
     {
         public static readonly HexCoord HighGoal = new HexCoord(8, 12);
         private static readonly HexCoord BasicGoal = new HexCoord(4, 1);
+        private static readonly HexCoord FirstFireGoal = new HexCoord(5, 6);
+        public HexCoord? MovementTarget(CombatSession session)
+        {
+            if (Outcome != CombatSessionOutcome.Ongoing) return null;
+            if (SegmentIndex == -1 && !reached) return BasicGoal;
+            if (SegmentIndex != 1 || FireDefender || session?.Surfaces == null) return null;
+            return extinguished.Where(cell => session.Surfaces.Get(cell).Kind != CombatSurfaceKind.Burning)
+                .OrderByDescending(cell => cell == FirstFireGoal).ThenBy(cell => cell.Q).ThenBy(cell => cell.R)
+                .Select(cell => (HexCoord?)cell).FirstOrDefault();
+        }
         private const string FirePreset = "demo_20261024_fire";
         private const string YinPreset = "demo_20261024_seal_yin";
         private readonly HashSet<HexCoord> extinguished = new HashSet<HexCoord>();
@@ -48,7 +58,7 @@ namespace TianZhang.Features.Adventure
             -1 => "本人到达 (4,1)，施放飞星指，主动结束行动。",
             0 => "登上高台 (8,12)，命中飞行对手或用极重将其压低。",
             1 when presetId == FirePreset => "守住阵心，使火域阻滞通路，再从陆路撤到 (8,12)。",
-            1 => "用潮水灭火后走过该格，或破坏阵心、处理余火后步行通过。",
+            1 => "步行穿过任一被潮水浇灭的火格，或破坏阵心、处理余火后步行通过。",
             2 when presetId == YinPreset => "封关延缓对手，利用藏真从近距观察中撤出。",
             2 => "绕过封边近距看见隐者，或破锚过门、用定尺与阳照完成观察。",
             _ => throw new ArgumentOutOfRangeException(nameof(segmentIndex))
@@ -59,7 +69,7 @@ namespace TianZhang.Features.Adventure
             -1 => "点移动，走到浅水格 (4,1)。",
             0 => "沿坡阶向高台 (8,12) 移动，或让持有御风的角色起飞。",
             1 when presetId == FirePreset => "守阵 · 接近阵心 (7,12)，展开长明。",
-            1 => "用蓄澜涨潮浇灭 (5,6) 的火，或让厚载飞至阵心 (7,12) 附近。",
+            1 => "用蓄澜涨潮浇灭 " + Cell(FirstFireGoal) + " 的火，或让厚载飞至阵心 (7,12) 附近。",
             2 when presetId == YinPreset => "在门枢 (9,12) 附近展开封关，并在月坛旁展开藏真。",
             2 => "先到 (8,12)，再绕过封边到 (9,12)，或用贯石击破锚。",
             _ => throw new ArgumentOutOfRangeException(nameof(segmentIndex))
@@ -187,7 +197,8 @@ namespace TianZhang.Features.Adventure
             }
             if (domain.Support.IsDestroyed && emberCells.Count > 0)
                 ProgressText = clearedTail ? "余火已尽。步行通过原余火格 " + Cell(emberCells.OrderBy(p => p.Q).ThenBy(p => p.R).First()) + "。" : "阵心已破。用潮水熄灭余火，或待其耗尽。";
-            else if (extinguished.Count > 0) ProgressText = "潮水已灭火。步行经过 " + Cell(extinguished.OrderBy(p => p.Q).ThenBy(p => p.R).First()) + "。";
+            else if (MovementTarget(session) is { } crossing)
+                ProgressText = "潮水已灭火。步行穿过任一熄火格，如 " + Cell(crossing) + "。";
         }
 
         private void ObserveGate(CombatSession session, CombatantSnapshot player, CombatantSnapshot actor,

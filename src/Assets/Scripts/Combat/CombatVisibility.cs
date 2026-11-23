@@ -120,10 +120,11 @@ namespace TianZhang.Combat
         internal static string Validate(CombatSession session, CombatantSnapshot actor, CombatJindanRequest request, CombatJindanAbilityDefinition ability)
         {
             if (request.EdgePath.Count != 0 || request.RemoteOrigin.HasValue || request.MetricDistanceUnits != 0 ||
-                request.EarthMode.HasValue || request.TideAction.HasValue || request.SelectedTargetCell.HasValue ||
+                request.EarthMode.HasValue || request.TideAction.HasValue ||
                 request.EarthTargetId != null || request.TideSource.HasValue || request.Charged || request.CreateTideEye)
                 return "visibility_fixed_domain_required";
             var definition = ability.Visibility;
+            if (request.SelectedTargetCell is { } selected && selected != definition.Center) return "visibility_support_required";
             var policy = new SpatialAttackPolicy(SpatialMovementMode.Ground | SpatialMovementMode.Fly, SpatialMovementMode.Ground, ability.VerticalReach);
             var contact = session.SceneObjects.Board.QueryContact(actor.Pose, new SpatialPose(definition.Center), 0, ability.Range, policy);
             if (!contact.IsInRange || !contact.HasLineOfSight) return contact.Reason;

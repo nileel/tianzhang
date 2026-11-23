@@ -46,6 +46,28 @@ namespace TianZhang.Features.CombatPresentation
         private readonly Dictionary<string, PresentedUnit> units = new Dictionary<string, PresentedUnit>();
         private readonly Dictionary<string, Coroutine> actionRecoveries = new Dictionary<string, Coroutine>();
         private readonly Dictionary<GameObject, (string Source, string Target)> transientFeedback = new();
+        private JindanCastVisual cast;
+
+        public bool AwaitingJindanImpact => cast && cast.isActiveAndEnabled && !cast.HasLanded;
+
+        public void PlayJindanCast(string actorId, string effectId, CombatUnitPresentationHex target,
+            CombatUnitPresentationHex? otherEdgeCell, string targetUnitId)
+        {
+            if (!TryGetVisibleBounds(actorId, out var body)) return;
+            Vector3 landing = SurfacePosition(target) + Vector3.up * .13f;
+            if (otherEdgeCell.HasValue) landing = (landing + SurfacePosition(otherEdgeCell.Value) + Vector3.up * .13f) * .5f;
+            if (targetUnitId != null)
+            {
+                if (!TryGetVisibleBounds(targetUnitId, out var targetBody)) return;
+                landing.y = targetBody.center.y;
+            }
+            var unit = units[actorId];
+            profileSet.TryGetProfile(unit.ProfileId, out var profile);
+            var feedback = profile.combatFeedback;
+            cast = JindanCastVisual.Play(effectId, body, landing, feedback.vfxPrefab);
+            RegisterTransient(cast.gameObject, JindanCastVisual.Duration, actorId, targetUnitId);
+            SpawnCue(feedback.castCue, body.center, feedback.intensity, actorId);
+        }
 
         public int ActiveCombatantCount => units.Count;
 
@@ -180,10 +202,12 @@ namespace TianZhang.Features.CombatPresentation
                     unit.Pose.IsDoubleCell, presentationEvent.AltitudeBand.Value);
                 unit.Pose = target;
                 StopActionRecovery(unit.CombatantId); ResetRootScale(unit);
-                movements.Add(unit.CombatantId, StartCoroutine(CombatUnitFlightVisual.Transition(unit.Root.transform, target,
+                var transition = CombatUnitFlightVisual.Transition(unit.Root.transform, target,
                     surface, surface != null ? surfacePoses[unit.CombatantId] : null, profile.sixDirectionYawDegrees[target.Facing],
                     MovementCellsPerSecond, () => movements.Remove(unit.CombatantId),
-                    presentationEvent.IsGravityDescent ? gravityPressurePrefab : null, landingDustPrefab)));
+                    presentationEvent.IsGravityDescent ? gravityPressurePrefab : null, landingDustPrefab);
+                movements.Add(unit.CombatantId, StartCoroutine(presentationEvent.IsGravityDescent && AwaitingJindanImpact
+                    ? AfterJindanImpact(transition) : transition));
                 return;
             }
             // A long body can turn only along the committed movement pose path. Attack direction
@@ -235,6 +259,7 @@ namespace TianZhang.Features.CombatPresentation
 
         public void Clear()
         {
+            cast = null;
             foreach (Coroutine routine in movements.Values) StopCoroutine(routine);
             movements.Clear();
             ClearTransientFeedback();
@@ -524,7 +549,13 @@ namespace TianZhang.Features.CombatPresentation
                 SpawnVfx(feedback.vfxPrefab, presentationEvent.PresentationEvent, position, feedback.intensity, unit.CombatantId);
         }
 
-        private void SpawnCue(AudioClip cue, Vector3 position, float intensity)
+        private System.Collections.IEnumerator AfterJindanImpact(System.Collections.IEnumerator transition)
+        {
+            while (AwaitingJindanImpact) yield return null;
+            yield return transition;
+        }
+
+        private void SpawnCue(AudioClip cue, Vector3 position, float intensity, string actorId = null)
         {
             if (cue == null) return;
             var audioObject = new GameObject("GuanzhongCombatFeedback_Audio");
@@ -536,7 +567,7 @@ namespace TianZhang.Features.CombatPresentation
             source.minDistance = 1.2f;
             source.maxDistance = 8f;
             source.Play();
-            RegisterTransient(audioObject, cue.length + 0.05f);
+            RegisterTransient(audioObject, cue.length + 0.05f, actorId);
         }
 
         private void SpawnVfx(GameObject prefab, CombatUnitPresentationEvent presentationEvent, Vector3 position, float intensity, string actorId)
@@ -618,7 +649,7 @@ namespace TianZhang.Features.CombatPresentation
         private void ClearTransientFeedback()
         {
             foreach (GameObject feedback in transientFeedback.Keys)
-                if (feedback != null) Destroy(feedback);
+                if (feedback != null) { feedback.SetActive(false); Destroy(feedback); }
             transientFeedback.Clear();
         }
 

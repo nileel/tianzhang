@@ -32,6 +32,13 @@ namespace TianZhang.Features.CombatPresentation
         [SerializeField] private Button detailsButton;
         private void Awake()
         {
+            // This line sits outside the quote panel, directly over the board and clouds.
+            if (actionHint != null)
+            {
+                var outline = actionHint.GetComponent<Outline>() ?? actionHint.gameObject.AddComponent<Outline>();
+                outline.effectColor = new Color32(8, 17, 22, 240);
+                outline.effectDistance = new Vector2(1.4f, -1.4f);
+            }
             if (detailsButton != null) detailsButton.onClick.AddListener(() =>
             { if (IsVisible) detailsRoot.SetActive(!detailsRoot.activeSelf); });
         }

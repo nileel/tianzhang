@@ -8,6 +8,20 @@ namespace TianZhang.Features.Adventure
 {
     internal static class JindanHudPresentation
     {
+        internal static string Description(string effect) => effect switch
+        {
+            "FIRE_MANIFEST" => "持续加热地表，后续本人回合结束时引燃可燃格，灼伤地面单位。",
+            "WATER_TIDE" => "选潮源涨退水位，推移接地者并造成水击；潮眼可在无水处起潮。",
+            "EARTH_MANIFEST" => "选相邻两格，在边上筑岩墙阻行，或为一档高差架坡。",
+            "EARTH_GRAVITY" => "点单位或土石施力：极重压低飞行者，失重利移动，镇岳抗推移。",
+            "SPACE_SCALE" => "选择相连格，压缩或扩张格边的实际距离，改变移动费用与射程。",
+            "SPACE_SEAL" => "在门枢封住箭头方向的敌方通行；反向和其他格边仍可通行。",
+            "YANG_RADIANCE" => "借日坛照亮战场，帮助视野内的观察者与藏真争夺显形。",
+            "YIN_CONCEAL" => "借月坛掩藏远敌眼中的己方单位；敌人近身时自然显形。",
+            CombatFlight.ProfileId => "自身起飞跨越地面障碍，避开地表水火；升降会改变攻击高度。",
+            _ => "选择要结束的持续能力，确认后支付收势费用。",
+        };
+
         internal static JindanHudSnapshot Project(CombatSession session, string actorId, string objective, bool defendFire)
         {
             if (session?.Jindan == null || !session.Combatants.TryGet(actorId, out var actor)) return null;
