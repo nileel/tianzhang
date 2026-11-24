@@ -36,24 +36,32 @@ namespace TianZhang.Gameplay.Contracts
         }
     }
 
+    public enum AdventureEntrance { Unspecified, Wilderness, Terrace }
+
     public sealed class NavigationStateSnapshot
     {
         public NavigationStateSnapshot(
             string worldNodeId,
             string settlementId,
             string adventureId,
-            SceneReturnTarget returnTarget)
+            SceneReturnTarget returnTarget,
+            AdventureEntrance entrance = AdventureEntrance.Unspecified)
         {
+            if (!Enum.IsDefined(typeof(AdventureEntrance), entrance) ||
+                (entrance != AdventureEntrance.Unspecified && string.IsNullOrWhiteSpace(adventureId)))
+                throw new ArgumentOutOfRangeException(nameof(entrance));
             WorldNodeId = string.IsNullOrWhiteSpace(worldNodeId) ? "jiangzuo_hub" : worldNodeId;
             SettlementId = string.IsNullOrWhiteSpace(settlementId) ? null : settlementId;
             AdventureId = string.IsNullOrWhiteSpace(adventureId) ? null : adventureId;
             ReturnTarget = returnTarget;
+            Entrance = entrance;
         }
 
         public string WorldNodeId { get; }
         public string SettlementId { get; }
         public string AdventureId { get; }
         public SceneReturnTarget ReturnTarget { get; }
+        public AdventureEntrance Entrance { get; }
     }
 
     public interface INavigationUseCase
@@ -61,7 +69,8 @@ namespace TianZhang.Gameplay.Contracts
         NavigationStateSnapshot Navigation { get; }
         string EnterWorld(string nodeId);
         string EnterSettlement(string settlementId);
-        string EnterAdventure(string adventureId, SceneReturnTarget returnTarget);
+        string EnterAdventure(string adventureId, SceneReturnTarget returnTarget,
+            AdventureEntrance entrance = AdventureEntrance.Unspecified);
         string ReturnToPreviousScene();
     }
 }

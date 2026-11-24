@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using TianZhang.Content;
+using TianZhang.Gameplay.Contracts;
 using TianZhang.World;
 using UnityEngine;
 using UnityEngine.UI;
@@ -134,6 +135,7 @@ namespace TianZhang.Features.Settlement
         [SerializeField] private Text featureButtonText;
         [SerializeField] private Button adventureButton;
         [SerializeField] private Text adventureButtonText;
+        private Button terraceButton;
         [SerializeField] private Button returnToWorldButton;
         [SerializeField] private Button saveAndReturnButton;
         [SerializeField] private BountyBoardView bountyBoardView;
@@ -356,19 +358,27 @@ namespace TianZhang.Features.Settlement
                 ShowFeatureResult(SettlementFeatureDispatcher.FeatureDisabledReason + ":" + feature.disabledReasonKey);
         }
 
-        public void BindAdventure(string adventureId, Action<string> onClick)
+        public void BindAdventure(string adventureId, Action<string, AdventureEntrance> onClick)
         {
             EnsureLanguageLoaded();
             bool available = !string.IsNullOrWhiteSpace(adventureId);
-            string destination = isJindanTrial
-                ? UiText.Resolve("settlement_enter_jindan_trial")
-                : "进入副本: " + UiText.ResolveId("adventure_", adventureId);
+            if (adventureButton == null) return;
+            if (terraceButton == null)
+            {
+                terraceButton = Instantiate(adventureButton, adventureButton.transform.parent, false);
+                terraceButton.name = "SettlementTerraceButton";
+                terraceButton.transform.SetSiblingIndex(adventureButton.transform.GetSiblingIndex() + 1);
+            }
+            adventureButton.gameObject.SetActive(!isJindanTrial);
             SetButton(
                 adventureButton,
                 adventureButtonText,
-                available ? destination : "副本不可用",
+                available ? "进入副本: " + UiText.ResolveId("adventure_", adventureId) : "副本不可用",
                 available,
-                () => onClick?.Invoke(adventureId));
+                () => onClick?.Invoke(adventureId, AdventureEntrance.Wilderness));
+            SetButton(terraceButton, terraceButton.GetComponentInChildren<Text>(true),
+                UiText.Resolve("settlement_enter_jindan_trial"), available,
+                () => onClick?.Invoke(adventureId, AdventureEntrance.Terrace));
         }
 
         public void ShowFeatureResult(string reason)

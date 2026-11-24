@@ -10,9 +10,11 @@ namespace TianZhang.Features.Adventure
     {
         internal static string Cell(CombatSession session, HexCoord cell)
         {
-            if (session?.Jindan == null || !session.SceneObjects.Board.TryGetCell(cell, out var tile)) return null;
+            if (session?.SceneObjects == null || (session.Surfaces == null && session.Jindan == null) ||
+                !session.SceneObjects.Board.TryGetCell(cell, out var tile)) return null;
             var surface = session.Surfaces?.Get(cell);
             var lines = new List<string> { $"高度 {tile.HeightLevel} · {JindanTidePresentation.Surface(surface?.Kind ?? CombatSurfaceKind.None)}" };
+            if (session.Jindan == null) return lines[0];
             foreach (var seat in session.Jindan.Seats)
             {
                 var fire = seat.FireDomain;

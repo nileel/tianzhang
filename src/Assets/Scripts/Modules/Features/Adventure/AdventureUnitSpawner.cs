@@ -43,7 +43,7 @@ namespace TianZhang.Features.Adventure
         public IReadOnlyList<CombatantSnapshot> Players { get; }
         public IReadOnlyDictionary<string, string> RehearsalNames { get; }
         public string PlayerTrialPresetId { get; }
-        public bool IsJindanRehearsal => RehearsalNames != null;
+        public bool IsJindanRehearsal => RehearsalNames != null || PlayerTrialPresetId != null;
         public CombatantSnapshot Enemy { get; }
         public IReadOnlyList<CombatantSnapshot> Enemies { get; }
         public EnemyData EnemyData { get; }
@@ -63,7 +63,8 @@ namespace TianZhang.Features.Adventure
             AdventureNodeData startNode,
             AdventureNodeData encounterNode,
             out AdventureSpawnSet spawned,
-            out string reason)
+            out string reason,
+            IReadOnlyDictionary<string, string> playerAbilityInstances = null, string playerTrialPresetId = null)
         {
             spawned = null;
             if (player == null)
@@ -111,7 +112,7 @@ namespace TianZhang.Features.Adventure
                 { reason = "adventure_enemy_basic_attack_binding_invalid"; return false; }
                 playerBasic = ResolveBasicAttackBinding(player.MainEquipmentBasicAttackProfileId, player.UnarmedBasicAttackProfileId);
                 enemyBasic = ResolveBasicAttackBinding(enemyProfile.MainEquipmentBasicAttackProfileId, enemyProfile.UnarmedBasicAttackProfileId);
-                playerSnapshot = CreatePlayer(player, playerPosition, playerBasic);
+                playerSnapshot = CreatePlayer(player, playerPosition, playerBasic, playerAbilityInstances);
                 enemyStats = ProjectEnemyStats(enemyData.combatTemplate, catalog.CombatRuleSet,
                     enemyData.combatStatScale, enemyData.movementEfficiencyScale);
                 enemySnapshot = CreateEnemy(enemyData, enemyStats, enemyPosition, enemyBasic, encounterNode.enemyFacing);
@@ -144,7 +145,8 @@ namespace TianZhang.Features.Adventure
                 enemyData,
                 playerBasic,
                 enemyBasic,
-                (string[])player.AbilityLoadout.EquippedSkills.Clone(), additionalSnapshots, enemyStats, additionalEnemyData);
+                (string[])player.AbilityLoadout.EquippedSkills.Clone(), additionalSnapshots, enemyStats, additionalEnemyData,
+                playerTrialPresetId: playerTrialPresetId);
             reason = null;
             return true;
         }

@@ -3,6 +3,7 @@ using System.Linq;
 using NUnit.Framework;
 using TianZhang.Bootstrap;
 using TianZhang.Combat;
+using TianZhang.Entity;
 using TianZhang.Features.CombatPresentation;
 using TianZhang.Gameplay.Contracts;
 using TianZhang.Spatial;
@@ -39,8 +40,7 @@ namespace TianZhang.Tests.PlayMode
             yield return Ready();
             yield return Press("choose_challenge");
             yield return Press("stage2");
-            Assert.That(Panel, Does.Contain("同伴").And.Contain("由你操控")
-                .And.Contain("提示").And.Contain("敌方全灭").And.Contain("我方全灭"));
+            Assert.That(Panel, Does.Contain("独自行动").And.Contain("敌方全灭").And.Contain("我方全灭"));
             Assert.That(Panel, Does.Not.Contain("_seat"));
             yield return Press("prep_details");
             Assert.That(Panel, Does.Contain("金丹源位 · 渊蓄池").And.Contain("演武·蓄澜")
@@ -76,23 +76,177 @@ namespace TianZhang.Tests.PlayMode
         private static string Heading() => GameObject.Find("JindanPreparationDialog/Heading")
             .GetComponent<UnityEngine.UI.Text>().text;
 
+        private static readonly string[] CharacterSaves = { "ordinary", "legacy", Earth, Water, Fire, Yang, Yin };
+
         [UnityTest, Timeout(300000)]
-        public IEnumerator FireDefeatAndRetry([ValueSource(nameof(Widths))] int width)
+        public IEnumerator TerraceEntryUsesSavedOwnerAndIndependentCosts([ValueSource(nameof(CharacterSaves))] string save)
         {
-            yield return StartChallenge(width, Fire, "stage2");
-            yield return UntilActor(Player);
+            yield return StartChallenge(1366, save, "basic");
+            var runtime = GameBootstrap.RequireRuntime();
+            var owner = runtime.Player.Capture();
+            var demo = Resources.FindObjectsOfTypeAll<JindanDemoCatalogData>().First(c => c.presets?.Length == 5);
+            var stages = new[] { "basic", "stage1", "stage2", "stage3" };
+            for (int i = 0; i < stages.Length; i++)
+            {
+                if (i > 0)
+                {
+                    yield return Press(stages[i]);
+                    StringAssert.Contains(i == 1 || i == 3 ? "裂石甲兽" : "石甲兽", Panel);
+                    yield return Press("enter");
+                    yield return Entered();
+                }
+                var player = Actor(Player);
+                Assert.AreEqual(Player, encounter.ControlledActorId);
+                var hud = Find<CombatHudPresenter>().Snapshot;
+                Assert.AreEqual(playerName, hud.Player.DisplayName);
+                StringAssert.Contains(i == 1 || i == 3 ? "裂石甲兽" : "石甲兽", hud.Enemies.Single().DisplayName);
+                Assert.AreEqual(1, session.Combatants.All.Count(a => a.Team == CombatTeam.Player));
+                Assert.AreEqual(1, session.Combatants.All.Count(a => a.Team == CombatTeam.Enemy));
+                Assert.AreEqual(owner.Progression.RealmStage, player.RealmStage);
+                CollectionAssert.AreEqual(owner.AbilityLoadout.EquippedSpells, player.EquippedArtProfileIds);
+                Assert.AreEqual(string.IsNullOrEmpty(owner.MainEquipmentBasicAttackProfileId)
+                    ? owner.UnarmedBasicAttackProfileId : owner.MainEquipmentBasicAttackProfileId, player.BasicAttackProfileId);
+                Assert.AreEqual(144, surface.Cells.Count);
+                if (string.IsNullOrEmpty(runtime.JindanDemoPresetId))
+                {
+                    Assert.IsNull(session.Jindan);
+                    Assert.IsNull(session.Flight);
+                }
+                else
+                {
+                    var preset = demo.GetPreset(save);
+                    CollectionAssert.AreEquivalent(preset.seatInstanceIds.Select(id => JindanDemoCatalogData.PlayerInstanceId(save, id)),
+                        session.Jindan.Seats.Select(seat => seat.Definition.SeatId));
+                    Assert.IsTrue(session.Jindan.Seats.All(seat => seat.Definition.ActorId == Player));
+                    Assert.AreEqual(string.IsNullOrEmpty(preset.flightAbilityInstanceId), session.Flight?.Find(Player) == null);
+                }
+                if (i == 0)
+                {
+                    var enemy = Actor("enemy");
+                    int enemySpirit = enemy.CurrentSpirit;
+                    int beforeAP = player.ActionPointsRemainingUnits, beforeMP = player.CurrentSpirit;
+                    if (player.EquippedArtProfileIds.Contains(Star))
+                    {
+                        yield return Attack(Star, new HexCoord(5, 1));
+                        Assert.AreEqual(beforeMP - 10, player.CurrentSpirit);
+                    }
+                    else
+                    {
+                        yield return Move(new HexCoord(4, 1));
+                        Assert.AreEqual(beforeMP, player.CurrentSpirit);
+                    }
+                    Assert.Less(player.ActionPointsRemainingUnits, beforeAP);
+                    Assert.AreEqual(enemySpirit, enemy.CurrentSpirit);
+                }
+                yield return WithdrawToResult();
+                yield return Press("choose_challenge");
+                StringAssert.Contains("独自行动", Panel);
+                Assert.AreEqual(savedPlayer, JsonUtility.ToJson(runtime.CaptureSave().player));
+                Assert.AreEqual(savedCultivation, JsonUtility.ToJson(runtime.CaptureSave().cultivation));
+            }
+        }
+
+        private IEnumerator WithdrawToResult()
+        {
+            yield return Named("ReturnButton");
+            yield return Named("ConfirmWithdrawalButton");
+            yield return Ready();
+            Assert.IsTrue(ResultOpen);
+            StringAssert.Contains("已撤离", Panel);
+            Assert.IsNull(encounter.CurrentSession);
+        }
+
+        private static readonly string[] VisibilityPresets = { Yang, Yin };
+
+        [UnityTest, Timeout(120000)]
+        public IEnumerator VisibilityChargesOnlyItsOwnSeat([ValueSource(nameof(VisibilityPresets))] string preset)
+        {
+            yield return StartChallenge(1366, preset, "stage3");
+            string effect = preset == Yang ? CombatVisibility.Yang : CombatVisibility.Yin;
+            var seat = Seat(effect);
+            var otherSeat = session.Jindan.Seats.Single(other => other != seat);
+            var center = session.Jindan.Ability(effect).Visibility.Center;
+            var command = Jindan(effect, new CombatJindanRequest(seat.Definition.SeatId, selectedTargetCell: center));
+            if (!encounter.PreviewJindan(command).IsLegal) yield return Move(center);
+            var quote = encounter.PreviewJindan(command);
+            int enemyMana = Actor("enemy").CurrentSpirit;
+            yield return Use("visibility_tab", "visibility_deploy", command, center);
+            Assert.IsNotNull(seat.ActiveVisibility);
+            Assert.AreEqual(quote.SpiritCost, seat.TotalManaSpent);
+            Assert.AreEqual(quote.ActionPointCostUnits, seat.TotalActionPointSpent);
+            Assert.AreEqual(0, otherSeat.TotalManaSpent);
+            Assert.AreEqual(0, otherSeat.TotalActionPointSpent);
+            Assert.AreEqual(enemyMana, Actor("enemy").CurrentSpirit);
+        }
+
+        [UnityTest, Timeout(120000)]
+        public IEnumerator OrdinaryTerraceFireCanBeInspectedAndClearsOnWithdrawal()
+        {
+            yield return StartChallenge(1366, "ordinary", "stage2");
+            var floor = session.Surfaces;
+            var burning = new HexCoord(5, 6);
+            Assert.AreEqual(CombatSurfaceKind.Burning, floor.Get(burning).Kind);
+            yield return Pick(burning);
+            StringAssert.Contains("燃烧", Find<CombatTargetView>().DetailsText);
+            yield return Click(Find<CombatTargetView>().CloseButton);
+            yield return WithdrawToResult();
+            Assert.AreEqual(CombatSurfaceKind.None, floor.Get(burning).Kind);
+            Assert.IsTrue(floor.FireSources.All(fire => fire.RemainingTicks == 0));
+        }
+
+        [UnityTest, Timeout(240000)]
+        public IEnumerator FireDomainClearsOnRetryTownReturnAndLoad()
+        {
+            yield return StartChallenge(1366, Fire, "basic");
             string initial = EntranceState();
-            yield return Move(Center);
-            yield return Use("fire_tab", "fire_preview", Jindan("FIRE_MANIFEST"));
-            yield return Capture("01-fire-unguarded");
-            for (int turn = 0; turn < 20 && !ResultOpen; turn++) yield return End();
-            Assert.IsTrue(ResultOpen, "持续结束行动后，敌方应能歼灭守方");
-            Assert.IsFalse(session.Combatants.HasLivingMembers(CombatTeam.Player));
-            StringAssert.Contains("战斗失败", Panel);
-            yield return Capture("02-defeat");
+            yield return OpenPlayerFire();
+            yield return WithdrawToResult();
             yield return Press("retry");
             yield return Entered();
             Assert.AreEqual(initial, EntranceState());
+            Assert.IsNull(Seat("FIRE_MANIFEST").FireDomain.Main);
+            yield return OpenPlayerFire();
+            yield return WithdrawToResult();
+            yield return Press("choose_challenge");
+            yield return Press("cancel_preparation");
+            yield return Scene(GameplaySceneNames.Settlement);
+            yield return Named("SettlementTerraceButton");
+            yield return Scene(GameplaySceneNames.Adventure);
+            view = Find<JindanDemoView>();
+            yield return Press("basic");
+            yield return Press("prep_save");
+            yield return Press("enter");
+            yield return Entered();
+            Assert.AreEqual(initial, EntranceState());
+            Assert.IsNull(Seat("FIRE_MANIFEST").FireDomain.Main);
+            yield return OpenPlayerFire();
+            yield return WithdrawToResult();
+            yield return SceneManager.LoadSceneAsync(GameplaySceneNames.StartMenu); yield return null;
+            Assert.IsTrue(Find<StartMenuSceneInstaller>().LoadPlayer("route").Succeeded);
+            yield return Scene(GameplaySceneNames.Adventure);
+            view = Find<JindanDemoView>();
+            Assert.IsFalse(Find<TianZhang.Features.Adventure.EncounterCoordinator>().IsRunning);
+            yield return Press("basic");
+            yield return Press("enter");
+            yield return Entered();
+            Assert.AreEqual(initial, EntranceState());
+            Assert.IsNull(Seat("FIRE_MANIFEST").FireDomain.Main);
+            Assert.AreEqual(savedPlayer, JsonUtility.ToJson(GameBootstrap.RequireRuntime().CaptureSave().player));
+            Assert.AreEqual(savedCultivation, JsonUtility.ToJson(GameBootstrap.RequireRuntime().CaptureSave().cultivation));
+            yield return Capture("03-reloaded-without-domain");
+        }
+
+        private IEnumerator OpenPlayerFire()
+        {
+            var seat = Seat("FIRE_MANIFEST");
+            var landing = new HexCoord(5, 1);
+            var request = new CombatJindanRequest(seat.Definition.SeatId, selectedTargetCell: landing);
+            var quote = encounter.PreviewJindan(Jindan("FIRE_MANIFEST", request));
+            Assert.IsTrue(quote.IsLegal, quote.RejectionReason);
+            yield return Press("fire_tab"); yield return Press("fire_preview"); yield return Pick(landing);
+            yield return Pay(quote, "展开长明");
+            Assert.AreEqual(landing, seat.FireDomain.Support.Cell);
+            Assert.NotNull(seat.FireDomain.Main);
         }
 
         private string EntranceState()

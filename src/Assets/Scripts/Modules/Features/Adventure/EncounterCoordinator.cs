@@ -65,10 +65,10 @@ namespace TianZhang.Features.Adventure
         private ICombatResolutionRandomSource rehearsalRandom;
         public JindanChallengeProgress Challenge { get; private set; }
 
-        public void PrepareJindanChallenge(int segmentIndex, string presetId)
+        public void PrepareJindanChallenge(int segmentIndex)
         {
             if (IsRunning) throw new InvalidOperationException("adventure_encounter_already_running");
-            nextChallenge = new JindanChallengeProgress(segmentIndex, presetId);
+            nextChallenge = new JindanChallengeProgress(segmentIndex);
         }
 
         private CombatSessionOutcome CurrentOutcome => CombatResultBuilder.GetOutcome(session);
@@ -103,7 +103,7 @@ namespace TianZhang.Features.Adventure
         }
 
         public IReadOnlyList<CombatCommand> GetItemCandidates(string actorId) =>
-            itemQuantity == null || spawned?.IsJindanRehearsal == true ? Array.Empty<CombatCommand>() : new[]
+            itemQuantity == null || spawned?.RehearsalNames != null ? Array.Empty<CombatCommand>() : new[]
             {
                 new CombatCommand(CombatCommandKind.UseItem, actorId, actorId, contextVersion: commandContextVersion,
                     itemId: "item_huoxue_dan"),
@@ -167,9 +167,8 @@ namespace TianZhang.Features.Adventure
         private bool IsPlayerActor(string id) => session != null && session.Combatants.TryGet(id, out var actor) && actor.Team == CombatTeam.Player;
         internal string ActorName(string id) => spawned?.RehearsalNames != null && spawned.RehearsalNames.TryGetValue(id, out var name)
             ? name : IsPlayerActor(id) ? playerDisplayName : resolveText(EnemyDataFor(id)?.displayNameKey ?? id);
-        private string PortraitKey(string id) => spawned?.PlayerTrialPresetId != null && id != "player"
-            ? JindanRehearsalFactory.PortraitSlot(id)
-            : spawned?.IsJindanRehearsal == true || IsPlayerActor(id) ? "player" : EnemyDataFor(id)?.enemyId;
+        private string PortraitKey(string id) => spawned?.RehearsalNames != null || IsPlayerActor(id) ?
+            "player" : EnemyDataFor(id)?.enemyId;
         public bool IsPresenting => surfacePlayback.Busy || ((unitPresentation as ICombatPresentationActivity)?.IsPresenting ?? false) ||
             (hudActivity?.IsPresenting ?? false);
 
@@ -243,10 +242,8 @@ namespace TianZhang.Features.Adventure
             ++commandContextVersion;
             if (combatRoutine != null) StopCoroutine(combatRoutine);
             if (surfaceRoutine != null) StopCoroutine(surfaceRoutine);
-            surfacePlayback.Clear();
             combatRoutine = null;
-            session.Jindan?.Clear(session);
-            session.Flight?.Clear(session);
+            ClearBattleEffects();
             session = null;
             spawned = null;
             enemyPolicies = null;
@@ -292,17 +289,10 @@ namespace TianZhang.Features.Adventure
             if (!unitSpawner.TrySpawn(
                     player, catalog, startNode, encounterNode, out spawned, out reason))
                 return false;
-            enemyPolicies = new Dictionary<string, ICombatActionPolicy>(StringComparer.Ordinal);
-            for (int index = 0; index < spawned.Enemies.Count; index++)
+            if (!TryResolveEnemyPolicies(spawned, out enemyPolicies, out reason))
             {
-                if (!EnemyAIProfileResolver.TryResolveCombatActionPolicy(
-                        spawned.EnemyDataList[index].aiProfileId, out ICombatActionPolicy policy, out reason))
-                {
-                    spawned = null;
-                    enemyPolicies = null;
-                    return false;
-                }
-                enemyPolicies.Add(spawned.Enemies[index].Id, policy);
+                spawned = null;
+                return false;
             }
             if (!TryCreatePresentationDescriptors(spawned, out IReadOnlyList<CombatUnitPresentationDescriptor> descriptors, out reason))
             {
@@ -341,24 +331,53 @@ namespace TianZhang.Features.Adventure
             return true;
         }
 
+        private static bool TryResolveEnemyPolicies(AdventureSpawnSet values,
+            out Dictionary<string, ICombatActionPolicy> policies, out string reason)
+        {
+            policies = new Dictionary<string, ICombatActionPolicy>(StringComparer.Ordinal);
+            for (int index = 0; index < values.Enemies.Count; index++)
+            {
+                if (!EnemyAIProfileResolver.TryResolveCombatActionPolicy(values.EnemyDataList[index].aiProfileId,
+                        out var policy, out reason)) return false;
+                policies.Add(values.Enemies[index].Id, policy);
+            }
+            reason = null;
+            return true;
+        }
+
         public bool TryBeginRehearsal(AdventureSpawnSet values, CombatSession prepared,
-            IReadOnlyList<CombatUnitPresentationDescriptor> descriptors, IReadOnlyList<HexCoord> cells, out string reason)
+            IReadOnlyList<HexCoord> cells, string playerName, out string reason)
         {
             reason = "adventure_encounter_already_running";
-            if (IsRunning || values == null || !values.IsJindanRehearsal || prepared?.Jindan == null) return false;
+            if (IsRunning || values == null || prepared == null) return false;
+            IReadOnlyList<CombatUnitPresentationDescriptor> descriptors;
+            Dictionary<string, ICombatActionPolicy> policies;
+            bool sample = values.RehearsalNames != null;
+            if (sample)
+            {
+                descriptors = JindanRehearsalFactory.Descriptors(values, CombatUnitPresentationProfileCatalogData.PlayerProfileId);
+                policies = values.Enemies.ToDictionary(actor => actor.Id, actor => (ICombatActionPolicy)new LegalActionAI());
+            }
+            else
+            {
+                if (nextChallenge == null) { reason = "jindan_player_challenge_invalid"; return false; }
+                if (!TryCreatePresentationDescriptors(values, out descriptors, out reason) ||
+                    !TryResolveEnemyPolicies(values, out policies, out reason)) return false;
+                if (nextChallenge.SegmentIndex == -1) policies[values.Enemy.Id] = new JindanChallengeEnemyPolicy();
+            }
             try { unitPresentation.Prepare(descriptors); }
             catch (Exception exception)
             { unitPresentation.Clear(); reason = "adventure_presentation_spawn_failed:" + exception.Message; return false; }
             spawned = values; session = prepared; battlefieldCells = cells;
-            Challenge = values.Player.Id == "player" ? nextChallenge : null;
+            Challenge = sample ? null : nextChallenge;
             nextChallenge = null;
             rehearsalRandom = Challenge == null ? null : new SystemCombatResolutionRandomSource(Challenge.Seed);
-            // Fixed actors stay isolated; the trial player retains the existing equipment/inventory owner.
-            session.ExternalResources = values.Player.Id == "player"
-                ? this : null;
-            enemyPolicies = values.Enemies.ToDictionary(value => value.Id, value => Challenge == null ? (ICombatActionPolicy)new LegalActionAI() : new JindanChallengeEnemyPolicy(Challenge));
-            playerDisplayName = ActorName(values.Player.Id);
-            presentation.ClearLog(); presentation.AppendLog((Challenge == null ? "金丹演武开始：" : "阶地战斗开始：") + string.Join("、", values.RehearsalNames.Values));
+            session.ExternalResources = sample ? null : this;
+            enemyPolicies = policies;
+            playerDisplayName = sample ? ActorName(values.Player.Id) : playerName;
+            presentation.ClearLog();
+            presentation.AppendLog(sample ? "金丹演武开始：" + string.Join("、", values.RehearsalNames.Values) :
+                "阶地战斗开始：" + playerDisplayName + " 对阵 " + string.Join("、", values.Enemies.Select(actor => ActorName(actor.Id))));
             combatRoutine = StartCoroutine(RunCombat());
             reason = null; return true;
         }
@@ -1006,6 +1025,14 @@ namespace TianZhang.Features.Adventure
             return new CombatTimelineSnapshot(turns.CurrentTick, current, entries, advanceSteps);
         }
 
+        private void ClearBattleEffects()
+        {
+            surfacePlayback.Clear();
+            if (session.Jindan != null) session.Jindan.Clear(session);
+            else session.Surfaces?.Clear(session);
+            session.Flight?.Clear(session);
+        }
+
         private void Complete(CombatSessionOutcome outcome)
         {
             if (session == null) return;
@@ -1018,8 +1045,7 @@ namespace TianZhang.Features.Adventure
                 _ => "combat_outcome_ongoing",
             }), false);
             EnemyData defeated = outcome == CombatSessionOutcome.Victory ? spawned.EnemyData : null;
-            session.Jindan?.Clear(session);
-            session.Flight?.Clear(session);
+            ClearBattleEffects();
             foreach (CombatantSnapshot player in spawned.Players) unitPresentation.Remove(player.Id);
             foreach (CombatantSnapshot enemy in spawned.Enemies) unitPresentation.Remove(enemy.Id);
             unitPresentation.Clear();

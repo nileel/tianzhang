@@ -24,7 +24,7 @@ namespace TianZhang.Features.Adventure
 
         public bool SelectNode(string nodeId)
         {
-            if (session == null || !session.TryGetNode(nodeId, out var node)) return false;
+            if (!isActiveAndEnabled || session == null || !session.TryGetNode(nodeId, out var node)) return false;
             if (!canSelectExplorationNode())
             {
                 hud?.Present(session, SelectNode, "adventure_not_exploring", false);

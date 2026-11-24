@@ -183,7 +183,7 @@ namespace TianZhang.Features.Settlement
             if (!string.IsNullOrWhiteSpace(reason)) sceneView?.ShowSaveResult(reason);
         }
 
-        public bool EnterAdventure(string adventureId)
+        public bool EnterAdventure(string adventureId, AdventureEntrance entrance = AdventureEntrance.Unspecified)
         {
             if (CurrentSettlement == null ||
                 string.IsNullOrWhiteSpace(adventureId) ||
@@ -193,7 +193,7 @@ namespace TianZhang.Features.Settlement
                 return false;
             }
 
-            loadScene(navigation.EnterAdventure(adventureId, BuildAdventureReturnTarget()));
+            loadScene(navigation.EnterAdventure(adventureId, BuildAdventureReturnTarget(), entrance));
             return true;
         }
 
@@ -274,7 +274,7 @@ namespace TianZhang.Features.Settlement
                 return;
             }
 
-            sceneView.BindAdventure(adventureEntranceIds[0], adventureId => EnterAdventure(adventureId));
+            sceneView.BindAdventure(adventureEntranceIds[0], (adventureId, entrance) => EnterAdventure(adventureId, entrance));
         }
 
         private void DispatchFeature(SettlementFeatureData feature)

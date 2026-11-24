@@ -43,31 +43,43 @@ namespace TianZhang.Features.Adventure
         public bool IsTerrainRehearsal { get; private set; }
 
         public bool BeginJindanRehearsal(JindanDemoCatalogData demo, int segmentIndex, string earthEffect,
-            EnvironmentProfileAsset environment, Func<string, string> text, out string reason, bool controlFire = false, bool usePlayer = false,
-            string playerPresetId = JindanDemoCatalogData.PlayerFirePresetId)
+            EnvironmentProfileAsset environment, Func<string, string> text, out string reason, bool controlFire = false,
+            CharacterStateSnapshot terracePlayer = null, string playerPresetId = null)
         {
             reason = "adventure_not_exploring";
             if (!CanSelectExplorationNode) return false;
-            if (segmentIndex < (usePlayer ? -1 : 0) || segmentIndex >= demo.segments.Length ||
-                usePlayer && demo.GetPreset(playerPresetId) == null)
-            { reason = "jindan_player_challenge_invalid"; return false; }
-            var actors = usePlayer ? JindanRehearsalFactory.CreateForPlayer(demo, earthEffect, text, player, segmentIndex, playerPresetId)
-                : JindanRehearsalFactory.Create(demo, segmentIndex, earthEffect, text, controlFire);
-            if (!combatEntry.TryCreateSession(actors, attackProfiles, environment, out var prepared, out reason, demo)) return false;
-            prepared.ConfigureJindan(JindanRehearsalFactory.CreateLoadout(demo, actors, earthEffect,
-                usePlayer && segmentIndex < 0 && playerPresetId == JindanDemoCatalogData.PlayerFirePresetId));
-            prepared.ConfigureFlight(JindanRehearsalFactory.CreateFlight(demo, actors));
+            AdventureSpawnSet actors;
+            bool usePlayer = terracePlayer != null;
+            if (usePlayer)
+            {
+                if (!JindanRehearsalFactory.TryCreateForPlayer(demo, catalog, unitSpawner, terracePlayer, segmentIndex,
+                        playerPresetId, out actors, out reason)) return false;
+            }
+            else
+            {
+                if (segmentIndex < 0 || segmentIndex >= demo.segments.Length)
+                { reason = "jindan_player_challenge_invalid"; return false; }
+                actors = JindanRehearsalFactory.Create(demo, segmentIndex, earthEffect, text, controlFire);
+            }
+            if (!combatEntry.TryCreateSession(actors, attackProfiles, environment, out var prepared, out reason,
+                    actors.IsJindanRehearsal ? demo : null)) return false;
+            if (actors.IsJindanRehearsal)
+            {
+                prepared.ConfigureJindan(JindanRehearsalFactory.CreateLoadout(demo, actors, earthEffect, usePlayer));
+                var flight = JindanRehearsalFactory.CreateFlight(demo, actors);
+                if (flight != null) prepared.ConfigureFlight(flight);
+            }
             if (!environment.TryCreateDefinition(out var surfaceEnvironment, out reason)) return false;
             prepared.ConfigureSurfaces(JindanRehearsalFactory.CreateSurfaces(demo, surfaceEnvironment, Math.Max(0, segmentIndex),
-                usePlayer && playerPresetId == JindanDemoCatalogData.PlayerFirePresetId));
+                usePlayer ? actors.Enemy.Id : null));
             if (!encounters.TryBeginRehearsal(actors, prepared,
-                JindanRehearsalFactory.Descriptors(actors, CombatUnitPresentationProfileCatalogData.PlayerProfileId),
-                environment.battlefieldCells.Select(cell => new TianZhang.Spatial.HexCoord(cell.q, cell.r)).ToArray(), out reason)) return false;
+                    environment.battlefieldCells.Select(cell => new TianZhang.Spatial.HexCoord(cell.q, cell.r)).ToArray(),
+                    terracePlayer?.Identity.DisplayName, out reason)) return false;
             IsTerrainRehearsal = true;
             CurrentState = AdventureSceneState.Combat;
             LastEncounterOutcome = CombatSessionOutcome.Ongoing;
-            hud.PresentTerrainRehearsalLocation((usePlayer ? "关中阶地 · " : "金丹演武 · ") +
-                (segmentIndex < 0 ? "基础演练" : text(demo.segments[segmentIndex].displayNameKey)));
+            hud.PresentTerrainRehearsalLocation(usePlayer ? "关中阶地 · " + JindanChallengeProgress.StageName(segmentIndex) :
+                "金丹演武 · " + text(demo.segments[segmentIndex].displayNameKey));
             return true;
         }
 

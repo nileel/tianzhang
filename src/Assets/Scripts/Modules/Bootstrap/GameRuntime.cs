@@ -53,6 +53,9 @@ namespace TianZhang.Bootstrap
         public CultivationState Cultivation { get; private set; }
         public WorldClockService WorldClock { get; private set; }
         public NavigationStateSnapshot Navigation { get; private set; }
+        public bool IsTerraceDestination => Navigation.AdventureId != null &&
+            (Navigation.Entrance == AdventureEntrance.Terrace ||
+             Navigation.Entrance == AdventureEntrance.Unspecified && !string.IsNullOrEmpty(JindanDemoPresetId));
         public BountyUseCase Bounties { get; private set; }
         public InventoryGrantUseCase InventoryGrants { get; private set; }
         public CharterUseCase Charters { get; private set; }
@@ -245,7 +248,8 @@ namespace TianZhang.Bootstrap
             return GameplaySceneNames.Settlement;
         }
 
-        public string EnterAdventure(string adventureId, SceneReturnTarget returnTarget)
+        public string EnterAdventure(string adventureId, SceneReturnTarget returnTarget,
+            AdventureEntrance entrance = AdventureEntrance.Unspecified)
         {
             if (string.IsNullOrWhiteSpace(adventureId))
                 throw new ArgumentException("Adventure ID is required.", nameof(adventureId));
@@ -265,7 +269,8 @@ namespace TianZhang.Bootstrap
                 Navigation.WorldNodeId,
                 Navigation.SettlementId,
                 adventureId,
-                returnTarget);
+                returnTarget,
+                entrance);
             return GameplaySceneNames.Adventure;
         }
 

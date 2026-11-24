@@ -62,7 +62,7 @@ namespace TianZhang.Bootstrap
         {
             if (Runtime == null || Runtime.Player == null || string.IsNullOrWhiteSpace(activeSlotId))
                 return GameSaveSlotWriteResult.Failed(GameSaveSlotFailureReason.InvalidSaveData);
-            if (!string.IsNullOrEmpty(Runtime.JindanDemoPresetId) && Runtime.Navigation.AdventureId != null &&
+            if (Runtime.Navigation.AdventureId != null &&
                 FindFirstObjectByType<TianZhang.Features.Adventure.AdventureController>() is { IsTerrainRehearsal: true })
                 return GameSaveSlotWriteResult.Failed(GameSaveSlotFailureReason.ChallengeInProgress);
             if (!CanRestoreNavigation(Runtime.Navigation, ContentCatalog))

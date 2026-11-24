@@ -13,79 +13,60 @@ namespace TianZhang.Features.Adventure
     /// <summary>Projects validated demo identities into the existing combat session, never into GameRuntime.</summary>
     public static class JindanRehearsalFactory
     {
-        public static AdventureSpawnSet Create(JindanDemoCatalogData catalog, int segmentIndex,
-            string earthEffect, Func<string, string> text, bool controlFire = false) =>
-            CreateActors(catalog, segmentIndex, earthEffect, text, controlFire, null, null);
-
-        public static AdventureSpawnSet CreateForPlayer(JindanDemoCatalogData catalog, string earthEffect,
-            Func<string, string> text, CharacterStateSnapshot player, int segmentIndex = 1,
-            string presetId = JindanDemoCatalogData.PlayerFirePresetId) =>
-            CreateActors(catalog, segmentIndex, earthEffect, text, false, player ?? throw new ArgumentNullException(nameof(player)), presetId);
-
-        // The trial HUD uses each holder's existing action badge in the party and turn portraits.
-        public static string PortraitSlot(string presetId) => presetId switch
+        public static JindanDemoSegmentActor[] PlayerPlacements(int segmentIndex)
         {
-            JindanDemoCatalogData.EarthPresetId => "earth_tab",
-            JindanDemoCatalogData.WaterPresetId => "tide_tab",
-            JindanDemoCatalogData.PlayerFirePresetId => "fire_tab",
-            JindanDemoCatalogData.YangPresetId => "visibility_tab",
-            JindanDemoCatalogData.YinPresetId => "seal_tab",
-            _ => throw new ArgumentException("jindan_player_preset_invalid"),
-        };
+            JindanDemoSegmentActor At(string id, int team, int q, int r, int facing) =>
+                new JindanDemoSegmentActor { characterId = id, team = team, q = q, r = r, facing = facing };
 
-        public static string RehearsalName(string presetId) => presetId switch
-        {
-            JindanDemoCatalogData.EarthPresetId => "石衡",
-            JindanDemoCatalogData.WaterPresetId => "江汐",
-            JindanDemoCatalogData.PlayerFirePresetId => "明烛",
-            JindanDemoCatalogData.YangPresetId => "晏衡",
-            JindanDemoCatalogData.YinPresetId => "朔宁",
-            _ => throw new ArgumentException("jindan_player_preset_invalid"),
-        };
-
-        public static JindanDemoSegmentActor[] PlayerPlacements(JindanDemoCatalogData catalog, int segmentIndex, string presetId)
-        {
-            if (catalog.GetPreset(presetId) == null || segmentIndex < -1 || segmentIndex >= catalog.segments.Length)
-                throw new ArgumentException("jindan_player_challenge_invalid");
-            var original = catalog.segments[Math.Max(0, segmentIndex)].actors;
-            if (segmentIndex == -1)
+            var (startQ, startR, enemy, enemyQ, enemyR) = segmentIndex switch
             {
-                var start = original.First(value => value.team == 0);
-                var rival = original.First(value => value.team == 1);
-                return new[] { At(presetId, 0, start.q, start.r, start.facing),
-                    At(presetId == rival.characterId ? JindanDemoCatalogData.YangPresetId : rival.characterId,
-                        1, rival.q, rival.r, rival.facing) };
-            }
-
-            bool reverse = segmentIndex == 1 && presetId == JindanDemoCatalogData.PlayerFirePresetId ||
-                           segmentIndex == 2 && presetId == JindanDemoCatalogData.YinPresetId;
-            var placements = original.Select(value =>
-            {
-                string id = segmentIndex == 0 && value.team == 1 && value.characterId == presetId
-                    ? JindanDemoCatalogData.YangPresetId : value.characterId;
-                return At(id, reverse ? 1 - value.team : value.team, value.q, value.r, value.facing);
-            }).ToList();
-            if (!placements.Any(value => value.characterId == presetId))
-            {
-                // Visitors start beside the allied holders whose abilities the challenge requires.
-                var companionCell = segmentIndex switch { 0 => new HexCoord(3, 0), 1 => new HexCoord(5, 4), _ => new HexCoord(4, 13) };
-                placements.Add(At(presetId, 0, companionCell.Q, companionCell.R, 0));
-            }
-            return placements.OrderByDescending(value => value.characterId == presetId).ToArray();
+                -1 => (4, 0, FormalEncounterRules.ShijiahouEnemyId, 7, 3),
+                0 => (4, 0, "enemy_lieshijia", 7, 12),
+                1 => (4, 4, FormalEncounterRules.ShijiahouEnemyId, 7, 7),
+                2 => (4, 14, "enemy_lieshijia", 7, 14),
+                _ => throw new ArgumentOutOfRangeException(nameof(segmentIndex))
+            };
+            return new[] { At("player", 0, startQ, startR, 0), At(enemy, 1, enemyQ, enemyR, 3) };
         }
 
-        private static JindanDemoSegmentActor At(string id, int team, int q, int r, int facing) =>
-            new JindanDemoSegmentActor { characterId = id, team = team, q = q, r = r, facing = facing };
+        public static bool TryCreateForPlayer(JindanDemoCatalogData demo, ContentCatalogData content,
+            AdventureUnitSpawner spawner, CharacterStateSnapshot player, int segmentIndex, string presetId,
+            out AdventureSpawnSet spawned, out string reason)
+        {
+            spawned = null;
+            if (demo == null || !demo.Validate(out _) || player?.Identity.CharacterId != "player" ||
+                segmentIndex < -1 || segmentIndex >= demo.segments.Length ||
+                !string.IsNullOrEmpty(presetId) && demo.GetPreset(presetId) == null)
+            { reason = "jindan_player_challenge_invalid"; return false; }
+            var placements = PlayerPlacements(segmentIndex);
+            var start = new AdventureNodeData { q = placements[0].q, r = placements[0].r };
+            var enemy = placements[1];
+            var encounter = new AdventureNodeData { q = enemy.q, r = enemy.r, enemyFacing = enemy.facing,
+                contentId = enemy.characterId };
+            var preset = demo.GetPreset(presetId);
+            var bindings = preset == null ? null : AbilityBindings(demo, preset).ToDictionary(
+                pair => pair.Key, pair => JindanDemoCatalogData.PlayerInstanceId(presetId, pair.Value));
+            return spawner.TrySpawn(player, content, start, encounter, out spawned, out reason, bindings, preset?.characterId);
+        }
 
-        private static AdventureSpawnSet CreateActors(JindanDemoCatalogData catalog, int segmentIndex,
-            string earthEffect, Func<string, string> text, bool controlFire, CharacterStateSnapshot player, string presetId)
+        private static Dictionary<string, string> AbilityBindings(JindanDemoCatalogData catalog, JindanDemoPresetDefinition preset)
+        {
+            var bindings = preset.seatInstanceIds.Select(catalog.GetSeat).SelectMany(seat =>
+                seat.candidateEffectIds.Select(effect => new KeyValuePair<string, string>(effect, seat.guardianAbilityInstanceId)))
+                .ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
+            if (!string.IsNullOrEmpty(preset.flightAbilityInstanceId))
+                bindings.Add(CombatFlight.ProfileId, preset.flightAbilityInstanceId);
+            return bindings;
+        }
+
+        public static AdventureSpawnSet Create(JindanDemoCatalogData catalog, int segmentIndex,
+            string earthEffect, Func<string, string> text, bool controlFire = false)
         {
             if (catalog == null || !catalog.Validate(out _)) throw new ArgumentException("jindan_catalog_invalid");
-            if (player != null && player.Identity.CharacterId != "player") throw new ArgumentException("jindan_player_challenge_invalid");
             if (controlFire && segmentIndex != 1) throw new ArgumentException("fire_control_requires_second_segment");
-            if (segmentIndex < (player == null ? 0 : -1) || segmentIndex >= catalog.segments.Length)
+            if (segmentIndex < 0 || segmentIndex >= catalog.segments.Length)
                 throw new ArgumentOutOfRangeException(nameof(segmentIndex));
-            var placements = player != null ? PlayerPlacements(catalog, segmentIndex, presetId) : catalog.segments[segmentIndex].actors;
+            var placements = catalog.segments[segmentIndex].actors;
             var players = new List<CombatantSnapshot>();
             var enemies = new List<CombatantSnapshot>();
             var names = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -98,11 +79,7 @@ namespace TianZhang.Features.Adventure
                     source.reaction, source.talent, source.fortune, preset.actionPointMaximumUnits,
                     preset.movementEfficiencyMilliUnits, true);
                 var stats = attributes.Derive(preset.realmMultiplier, CharacterAttributeBonuses.Empty);
-                var bindings = preset.seatInstanceIds.Select(catalog.GetSeat).SelectMany(seat =>
-                    seat.candidateEffectIds.Select(effect => new KeyValuePair<string, string>(effect, seat.guardianAbilityInstanceId)))
-                    .ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
-                if (!string.IsNullOrEmpty(preset.flightAbilityInstanceId))
-                    bindings.Add(CombatFlight.ProfileId, preset.flightAbilityInstanceId);
+                var bindings = AbilityBindings(catalog, preset);
                 var arts = preset.equippedArtProfileIds.Concat(preset.characterId == catalog.demolition.characterId
                     ? new[] { catalog.demolition.profileId } : Array.Empty<string>()).ToArray();
                 int team = controlFire ? 1 - placement.team : placement.team;
@@ -117,21 +94,12 @@ namespace TianZhang.Features.Adventure
                     equippedArtProfileIds: arts, availableArtProfileIds: arts)
                 { GongFaId = preset.sourceGongFaId };
                 actor.SetSpirit(preset.manaMaximum, preset.manaMaximum);
-                if (player != null && preset.characterId == presetId)
-                {
-                    var playerBindings = bindings.ToDictionary(pair => pair.Key,
-                        pair => JindanDemoCatalogData.PlayerInstanceId(preset.characterId, pair.Value));
-                    actor = AdventureUnitSpawner.CreatePlayer(player, new HexCoord(placement.q, placement.r),
-                        string.IsNullOrEmpty(player.MainEquipmentBasicAttackProfileId)
-                            ? player.UnarmedBasicAttackProfileId : player.MainEquipmentBasicAttackProfileId,
-                        playerBindings, placement.facing);
-                }
                 (actor.Team == CombatTeam.Player ? players : enemies).Add(actor);
-                names.Add(actor.Id, actor.Id == "player" ? player.Identity.DisplayName : player != null ? RehearsalName(preset.characterId) : text(preset.displayNameKey));
+                names.Add(actor.Id, text(preset.displayNameKey));
             }
             return new AdventureSpawnSet(players[0], enemies[0], null, players[0].BasicAttackProfileId,
-                enemies[0].BasicAttackProfileId, player?.AbilityLoadout.EquippedSkills ?? Array.Empty<string>(), enemies.Skip(1).ToArray(),
-                additionalPlayers: players.Skip(1).ToArray(), rehearsalNames: names, playerTrialPresetId: presetId);
+                enemies[0].BasicAttackProfileId, Array.Empty<string>(), enemies.Skip(1).ToArray(),
+                additionalPlayers: players.Skip(1).ToArray(), rehearsalNames: names);
         }
 
         public static CombatJindanLoadout CreateLoadout(JindanDemoCatalogData catalog, AdventureSpawnSet spawned,
@@ -146,6 +114,7 @@ namespace TianZhang.Features.Adventure
                 new CombatJindanSeatDefinition(Owner(value.characterId), Instance(value.characterId, value.seatInstanceId), value.positionId, value.positionType.ToString(),
                     Instance(value.characterId, value.guardianAbilityInstanceId), value.candidateEffectIds,
                     value.candidateEffectIds.Contains(earthEffect) ? earthEffect : value.defaultEffectId)).ToArray();
+            if (seats.Length == 0) return null;
             var abilities = new List<CombatJindanAbilityDefinition>();
             foreach (string effect in seats.SelectMany(value => value.Candidates).Distinct())
             {
@@ -190,7 +159,7 @@ namespace TianZhang.Features.Adventure
         }
 
         public static CombatSurfaces CreateSurfaces(JindanDemoCatalogData catalog,
-            EnvironmentProfileDefinition environment, int segmentIndex, bool playerFire = false)
+            EnvironmentProfileDefinition environment, int segmentIndex, string environmentFireActorId = null)
         {
             if (catalog == null || !catalog.Validate(out _)) throw new ArgumentException("jindan_catalog_invalid");
             if (environment == null || environment.profileId != catalog.surfaceRules.environmentProfileId)
@@ -218,7 +187,7 @@ namespace TianZhang.Features.Adventure
                     (CombatSurfaceKind)Enum.Parse(typeof(CombatSurfaceKind), cell.kind), cell.fuel, cell.sourceRef, cell.fuelObjectId);
             }
             var fires = catalog.surfaceFires.Where(value => value.segmentId == segment).Select(value =>
-                new CombatFireDefinition(value.sourceRef, playerFire && value.actorId == JindanDemoCatalogData.PlayerFirePresetId ? "player" : value.actorId, value.periodTicks, value.durationTicks,
+                new CombatFireDefinition(value.sourceRef, environmentFireActorId ?? value.actorId, value.periodTicks, value.durationTicks,
                     value.capacity, value.fuelBudget, value.attackCapacity, value.damageMultiplier));
             return new CombatSurfaces(definitions.Values, fires,
                 catalog.surfaceRules.wetMovementBurden, catalog.surfaceRules.deepMovementBurden);
@@ -227,8 +196,9 @@ namespace TianZhang.Features.Adventure
         public static CombatFlight CreateFlight(JindanDemoCatalogData catalog, AdventureSpawnSet spawned)
         {
             var sources = spawned.Players.Concat(spawned.Enemies)
-                .Where(actor => !string.IsNullOrEmpty(catalog.GetPreset(actor.Id == "player" ? spawned.PlayerTrialPresetId : actor.Id).flightAbilityInstanceId))
-                .Select(actor => new KeyValuePair<string, string>(actor.Id, actor.GetAbilityInstanceId(CombatFlight.ProfileId)));
+                .Where(actor => !string.IsNullOrEmpty(catalog.GetPreset(actor.Id == "player" ? spawned.PlayerTrialPresetId : actor.Id)?.flightAbilityInstanceId))
+                .Select(actor => new KeyValuePair<string, string>(actor.Id, actor.GetAbilityInstanceId(CombatFlight.ProfileId))).ToArray();
+            if (sources.Length == 0) return null;
             var commands = catalog.commands.Where(value => value.effectId == "FLIGHT").ToArray();
             if (commands.Length != 5 || commands.Any(value => !value.enabled)) throw new ArgumentException("flight_commands_missing");
             var takeoff = commands.Single(value => value.kind == "FLIGHT_TAKEOFF");

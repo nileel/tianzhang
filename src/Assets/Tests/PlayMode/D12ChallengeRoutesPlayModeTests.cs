@@ -18,7 +18,6 @@ using TianZhang.Spatial;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
@@ -29,22 +28,18 @@ namespace TianZhang.Tests.PlayMode
     public sealed partial class D12ChallengeRoutesPlayModeTests
     {
         private static readonly int[] Widths = { 1366, 1920 };
-        private static readonly HexCoord High = new HexCoord(8, 12);
-        private static readonly HexCoord GateTo = new HexCoord(9, 12);
-        private static readonly HexCoord Center = new HexCoord(7, 12);
         private const string Player = "player", Earth = "demo_20261024_earth", Water = "demo_20261024_water";
         private const string Yang = "demo_20261024_space_yang", Yin = "demo_20261024_seal_yin", Fire = "demo_20261024_fire";
-        private const string Star = "spell_feixingzhi", Stone = "spell_guanshiji", Demolish = "demo_20261026_polei";
+        private const string Star = "spell_feixingzhi";
 
         private InputSettings.BackgroundBehavior previousBackground;
         private InputSettings.EditorInputBehaviorInPlayMode previousInput;
         private Mouse mouse;
-        private Keyboard keyboard;
         private JindanDemoView view;
         private EncounterCoordinator encounter;
         private CombatSession session;
         private CombatBattlefieldSurface surface;
-        private string output, savedPlayer, savedCultivation;
+        private string output, savedPlayer, savedCultivation, playerName;
         private Coroutine recording;
         private static T Find<T>() where T : Object => Object.FindFirstObjectByType<T>();
         private CombatantSnapshot Actor(string id) => session.Combatants.All.Single(a => a.Id == id);
@@ -56,7 +51,7 @@ namespace TianZhang.Tests.PlayMode
 
         private IEnumerator StartChallenge(int width, string preset, string stage, bool acceptBounty = false)
         {
-            output = Path.GetFullPath(Path.Combine("Logs/d12-challenges", TestContext.CurrentContext.Test.MethodName + "-" + width));
+            output = Path.GetFullPath(Path.Combine("Logs/d12-challenges", TestContext.CurrentContext.Test.MethodName + "-" + preset + "-" + width));
             Directory.CreateDirectory(output);
             File.WriteAllText(Path.Combine(output, "actions.txt"), "");
             previousBackground = InputSystem.settings.backgroundBehavior;
@@ -64,7 +59,6 @@ namespace TianZhang.Tests.PlayMode
             InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
             InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
             mouse = InputSystem.AddDevice<Mouse>();
-            keyboard = InputSystem.AddDevice<Keyboard>();
             GuanzhongCombatEquipmentPlayModeTests.SetGameSize(width, width == 1366 ? 768 : 1080);
             var stale = Find<GameBootstrap>();
             if (stale != null) { Object.Destroy(stale.gameObject); yield return null; }
@@ -73,19 +67,33 @@ namespace TianZhang.Tests.PlayMode
             var folder = Path.Combine(Application.temporaryCachePath, "D12Route-" + Guid.NewGuid().ToString("N"));
             typeof(GameBootstrap).GetField("slotStore", BindingFlags.NonPublic | BindingFlags.Instance)
                 .SetValue(bootstrap, new GameSaveSlotStore(folder));
-            yield return Named("NewPlayerButton");
-            yield return Named("JindanStartButton");
-            string origin = preset switch
+            bool ordinary = preset == "ordinary" || preset == "legacy";
+            playerName = preset == "legacy" ? "岑二" : "行舟";
+            if (preset == "legacy")
             {
-                Earth => "loose", Water => "sect_servant", Yang => "minor_clan", Yin => "debt_exile", _ => null
-            };
-            if (origin != null) yield return Named("Origin_origin_" + origin);
-            GameObject.Find("SlotIdInput").GetComponent<InputField>().text = "route";
-            GameObject.Find("CharacterNameInput").GetComponent<InputField>().text = "行舟";
-            yield return Named("CreatePlayerButton");
+                Directory.CreateDirectory(folder);
+                File.Copy(Path.Combine(Application.dataPath, "../../artifacts/guanzhong-playtest-20261119/jiangzuo-qa-save.json"),
+                    Path.Combine(folder, "route.json"));
+                Assert.IsTrue(Find<StartMenuSceneInstaller>().LoadPlayer("route").Succeeded);
+            }
+            else
+            {
+                yield return Named("NewPlayerButton");
+                if (!ordinary) yield return Named("JindanStartButton");
+                string origin = preset switch
+                {
+                    Earth => "loose", Water => "sect_servant", Yang => "minor_clan", Yin => "debt_exile",
+                    "ordinary" => "minor_clan", _ => null
+                };
+                if (origin != null) yield return Named("Origin_origin_" + origin);
+                GameObject.Find("SlotIdInput").GetComponent<InputField>().text = "route";
+                GameObject.Find("CharacterNameInput").GetComponent<InputField>().text = playerName;
+                yield return Named("CreatePlayerButton");
+            }
             yield return Scene(GameplaySceneNames.World);
             var runtime = GameBootstrap.RequireRuntime();
-            Assert.AreEqual(preset, runtime.JindanDemoPresetId);
+            if (ordinary) Assert.That(runtime.JindanDemoPresetId, Is.Null.Or.Empty);
+            else Assert.AreEqual(preset, runtime.JindanDemoPresetId);
             Assert.IsTrue(Find<WorldMapController>().SelectNode("guanzhong_hub"));
             Find<WorldMapController>().EnterSelectedLocation();
             yield return Scene(GameplaySceneNames.Settlement);
@@ -99,15 +107,17 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsTrue(bootstrap.SaveActiveSlot().Succeeded);
             savedPlayer = JsonUtility.ToJson(runtime.CaptureSave().player);
             savedCultivation = JsonUtility.ToJson(runtime.CaptureSave().cultivation);
-            Assert.IsTrue(Find<SettlementController>().EnterAdventure("guanzhong_wild"));
+            yield return Named("SettlementTerraceButton");
             yield return Scene(GameplaySceneNames.Adventure);
             view = Find<JindanDemoView>();
             Assert.IsTrue(view.GetButton("enter").gameObject.activeInHierarchy, "本人金丹开局直接选择遭遇");
+            foreach (string key in new[] { "basic", "stage1", "stage2", "stage3" })
+                Assert.IsTrue(view.GetButton(key).gameObject.activeInHierarchy && view.GetButton(key).IsInteractable(), key);
             yield return Press(stage);
-            string title = stage switch { "stage1" => "一：", "stage2" => "二：", "stage3" => "三：", _ => "基础演练" };
+            string title = stage switch { "stage1" => "登高", "stage2" => "水火", "stage3" => "关隘", _ => "基础演练" };
             for (int frame = 0; frame < 30 && !Panel.Contains(title); frame++) yield return null;
             StringAssert.Contains(title, Panel);
-            StringAssert.Contains("出战角色  行舟 · " + runtime.Player.Progression.RealmStage, Panel);
+            StringAssert.Contains("出战角色  " + playerName + " · " + runtime.Player.Progression.RealmStage, Panel);
             StringAssert.Contains("遭遇  ", Panel);
             StringAssert.Contains("对手  ", Panel);
             StringAssert.Contains("敌方全灭", Panel);
@@ -128,7 +138,7 @@ namespace TianZhang.Tests.PlayMode
             session = encounter.CurrentSession;
             Assert.NotNull(session);
             Assert.AreEqual(CombatSessionOutcome.Ongoing, Find<AdventureController>().LastEncounterOutcome);
-            Assert.AreEqual("行舟", GameBootstrap.RequireRuntime().Player.Identity.DisplayName);
+            Assert.AreEqual(playerName, GameBootstrap.RequireRuntime().Player.Identity.DisplayName);
             Assert.AreEqual(Player, Actor(Player).Id);
             surface = Find<CombatBattlefieldSurface>();
             float limit = Time.realtimeSinceStartup + 35;
@@ -255,7 +265,7 @@ namespace TianZhang.Tests.PlayMode
             yield return Press("confirm");
             yield return Ready();
             RecordTurn("结束后");
-            Assert.IsTrue(ResultOpen || session.TurnSequence > turn || session.Visibility.IsPaused);
+            Assert.IsTrue(ResultOpen || session.TurnSequence > turn || session.Visibility?.IsPaused == true);
         }
 
         private IEnumerator UntilActor(string id)
@@ -265,24 +275,11 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreEqual(id, session.CurrentActorId);
         }
 
-        private IEnumerator UntilNext(string id)
-        {
-            yield return End(); yield return UntilActor(id);
-        }
-
         private IEnumerator Use(string tab, string option, CombatCommand command, params HexCoord[] cells)
         {
             var quote = encounter.PreviewJindan(command);
             Assert.IsTrue(quote.IsLegal, option + ": " + quote.RejectionReason);
             yield return Press(tab); yield return Press(option);
-            if (option is "fire_preview" or "visibility_deploy" or "seal_deploy")
-            {
-                Assert.IsFalse(view.GetButton("confirm").interactable);
-                var ability = session.Jindan.Ability(command.ProfileId);
-                var target = option == "fire_preview" ? Seat(command.ProfileId).FireDomain.Support.Cell :
-                    option == "seal_deploy" ? ability.Seal.To : ability.Visibility.Center;
-                yield return Pick(target);
-            }
             foreach (var cell in cells) yield return Pick(cell);
             yield return Pay(quote, command.ProfileId + "/" + option);
         }
@@ -290,9 +287,6 @@ namespace TianZhang.Tests.PlayMode
         private CombatCommand Jindan(string effect, CombatJindanRequest request = null, bool close = false) =>
             new CombatCommand(close ? CombatCommandKind.CloseJindan : CombatCommandKind.JindanAbility,
                 session.CurrentActorId, profileId: effect, jindan: request ?? new CombatJindanRequest(Seat(effect).Definition.SeatId));
-        private IEnumerator Fly(CombatFlightAction action) => Use("flight_tab", "flight_" + action.ToString().ToLowerInvariant(),
-            new CombatCommand(CombatCommandKind.Flight, session.CurrentActorId, profileId: CombatFlight.ProfileId, flightAction: action));
-
         private IEnumerator Attack(string profile, HexCoord target)
         {
             var bar = Find<CombatActionBarView>();
@@ -358,11 +352,11 @@ namespace TianZhang.Tests.PlayMode
         {
             var units = string.Join(" / ", session.Combatants.All.Select(a =>
                 $"{a.Id}{a.Position} 高{a.AltitudeBand} HP{a.CurrentHealth} AP{a.ActionPointsRemainingUnits / 1000f}"));
-            var states = string.Join(" / ", session.Jindan.Seats.Select(s =>
+            var states = string.Join(" / ", session.Jindan?.Seats.Select(s =>
                 $"{s.EffectId} 维护{s.MaintenancePayments}" +
                 (s.FireDomain == null ? "" : $" 心{s.FireDomain.Support.Durability} 主{s.FireDomain.Main != null} 余{s.FireDomain.Tails.Count}") +
                 (s.ActiveSeal == null ? "" : $" 门{s.ActiveSeal.Support.Durability}") +
-                (s.ActiveVisibility == null ? "" : " 坛在")));
+                (s.ActiveVisibility == null ? "" : " 坛在")) ?? Enumerable.Empty<string>());
             Record($"{label} tick{session.TurnScheduler.CurrentTick} {units} | {states}");
         }
 
@@ -406,7 +400,7 @@ namespace TianZhang.Tests.PlayMode
             recording = null;
             if (mouse != null)
             {
-                InputSystem.RemoveDevice(mouse); InputSystem.RemoveDevice(keyboard);
+                InputSystem.RemoveDevice(mouse);
                 InputSystem.settings.backgroundBehavior = previousBackground;
                 InputSystem.settings.editorInputBehaviorInPlayMode = previousInput;
             }

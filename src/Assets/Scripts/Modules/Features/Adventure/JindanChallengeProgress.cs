@@ -9,32 +9,31 @@ namespace TianZhang.Features.Adventure
     {
         public const string VictoryCondition = "敌方全灭，我方有人存活。";
         public const string DefeatCondition = "我方全灭，包括双方同归于尽。";
-        public static readonly HexCoord HighGoal = new HexCoord(8, 12);
         private static readonly HexCoord BasicGoal = new HexCoord(4, 1);
-        private const string FirePreset = "demo_20261024_fire";
-        private const string YinPreset = "demo_20261024_seal_yin";
 
         private enum PracticeStep { Move, Cast, EndTurn, Complete }
         private PracticeStep practiceStep;
 
-        public JindanChallengeProgress(int segmentIndex, string presetId)
+        public JindanChallengeProgress(int segmentIndex)
         {
             if (segmentIndex < -1 || segmentIndex > 2) throw new ArgumentOutOfRangeException(nameof(segmentIndex));
             SegmentIndex = segmentIndex;
-            PresetId = presetId;
         }
 
         public int SegmentIndex { get; }
-        public string PresetId { get; }
         public int Seed => 20261119 + SegmentIndex + 1;
-        public int ConfigVersion => 2;
-        internal bool FireDefender => SegmentIndex == 1 && PresetId == FirePreset;
-        internal bool YinDefender => SegmentIndex == 2 && PresetId == YinPreset;
+        public int ConfigVersion => 3;
+
+        public static string StageName(int segmentIndex) => segmentIndex switch
+        {
+            -1 => "基础演练", 0 => "登高", 1 => "水火", 2 => "关隘",
+            _ => throw new ArgumentOutOfRangeException(nameof(segmentIndex))
+        };
 
         public string ProgressText => SegmentIndex != -1 ? "目标：全歼敌方。" : practiceStep switch
         {
             PracticeStep.Move => "全歼敌方。可选练习：走到浅水格 (4,1)。",
-            PracticeStep.Cast => "全歼敌方。可选练习：施放飞星指，可选空格。",
+            PracticeStep.Cast => "全歼敌方。可选练习：普攻或施放一项已装配的术法。",
             PracticeStep.EndTurn => "全歼敌方。可选练习：点结束行动。",
             _ => "操作练习已完成。继续战斗，全歼敌方。"
         };
@@ -42,14 +41,12 @@ namespace TianZhang.Features.Adventure
         public HexCoord? MovementTarget(CombatSession session) =>
             SegmentIndex == -1 && practiceStep == PracticeStep.Move && session != null ? BasicGoal : (HexCoord?)null;
 
-        public static string FirstAction(int segmentIndex, string presetId) => segmentIndex switch
+        public static string FirstAction(int segmentIndex) => segmentIndex switch
         {
-            -1 => "对手原地守候。可到 (4,1) 试用飞星指，也可直接接敌。",
-            0 => "对手会御风登台。可沿坡接近，再选择对空攻击或压低对手。",
-            1 when presetId == FirePreset => "长明可封住来路。阵心受击时，也可直接攻击来敌。",
-            1 => "可沿干地接敌，或借潮水灭火开路。",
-            2 when presetId == YinPreset => "可借封关阻敌，借藏真寻找出手机会。",
-            2 => "贴近可察觉藏真者，也可利用阳照找出对手。",
+            -1 => "对手原地守候。可走到浅水格 (4,1) 熟悉移动，也可直接接敌。",
+            0 => "裂石甲兽能从高台使用裂石术。可沿坡接近，留意射程和高差。",
+            1 => "水岸有天然火。可从干地绕行，再接近石甲兽。",
+            2 => "裂石甲兽守在关隘。可从侧面接近，或进入射程后出手。",
             _ => throw new ArgumentOutOfRangeException(nameof(segmentIndex))
         };
 
@@ -62,7 +59,7 @@ namespace TianZhang.Features.Adventure
                     session.Combatants.TryGet(command.ActorId, out var player) && player.Position == BasicGoal:
                     practiceStep = PracticeStep.Cast;
                     break;
-                case PracticeStep.Cast when command.Kind == CombatCommandKind.Art && command.ProfileId == "spell_feixingzhi":
+                case PracticeStep.Cast when command.Kind is CombatCommandKind.BasicAttack or CombatCommandKind.Art:
                     practiceStep = PracticeStep.EndTurn;
                     break;
                 case PracticeStep.EndTurn when command.Kind == CombatCommandKind.EndTurn:

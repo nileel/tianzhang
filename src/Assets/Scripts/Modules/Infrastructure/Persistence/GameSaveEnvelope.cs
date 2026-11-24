@@ -758,6 +758,7 @@ namespace TianZhang.Infrastructure.Persistence
         public string worldNodeId;
         public string settlementId;
         public string adventureId;
+        public AdventureEntrance entrance;
         public string returnSceneName;
         public string returnWorldNodeId;
         public string returnSettlementId;
@@ -769,6 +770,7 @@ namespace TianZhang.Infrastructure.Persistence
                 worldNodeId = state.WorldNodeId,
                 settlementId = state.SettlementId,
                 adventureId = state.AdventureId,
+                entrance = state.Entrance,
                 returnSceneName = state.ReturnTarget.SceneName,
                 returnWorldNodeId = state.ReturnTarget.WorldNodeId,
                 returnSettlementId = state.ReturnTarget.SettlementId,
@@ -804,7 +806,7 @@ namespace TianZhang.Infrastructure.Persistence
                     SceneName = returnSceneName,
                     WorldNodeId = returnWorldNodeId,
                     SettlementId = returnSettlementId,
-                });
+                }, entrance);
         }
     }
 }

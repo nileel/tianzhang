@@ -264,6 +264,12 @@ namespace TianZhang.Features.CombatPresentation
             GetButton("cancel_preparation").GetComponentInChildren<Text>(true).text = trial ? "返回关中城" : "返回冒险";
             GetButton("prep_details").GetComponentInChildren<Text>(true).text = showDetails ? "返回遭遇" : "查看角色";
             GetButton("enter").GetComponentInChildren<Text>(true).text = trial ? "进入此遭遇" : "进入演武";
+            if (trial)
+            {
+                GetButton("stage1").GetComponentInChildren<Text>(true).text = "登高";
+                GetButton("stage2").GetComponentInChildren<Text>(true).text = "水火";
+                GetButton("stage3").GetComponentInChildren<Text>(true).text = "关隘";
+            }
             GetButton("retry").gameObject.SetActive(result);
             GetButton("choose_challenge").gameObject.SetActive(result);
             if (result) GetButton("choose_challenge").GetComponentInChildren<Text>(true).text = "另选遭遇";

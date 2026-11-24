@@ -12,19 +12,18 @@ namespace TianZhang.Tests.PlayMode
     public sealed partial class D12ChallengeRoutesPlayModeTests
     {
         [UnityTest, Timeout(180000)]
-        public IEnumerator FallenPlayerHandsControlToLivingCompanion()
+        public IEnumerator LastLivingPlayerFallsAndCanRetry()
         {
             yield return StartChallenge(1366, Fire, "stage1");
             var player = Actor(Player);
             player.ApplyStatus(CombatStatusKind.DamageOverTime, 2, player.MaximumHealth);
-            for (int i = 0; i < 6 && player.IsAlive && !ResultOpen; i++) yield return End();
-
-            Assert.IsFalse(player.IsAlive, "本人应在行动开始结算时倒下");
-            AssertBattleContinues();
-            Assert.AreEqual(Earth, encounter.ControlledActorId);
-            StringAssert.Contains("同伴行动", GameObject.Find("CombatPlayerText").GetComponent<Text>().text);
-            yield return Guard();
-            Assert.IsTrue(Actor(Earth).IsGuarding, "玩家能从正式 HUD 指挥存活同伴");
+            for (int i = 0; i < 6 && !ResultOpen; i++) yield return End();
+            Assert.IsFalse(player.IsAlive);
+            Assert.IsTrue(ResultOpen);
+            Assert.AreEqual(CombatSessionOutcome.Defeat, Find<AdventureController>().LastEncounterOutcome);
+            yield return Press("retry");
+            yield return Entered();
+            Assert.IsTrue(Actor(Player).IsAlive);
         }
 
         [UnityTest, Timeout(180000)]

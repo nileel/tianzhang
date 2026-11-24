@@ -90,16 +90,16 @@ namespace TianZhang.Bootstrap
             surfaceView.ConfigureSurface(terrainRehearsalSurface);
             battlefieldCamera.GetComponent<AdventureCameraController>().Configure(battlefieldCamera,
                 terrainRehearsalSurface.transform, .340433121f);
-            string presetId = GameBootstrap.RequireRuntime().JindanDemoPresetId;
+            var runtime = GameBootstrap.RequireRuntime();
             var placement = jindan.IsPlayerChallenge
-                ? JindanRehearsalFactory.PlayerPlacements(jindanDemoCatalog, segmentIndex, presetId).Single(p => p.characterId == presetId)
+                ? JindanRehearsalFactory.PlayerPlacements(segmentIndex).First(p => p.team == 0)
                 : jindanDemoCatalog.segments[segmentIndex].actors.First(value => value.team == (jindan.ControlFire ? 1 : 0));
             Vector3 focus = terrainRehearsalSurface.Center(new TianZhang.Gameplay.Contracts.CombatUnitPresentationHex(placement.q, placement.r));
             battlefieldCamera.transform.position = focus - battlefieldCamera.transform.forward * 20;
-            if (jindan.IsPlayerChallenge) encounterCoordinator.PrepareJindanChallenge(segmentIndex, presetId);
+            if (jindan.IsPlayerChallenge) encounterCoordinator.PrepareJindanChallenge(segmentIndex);
             if (!controller.BeginJindanRehearsal(jindanDemoCatalog, segmentIndex, earthEffect,
                 terrainRehearsalEnvironment, UiText.Resolve, out string reason, jindan.ControlFire,
-                jindan.IsPlayerChallenge, presetId))
+                jindan.IsPlayerChallenge ? runtime.Player.Capture() : null, runtime.JindanDemoPresetId))
                 throw new InvalidOperationException("jindan_rehearsal_entry_failed:" + reason);
         }
 
@@ -212,11 +212,16 @@ namespace TianZhang.Bootstrap
                 if (jindanHud != null && jindanDemoView.SelectedKey == null)
                     combatCommandInput.ShowInvalidated();
             }
-            combatBountyTrackerView.SetObjective(jindanHud?.Objective);
+            combatBountyTrackerView.SetObjective(visibilitySession != null && encounterCoordinator.Challenge != null
+                ? encounterCoordinator.Challenge.ProgressText : jindanHud?.Objective);
             combatActionBar.PauseInput(visibility?.IsPaused == true || jindan.PreparationOpen || controller.IsWithdrawalConfirmationOpen);
             combatTargetInput.enabled = jindanDemoView.SelectedKey == null;
-            if (jindan.PreparationOpen) jindanDemoView.PresentPreparation(jindan.PreparationDetails, jindan.IsPlayerChallenge,
-                jindan.ShowingResult, jindan.ShowingDetails);
+            if (jindan.PreparationOpen)
+            {
+                if (jindan.IsPlayerChallenge && explorationPanel.activeSelf) explorationPanel.SetActive(false);
+                jindanDemoView.PresentPreparation(jindan.PreparationDetails, jindan.IsPlayerChallenge,
+                    jindan.ShowingResult, jindan.ShowingDetails);
+            }
             else if (encounterCoordinator.CurrentSession?.Jindan != null)
                 jindanDemoView.PresentCombat(jindan.CombatDetails, jindan.QuoteDetails,
                     encounterCoordinator.AcceptsPlayerCommand, jindan.CanConfirm, jindan.QuoteTitle, jindan.CompactQuote, jindan.InteractionHint);
@@ -400,11 +405,12 @@ namespace TianZhang.Bootstrap
                     encounterCoordinator.SurfaceSettled = surfaceView.PlaySettlement;
                     encounterCoordinator.JindanCastCommitted = static3DUnitPresentationProvider.PlayJindanCast;
                     jindan = new JindanRehearsalPresenter(jindanDemoCatalog, encounterCoordinator, BeginJindanRehearsal, UiText.Resolve,
-                        string.IsNullOrEmpty(runtime.JindanDemoPresetId) ? null : runtime.Player.Identity.DisplayName, runtime.JindanDemoPresetId);
+                        runtime.IsTerraceDestination ? runtime.Player : null, runtime.JindanDemoPresetId);
                     openInitialPreparation = jindan.IsPlayerChallenge;
                     jindanRehearsalButton.gameObject.SetActive(jindan.IsPlayerChallenge);
                     if (jindan.IsPlayerChallenge)
                     {
+                        input.enabled = false;
                         combatHudPresenter.ConfigureTrialPortraits(jindanDemoView);
                         jindanRehearsalButton.onClick.AddListener(OpenJindanPreparation);
                     }

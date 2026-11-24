@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using TianZhang.Character;
 using TianZhang.Combat;
 using TianZhang.Entity;
 using TianZhang.Spatial;
@@ -16,11 +17,11 @@ namespace TianZhang.Features.Adventure
         private readonly EncounterCoordinator encounter;
         private readonly Action<int, string> enter;
         private readonly Func<string, string> text;
-        private readonly string trialPlayerName;
+        private readonly CharacterRuntimeProfile trialPlayer;
         private readonly string trialPresetId;
         private bool showDetails;
         private string resultText;
-        public bool IsPlayerChallenge => trialPlayerName != null;
+        public bool IsPlayerChallenge => trialPlayer != null;
         public bool ShowingResult => resultText != null;
         public bool ShowingDetails => showDetails;
         private readonly List<HexCoord> path = new List<HexCoord>(3);
@@ -53,14 +54,14 @@ namespace TianZhang.Features.Adventure
         public IReadOnlyList<HexCoord> SelectableSupports => selection == SelectionMode.Support ? supportChoices : Array.Empty<HexCoord>();
 
         public JindanRehearsalPresenter(JindanDemoCatalogData catalog, EncounterCoordinator encounter,
-            Action<int, string> enter, Func<string, string> text, string trialPlayerName = null, string trialPresetId = null)
+            Action<int, string> enter, Func<string, string> text, CharacterRuntimeProfile trialPlayer = null, string trialPresetId = null)
         {
             this.catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
             this.encounter = encounter ?? throw new ArgumentNullException(nameof(encounter));
             this.enter = enter ?? throw new ArgumentNullException(nameof(enter));
             this.text = text ?? throw new ArgumentNullException(nameof(text));
-            this.trialPlayerName = trialPlayerName;
-            this.trialPresetId = trialPresetId ?? (trialPlayerName == null ? null : JindanDemoCatalogData.PlayerFirePresetId);
+            this.trialPlayer = trialPlayer;
+            this.trialPresetId = trialPresetId;
             if (IsPlayerChallenge)
             {
                 segmentIndex = -1;
@@ -161,7 +162,8 @@ namespace TianZhang.Features.Adventure
             encounter.CurrentSession, encounter.ControlledActorId, encounter.CurrentSession != null && IsPlayerChallenge ?
                 encounter.Challenge?.ProgressText : StageName, !IsPlayerChallenge && ControlFire);
 
-        private string StageName => segmentIndex < 0 ? "基础演练" : Local(catalog.segments[segmentIndex].displayNameKey);
+        private string StageName => IsPlayerChallenge ? JindanChallengeProgress.StageName(segmentIndex) :
+            Local(catalog.segments[segmentIndex].displayNameKey);
         public void ShowResult(string label, string explanation)
         {
             var challenge = encounter.Challenge;
@@ -617,12 +619,7 @@ namespace TianZhang.Features.Adventure
         { ClearQuote(); path.Clear(); remoteOrigin = null; earthCell=null; earthTarget=null; tideSource = null; supportSeat = null; supportChoices = Array.Empty<HexCoord>(); selection = SelectionMode.None; }
         private void SelectSegmentPreset()
         {
-            if (IsPlayerChallenge)
-            {
-                ControlFire = segmentIndex == 1 && trialPresetId == JindanDemoCatalogData.PlayerFirePresetId;
-                presetIndex = Array.FindIndex(catalog.presets, value => value.characterId == trialPresetId);
-                return;
-            }
+            if (IsPlayerChallenge) return;
             if (segmentIndex != 1) ControlFire = false;
             string id = catalog.segments[segmentIndex].actors.First(value => value.team == (ControlFire ? 1 : 0)).characterId;
             presetIndex = Array.FindIndex(catalog.presets, value => value.characterId == id);
@@ -630,33 +627,36 @@ namespace TianZhang.Features.Adventure
 
         private string PreparationText()
         {
-            var preset = catalog.presets[presetIndex];
+            var preset = IsPlayerChallenge ? catalog.GetPreset(trialPresetId) : catalog.presets[presetIndex];
             var result = new StringBuilder();
             if (IsPlayerChallenge)
             {
-                var roster = JindanRehearsalFactory.PlayerPlacements(catalog, segmentIndex, trialPresetId);
-                string Fighters(int team) => string.Join("、", roster.Where(p => p.team == team && p.characterId != trialPresetId)
-                    .Select(p => JindanRehearsalFactory.RehearsalName(p.characterId) + "（" + Local(catalog.GetPreset(p.characterId).displayNameKey) + "）"));
-                bool defend = ControlFire || segmentIndex == 2 && preset.seatInstanceIds.Any(id => catalog.GetSeat(id).candidateEffectIds.Contains("SPACE_SEAL"));
-                result.AppendLine("出战角色  " + trialPlayerName + " · " + preset.realmSubstage + " · " + Local(preset.displayNameKey));
+                var enemies = JindanRehearsalFactory.PlayerPlacements(segmentIndex).Where(actor => actor.team == 1);
+                result.AppendLine("出战角色  " + trialPlayer.Identity.DisplayName + " · " + trialPlayer.Progression.RealmStage +
+                    (preset == null ? "" : " · " + Local(preset.displayNameKey)));
                 string terrain = segmentIndex switch
                 {
                     -1 => "浅水滩", 0 => "高台坡阶", 1 => "水岸火阵", _ => "坛前关隘"
                 };
-                result.AppendLine("遭遇  " + terrain + " · " + StageName +
-                    (segmentIndex < 0 ? "" : " · " + (defend ? "守方" : "突破方")));
-                var allies = Fighters(0);
-                result.AppendLine("同伴  " + (allies.Length == 0 ? "独自行动" : allies + " · 由你操控，各自计费"));
-                result.AppendLine("对手  " + Fighters(1) + " · 自主行动");
+                result.AppendLine("遭遇  " + StageName + " · " + terrain);
+                result.AppendLine("同伴  独自行动");
+                result.AppendLine("对手  " + string.Join("、", enemies.Select(actor => Local(actor.characterId))));
                 result.AppendLine();
                 result.AppendLine("获胜  " + JindanChallengeProgress.VictoryCondition);
                 result.AppendLine("失败  " + JindanChallengeProgress.DefeatCondition);
                 if (segmentIndex < 0) result.AppendLine("基础演练可跳过，直接选择其他遭遇。");
-                result.AppendLine("提示  " + JindanChallengeProgress.FirstAction(segmentIndex, trialPresetId));
+                result.AppendLine("提示  " + JindanChallengeProgress.FirstAction(segmentIndex));
                 if (message.Length > 0) result.AppendLine(message);
                 if (!showDetails) return result.ToString();
                 result.Clear();
-                result.AppendLine(trialPlayerName + " · " + Local(preset.sourceGongFaId));
+                result.AppendLine(trialPlayer.Identity.DisplayName + " · " + trialPlayer.Progression.RealmStage);
+                result.AppendLine("生命 " + trialPlayer.Resources.CurrentHealth + "/" + trialPlayer.Resources.MaximumHealth +
+                    " · MP " + trialPlayer.Resources.CurrentSpirit + "/" + trialPlayer.Resources.MaximumSpirit);
+                result.AppendLine("主手  " + (string.IsNullOrEmpty(trialPlayer.MainEquipmentItemId) ? "徒手" : Local(trialPlayer.MainEquipmentItemId)));
+                var arts = trialPlayer.AbilityLoadout.EquippedSpells.Concat(trialPlayer.AbilityLoadout.EquippedSkills);
+                result.AppendLine("装配  " + (arts.Any() ? string.Join("、", arts.Select(Local)) : "无"));
+                if (preset == null) return result.ToString();
+                result.AppendLine(Local(preset.sourceGongFaId));
             }
             else
             {
@@ -712,7 +712,7 @@ namespace TianZhang.Features.Adventure
             if (session?.Jindan == null || !session.Combatants.TryGet(actorId, out var actor)) return string.Empty;
             var preset = catalog.GetPreset(actorId);
             var result = new StringBuilder();
-            result.AppendLine((actorId == "player" ? trialPlayerName : preset == null ? actorId : Local(preset.displayNameKey)) + "  t=" + session.TurnScheduler.CurrentTick +
+            result.AppendLine((actorId == "player" ? trialPlayer.Identity.DisplayName : preset == null ? encounter.ActorName(actorId) : Local(preset.displayNameKey)) + "  t=" + session.TurnScheduler.CurrentTick +
                 (encounter.AcceptsPlayerCommand ? " · 你的行动" : " · 等待行动"));
             result.AppendLine("AP " + Ap(actor.ActionPointsRemainingUnits) + "/" + Ap(actor.ActionPointLimitAtTurnStartUnits) +
                 "  MP " + actor.CurrentSpirit + "/" + actor.MaximumSpirit);

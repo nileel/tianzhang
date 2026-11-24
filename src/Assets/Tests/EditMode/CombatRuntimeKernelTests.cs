@@ -891,6 +891,21 @@ namespace TianZhang.Tests.EditMode
         }
 
         [Test]
+        public void FallenPlayerLeavesTheLivingAllyInControl()
+        {
+            var player = CreateCombatant("player", CombatTeam.Player, new HexCoord(0, 0), 100, 100, 20, 10);
+            var ally = CreateCombatant("ally", CombatTeam.Player, new HexCoord(0, 1), 100, 100, 20, 10);
+            var enemy = CreateCombatant("enemy", CombatTeam.Enemy, new HexCoord(1, 0), 1, 100, 20, 10);
+            var session = CreateSession(new[] { player, ally, enemy }, new FixedRangeQuery(true));
+            player.ReceiveDamage(player.CurrentHealth);
+            Assert.AreEqual(CombatSessionOutcome.Ongoing, CombatResultBuilder.GetOutcome(session));
+            var service = new CombatCommandService();
+            Assert.AreEqual(ally.Id, service.AdvanceUntilAction(session).ActorId);
+            Assert.IsTrue(service.Execute(session, new CombatCommand(CombatCommandKind.Guard, ally.Id)).Succeeded);
+            Assert.IsTrue(ally.IsGuarding);
+        }
+
+        [Test]
         public void SessionAllowsTwoActorsPerSideIncludingD5TwoVsOne()
         {
             CombatantSnapshot player = CreateCombatant("player", CombatTeam.Player, new HexCoord(0, 0), 10, 100, 20, 10);

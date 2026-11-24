@@ -1,0 +1,79 @@
+TerraceEntryUsesSavedOwnerAndIndependentCosts-demo_20261024_earth-1366
+准备 出战角色  行舟 · 金丹初结 · 厚载演武者
+入场 player/Player (4, 0, -4), enemy/Enemy (7, 3, -10)
+player spell_feixingzhi (5, 1, -6), AP 1000→950, MP 6000→5990
+入场 player/Player (4, 0, -4), enemy/Enemy (7, 12, -19)
+入场 player/Player (4, 4, -8), enemy/Enemy (7, 7, -14)
+入场 player/Player (4, 14, -18), enemy/Enemy (7, 14, -21)
+
+TerraceEntryUsesSavedOwnerAndIndependentCosts-demo_20261024_fire-1366
+准备 出战角色  行舟 · 金丹初结 · 长明演武者
+入场 player/Player (4, 0, -4), enemy/Enemy (7, 3, -10)
+player spell_feixingzhi (5, 1, -6), AP 1000→950, MP 6000→5990
+入场 player/Player (4, 0, -4), enemy/Enemy (7, 12, -19)
+入场 player/Player (4, 4, -8), enemy/Enemy (7, 7, -14)
+入场 player/Player (4, 14, -18), enemy/Enemy (7, 14, -21)
+
+TerraceEntryUsesSavedOwnerAndIndependentCosts-demo_20261024_seal_yin-1366
+准备 出战角色  行舟 · 金丹温养 · 封关与藏真演武者
+入场 player/Player (4, 0, -4), enemy/Enemy (7, 3, -10)
+player spell_feixingzhi (5, 1, -6), AP 1000→950, MP 6000→5990
+入场 player/Player (4, 0, -4), enemy/Enemy (7, 12, -19)
+入场 player/Player (4, 4, -8), enemy/Enemy (7, 7, -14)
+入场 player/Player (4, 14, -18), enemy/Enemy (7, 14, -21)
+
+TerraceEntryUsesSavedOwnerAndIndependentCosts-demo_20261024_space_yang-1366
+准备 出战角色  行舟 · 金丹温养 · 尺度与阳照演武者
+入场 player/Player (4, 0, -4), enemy/Enemy (7, 3, -10)
+player spell_feixingzhi (5, 1, -6), AP 1000→950, MP 6000→5990
+入场 player/Player (4, 0, -4), enemy/Enemy (7, 12, -19)
+入场 player/Player (4, 4, -8), enemy/Enemy (7, 7, -14)
+入场 player/Player (4, 14, -18), enemy/Enemy (7, 14, -21)
+
+TerraceEntryUsesSavedOwnerAndIndependentCosts-demo_20261024_water-1366
+准备 出战角色  行舟 · 金丹初结 · 蓄澜演武者
+入场 player/Player (4, 0, -4), enemy/Enemy (7, 3, -10)
+player spell_feixingzhi (5, 1, -6), AP 1000→950, MP 6000→5990
+入场 player/Player (4, 0, -4), enemy/Enemy (7, 12, -19)
+入场 player/Player (4, 4, -8), enemy/Enemy (7, 7, -14)
+入场 player/Player (4, 14, -18), enemy/Enemy (7, 14, -21)
+
+TerraceEntryUsesSavedOwnerAndIndependentCosts-legacy-1366
+准备 出战角色  岑二 · 凡人
+入场 player/Player (4, 0, -4), enemy/Enemy (7, 3, -10)
+player 移动 (4, 1, -5) 报价 75 AP/0 MP, AP 100→25, MP 180→180, 格 (4, 1, -5)
+入场 player/Player (4, 0, -4), enemy/Enemy (7, 12, -19)
+入场 player/Player (4, 4, -8), enemy/Enemy (7, 7, -14)
+入场 player/Player (4, 14, -18), enemy/Enemy (7, 14, -21)
+
+TerraceEntryUsesSavedOwnerAndIndependentCosts-ordinary-1366
+准备 出战角色  行舟 · 练气
+入场 player/Player (4, 0, -4), enemy/Enemy (7, 3, -10)
+player spell_feixingzhi (5, 1, -6), AP 100→50, MP 180→170
+入场 player/Player (4, 0, -4), enemy/Enemy (7, 12, -19)
+入场 player/Player (4, 4, -8), enemy/Enemy (7, 7, -14)
+入场 player/Player (4, 14, -18), enemy/Enemy (7, 14, -21)
+
+长明 · 登高，两种分辨率的走法相同（以下为 1366×768 实录）
+player 移动 (7, 11, -18) 报价 385.414 AP/0 MP, AP 1000→614.586, MP 6000→6000, 格 (7, 11, -18)
+player basic_body_human_jindan (7, 12, -19), AP 614.586→0, MP 6000→6000
+player 普攻后，enemy HP 190→0
+正式结局 战斗胜利
+配置 v3 · 种子 20261120
+
+长明 · 撤离后同配置重试、返城重进、读档重进
+入场 player/Player (4, 0, -4), enemy/Enemy (7, 3, -10)
+player 展开长明 报价 500 AP/1000 MP, AP 1000→500, MP 6000→5000, 格 (4, 0, -4)
+入场 player/Player (4, 0, -4), enemy/Enemy (7, 3, -10)
+player 展开长明 报价 500 AP/1000 MP, AP 1000→500, MP 6000→5000, 格 (4, 0, -4)
+入场 player/Player (4, 0, -4), enemy/Enemy (7, 3, -10)
+player 展开长明 报价 500 AP/1000 MP, AP 1000→500, MP 6000→5000, 格 (4, 0, -4)
+入场 player/Player (4, 0, -4), enemy/Enemy (7, 3, -10)
+
+关隘 · demo_20261024_space_yang
+入场 player/Player (4, 14, -18), enemy/Enemy (7, 14, -21)
+player YANG_RADIANCE/visibility_deploy 报价 250 AP/400 MP, AP 1000→750, MP 6000→5600, 格 (4, 14, -18)
+
+关隘 · demo_20261024_seal_yin
+入场 player/Player (4, 14, -18), enemy/Enemy (7, 14, -21)
+player YIN_CONCEAL/visibility_deploy 报价 250 AP/400 MP, AP 1000→750, MP 6000→5600, 格 (4, 14, -18)

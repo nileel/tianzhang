@@ -69,10 +69,6 @@ namespace TianZhang.Tests.PlayMode
             Assert.AreSame(owner, restored.Player);
             bad = GameSaveSerializer.Deserialize(json); bad.hasPlayer = false;
             Assert.Throws<InvalidDataException>(() => GameSaveSerializer.Serialize(bad));
-            var spawned = JindanRehearsalFactory.CreateForPlayer(demo, "EARTH_GRAVITY", key => key, owner.Capture());
-            var loadout = JindanRehearsalFactory.CreateLoadout(demo, spawned, "EARTH_GRAVITY");
-            Assert.AreEqual(1, loadout.Seats.Count(s => s.Definition.ActorId == "player"));
-            Assert.IsNull(JindanRehearsalFactory.CreateFlight(demo, spawned).Find("player"));
             Assert.AreEqual("demo_20261024_fire", demo.GetPreset(JindanDemoCatalogData.PlayerFirePresetId).foundationState.characterId,
                 "Creating a player must not mutate the catalog asset.");
         }
@@ -128,7 +124,7 @@ namespace TianZhang.Tests.PlayMode
                     }
                     else
                     {
-                        Assert.IsTrue(Find<SettlementController>().EnterAdventure("guanzhong_wild"));
+                        yield return Click(GameObject.Find("SettlementTerraceButton").GetComponent<Button>());
                         yield return SceneReady(GameplaySceneNames.Adventure);
                     }
                     var view = Find<JindanDemoView>();
@@ -145,7 +141,7 @@ namespace TianZhang.Tests.PlayMode
                     var seat = session.Jindan.Seats.Single(s => s.Definition.ActorId == "player");
                     Assert.AreEqual("player:trial:demo_20261024_fire_guardian", seat.Definition.AbilityInstanceId);
                     Assert.IsNull(seat.FireDomain?.Main);
-                    Assert.IsNull(session.Flight.Find("player"));
+                    Assert.IsNull(session.Flight?.Find("player"));
                     Assert.IsNotNull(session.ExternalResources);
                     yield return Capture(size.x + "-initial-hud");
                     D12UnifiedHudPlayModeTests.CheckSlots("changming-" + size.x);
@@ -159,26 +155,8 @@ namespace TianZhang.Tests.PlayMode
                     if (entry == 0)
                     {
                         var shared = Find<CombatActionPreviewView>();
-                        int beforeApproach = actor.ActionPointsRemainingUnits;
                         int mana = actor.CurrentSpirit;
-                        yield return Click(view.GetButton("fire_tab"));
-                        yield return Click(view.GetButton("fire_preview"));
-                        Assert.IsFalse(shared.ConfirmButton.interactable);
-                        StringAssert.Contains("点「移动」靠近", GameObject.Find("ActionHint").GetComponent<Text>().text);
-                        var marked = Find<CombatMovementView>().Highlights.Single(pair => pair.Value.gameObject.activeSelf).Key;
-                        var center = new CombatUnitPresentationHex(marked.x, marked.y);
-                        Assert.AreEqual(seat.FireDomain.Support.Cell.Q, center.Q);
-                        Assert.AreEqual(seat.FireDomain.Support.Cell.R, center.R);
-                        var label = GameObject.Find("FireCenterLabel").GetComponent<Text>();
-                        Assert.AreEqual("阵心", label.text);
-                        Vector3 ground = Camera.main.WorldToViewportPoint(Find<CombatBattlefieldSurface>().Center(center));
-                        Assert.Less(Vector2.Distance(label.rectTransform.anchorMin, (Vector2)ground), .001f);
-                        yield return Capture(size.x + "-fire-center-approach");
-                        yield return Click(shared.CancelButton);
-                        Assert.IsFalse(Find<CombatMovementView>().Highlights[marked].gameObject.activeSelf);
-                        Assert.AreEqual(beforeApproach, actor.ActionPointsRemainingUnits);
-                        Assert.AreEqual(mana, actor.CurrentSpirit);
-                        yield return MoveToMarkedCenter(encounter, actor, center);
+                        var center = new CombatUnitPresentationHex(actor.Position.Q, actor.Position.R);
                         yield return Click(view.GetButton("fire_tab"));
                         yield return Click(view.GetButton("fire_preview"));
                         Assert.IsFalse(shared.ConfirmButton.interactable);
@@ -311,25 +289,6 @@ namespace TianZhang.Tests.PlayMode
                 yield break;
             }
             Assert.Fail("飞星指施放范围内未找到可由鼠标点中的空格。");
-        }
-
-        private IEnumerator MoveToMarkedCenter(EncounterCoordinator encounter, CombatantSnapshot actor, CombatUnitPresentationHex center)
-        {
-            var origin = actor.Position;
-            int ap = actor.ActionPointsRemainingUnits, mp = actor.CurrentSpirit;
-            yield return Click(Find<CombatActionBarView>().MoveButton);
-            Assert.IsNotNull(GameObject.Find("FireCenterLabel"), "Keep the destination visible while choosing the approach.");
-            var option = Find<CombatHudPresenter>().Snapshot.Movement.Options.Single(o => o.Destination.Equals(center));
-            Assert.IsTrue(TryGroundPoint(option.Destination, out var point), "The marked center must be pickable.");
-            yield return GuanzhongBasicAttackPlayModeTests.PointAttackAt(point, click: true);
-            AssertPrice(option.Cost, 0);
-            Assert.AreEqual(origin, actor.Position);
-            Assert.AreEqual(ap, actor.ActionPointsRemainingUnits);
-            yield return Click(Find<CombatActionPreviewView>().ConfirmButton);
-            yield return CommandReady(encounter);
-            Assert.AreEqual(new TianZhang.Spatial.HexCoord(center.Q, center.R), actor.Position);
-            Assert.AreEqual(ap - option.Cost, actor.ActionPointsRemainingUnits);
-            Assert.AreEqual(mp, actor.CurrentSpirit);
         }
 
         private IEnumerator ConfirmBasicAttack(EncounterCoordinator encounter, CombatantSnapshot actor)
