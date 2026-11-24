@@ -48,6 +48,7 @@ namespace TianZhang.Tests.PlayMode
             Observe(new CombatCommand(CombatCommandKind.Art, JindanDemoCatalogData.EarthPresetId,
                 profileId: "demo_20261026_polei", targetCell: support.Cell), receipt);
             Assert.AreEqual(CombatSessionOutcome.Ongoing, challenge.Outcome, "The defender arrived before the opposition.");
+            StringAssert.Contains("先离开 (8,12)", challenge.ProgressText);
         }
 
         [Test]

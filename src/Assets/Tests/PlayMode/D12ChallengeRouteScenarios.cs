@@ -27,7 +27,14 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsTrue(path.IsLegal, path.RejectionReason);
             Assert.IsTrue(path.MovementSteps.Any(step => surface.Cells.Any(c => c.q == step.To.Anchor.Q &&
                 c.r == step.To.Anchor.R && c.kind != 0)), "登高路径必须经过坂道或阶梯");
-            yield return Move(High);
+            yield return Click(Find<CombatActionBarView>().MoveButton);
+            yield return Pick(High);
+            yield return null;
+            Assert.IsTrue(UnityEngine.Object.FindObjectsByType<UnityEngine.UI.Text>(FindObjectsSortMode.None).Any(label =>
+                label.name == "PublicFieldLabel" && label.text == "演练目标"), "登高选格时应显示目标标记");
+            yield return Capture("01-high-goal");
+            yield return Pay(path, "登上高台");
+            Assert.AreEqual(High, Current.Position);
             yield return Capture("01-ground-ascent");
             var health = enemy.CurrentHealth;
             yield return Attack(Current.BasicAttackProfileId, enemy.Position);
@@ -221,6 +228,8 @@ namespace TianZhang.Tests.PlayMode
             // The north-east terrace has four level exits, so two pursuers cannot seal the retreat.
             yield return Move(new HexCoord(9, 13));
             yield return Use("fire_tab", "fire_preview", Jindan("FIRE_MANIFEST"));
+            StringAssert.Contains("长明地火 0/3", view.PersistentStatus);
+            StringAssert.Contains("等长明引燃地格再撤", Find<CombatBountyTrackerView>().Summary);
             yield return Guard();
             yield return Capture("01-defend-flank");
             yield return UntilNext(Player);
@@ -267,11 +276,13 @@ namespace TianZhang.Tests.PlayMode
             var seal = Seat("SPACE_SEAL");
             var hidden = Seat(CombatVisibility.Yin);
             yield return Use("seal_tab", "seal_deploy", Jindan("SPACE_SEAL"));
+            StringAssert.Contains("封关已就位", Find<CombatBountyTrackerView>().Summary);
             yield return Use("visibility_tab", "visibility_deploy", Jindan(CombatVisibility.Yin));
             if (session.Visibility.IsPaused) yield return WinObservation();
             yield return Move(new HexCoord(8, 14));
             if (session.Visibility.IsPaused) yield return WinObservation();
             yield return Capture("01-seal-and-conceal");
+            StringAssert.Contains("让对手尝试过门", Find<CombatBountyTrackerView>().Summary);
             // Let the observer actually approach and attempt the sealed edge before the defender retreats.
             yield return End();
             if (session.Visibility.IsPaused) yield return WinObservation();
@@ -288,6 +299,7 @@ namespace TianZhang.Tests.PlayMode
             {
                 yield return Use("close_tab", "seal_close", Jindan("SPACE_SEAL", close: true));
                 Assert.IsNull(seal.ActiveSeal);
+                StringAssert.Contains("门已打开", Find<CombatBountyTrackerView>().Summary);
                 yield return Capture("02-seal-open");
                 if (opponent.Position == High || opponent.Position == GateTo)
                 {
@@ -322,6 +334,9 @@ namespace TianZhang.Tests.PlayMode
                 Record("撤出后阳方可见=" + session.Visibility.IsVisible(opponent.Id, Player) +
                     "，近距=" + session.Visibility.NaturallyRevealed(Actor(Player)) +
                     "，观察=" + string.Join("/", session.Visibility.History.Select(c => c.PriorityStep + ":" + c.Outcome)));
+                if (!close && hidden.ActiveVisibility != null && !session.Visibility.NaturallyRevealed(Actor(Player)) &&
+                    session.Visibility.IsVisible(opponent.Id, Player))
+                    StringAssert.Contains("阳照仍能看见你", Find<CombatBountyTrackerView>().Summary);
                 yield return End(); // The older paid Yang domain expires before the freshly deployed concealment.
                 if (session.Visibility.IsPaused) yield return WinObservation();
             }

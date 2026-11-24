@@ -16,6 +16,7 @@ namespace TianZhang.Features.Adventure
         {
             if (Outcome != CombatSessionOutcome.Ongoing) return null;
             if (SegmentIndex == -1 && !reached) return BasicGoal;
+            if (SegmentIndex == 0 && !reached) return HighGoal;
             if (SegmentIndex != 1 || FireDefender || session?.Surfaces == null) return null;
             return extinguished.Where(cell => session.Surfaces.Get(cell).Kind != CombatSurfaceKind.Burning)
                 .OrderByDescending(cell => cell == FirstFireGoal).ThenBy(cell => cell.Q).ThenBy(cell => cell.R)
@@ -67,7 +68,7 @@ namespace TianZhang.Features.Adventure
         public static string FirstAction(int segmentIndex, string presetId) => segmentIndex switch
         {
             -1 => "点移动，走到浅水格 (4,1)。",
-            0 => "沿坡阶向高台 (8,12) 移动，或让持有御风的角色起飞。",
+            0 => "沿坡或御风登台 (8,12)。用方向键向右上找目标格。",
             1 when presetId == FirePreset => "守阵 · 接近阵心 (7,12)，展开长明。",
             1 => "用蓄澜涨潮浇灭 " + Cell(FirstFireGoal) + " 的火，或让厚载飞至阵心 (7,12) 附近。",
             2 when presetId == YinPreset => "在门枢 (9,12) 附近展开封关，并在月坛旁展开藏真。",
@@ -164,13 +165,14 @@ namespace TianZhang.Features.Adventure
                 }
                 if (fire.MaintenancePayments == 0)
                 {
-                    if (domain.Main != null) ProgressText = "守阵 · 护住阵心，结束行动以维持长明火域。";
+                    if (domain.Main != null) ProgressText = "守住阵心。等长明引燃地格再撤。";
                     return;
                 }
                 if (paidFireBurned && fireResisted && reached && player.Position == HighGoal && domain.Main != null &&
                     (!fireClosed || movedWithEmbers && fire.SuccessfulDeployments > 1))
                     Finish(true, fireClosed ? "收势留下余火，借余火转移后重新展开，已安全撤至高台。" : "长明维护生效，阵心仍在，已沿陆路撤至高台。");
-                else if (!fireResisted) ProgressText = "护住阵心。让火格牵制来敌，或抵住对手破阵后再向 (8,12) 转移。";
+                else if (!paidFireBurned || !fireResisted) ProgressText = "守住阵心，等长明引燃地格、火域牵制来敌或阵心受击后再撤。";
+                else if (!reached && player.Position == HighGoal) ProgressText = "撤早了一步。先离开 (8,12)，再从陆路走回此格。";
                 else ProgressText = fireClosed ? "借余火步行撤到 (8,12)。有可燃格且长明冷却结束后，重新展开。" : "火域已维护。护住阵心，沿陆路撤到 (8,12)。";
                 return;
             }
@@ -254,10 +256,21 @@ namespace TianZhang.Features.Adventure
                 if (session.Visibility.IsPaused) return;
                 if (YinDefender)
                 {
-                    if (sealDelayed && retreated && yin.ActiveVisibility != null && !session.Visibility.NaturallyRevealed(hidden) &&
-                        !session.Visibility.IsVisible(observer.Id, hidden.Id) && (sealClosed ? crossedOpen : seal.ActiveSeal != null))
-                        Finish(true, sealClosed ? "封关延缓对手，收关通行后以藏真撤出了近距观察。" : "门枢仍在封关，已利用藏真撤出对手的近距观察。");
-                    else if (sealDelayed) ProgressText = "对手已受封关牵制。以藏真退离近距，或收关过门后退离。";
+                    if (sealDelayed && retreated && yin.ActiveVisibility != null && !nearBefore &&
+                        (sealClosed ? crossedOpen : seal.ActiveSeal != null))
+                    {
+                        if (session.Visibility.IsVisible(observer.Id, hidden.Id))
+                            ProgressText = "已脱离近距，阳照仍能看见你。保持藏真，等观察失效。";
+                        else Finish(true, sealClosed ? "封关延缓对手，收关通行后以藏真撤出了近距观察。" : "门枢仍在封关，已利用藏真撤出对手的近距观察。");
+                    }
+                    else if (sealDelayed && sealClosed && seal.ActiveSeal == null) ProgressText = crossedOpen
+                        ? "已穿过门枢。借藏真撤出近距观察。"
+                        : "门已打开。引开对手，从门枢穿过。";
+                    else if (sealDelayed) ProgressText = "对手已绕门。借藏真退开，或收关过门。";
+                    else if (seal.ActiveSeal != null) ProgressText = yin.ActiveVisibility != null
+                        ? "封关、藏真已就位。结束行动，让对手尝试过门。"
+                        : "封关已就位。在月坛旁展开藏真。";
+                    else ProgressText = yin.ActiveVisibility != null ? "藏真已生效。在门枢 (9,12) 附近展开封关。" : FirstAction(SegmentIndex, PresetId);
                     return;
                 }
                 if (crossedBroken && session.Visibility.History.Any(c => scaledObservations.Contains(c.EventId) && c.Visible))

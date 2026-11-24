@@ -62,7 +62,7 @@ namespace TianZhang.Features.Adventure
                 {
                     status.AppendLine("长明 · 主规则生效");
                     status.AppendLine("中心 " + fire.Support.Durability + "/" + fire.Support.Definition.MaxDurability +
-                        " · 火 " + CombatFireDomainRules.BurningCount(session, seat) + "/" + definition.Capacity);
+                        " · 长明地火 " + CombatFireDomainRules.BurningCount(session, seat) + "/" + definition.Capacity);
                     bool castingTurn = session.Combatants.TryGet(seat.Definition.ActorId, out var owner) &&
                         owner.OwnTurnsStarted <= fire.Main.CreatedOwnTurn;
                     status.AppendLine(castingTurn ? "本回合不维护 · 后续 " + definition.UpkeepMana + " MP" :
