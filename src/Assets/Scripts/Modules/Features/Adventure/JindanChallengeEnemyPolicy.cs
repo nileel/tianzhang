@@ -21,6 +21,13 @@ namespace TianZhang.Features.Adventure
         {
             if (legal.Count == 0) return null;
             session.Combatants.TryGet(session.CurrentActorId, out var actor);
+            if (challenge.SegmentIndex == -1)
+            {
+                // The practice opponent holds position and makes at most one basic attack per turn.
+                var strike = legal.FirstOrDefault(c => c.Kind == CombatCommandKind.BasicAttack);
+                if (!session.HasCommittedBenefit && strike != null) return strike;
+                return legal.First(c => c.Kind == CombatCommandKind.EndTurn);
+            }
             if (challenge.SegmentIndex == 0)
             {
                 var takeoff = legal.FirstOrDefault(c => c.Kind == CombatCommandKind.Flight && c.FlightAction == CombatFlightAction.Takeoff);

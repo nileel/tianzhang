@@ -86,7 +86,7 @@ namespace TianZhang.Features.Adventure
         public void SetWithdrawalPurpose(bool challenge)
         {
             var message = withdrawalConfirmation.transform.Find("WithdrawalDialog/WithdrawalMessage").GetComponent<Text>();
-            message.text = challenge ? "结束本次挑战，保存本人的构筑并返回演武准备。重试会从本段开场重新开始。" : WithdrawalMessage;
+            message.text = challenge ? "撤离不计胜负。保存角色后，可按原配置重试这场战斗，也可另选遭遇。" : WithdrawalMessage;
             confirmWithdrawalButton.GetComponentInChildren<Text>(true).text = challenge ? "撤离并保存" : "确认撤离";
         }
 

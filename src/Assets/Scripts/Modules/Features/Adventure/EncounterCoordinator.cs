@@ -37,7 +37,6 @@ namespace TianZhang.Features.Adventure
     public sealed class EncounterCoordinator : MonoBehaviour, ICombatCommandHandler, ICombatActionPreviewHandler, ICombatExternalResourceQuery
     {
         private readonly CombatCommandService commandService = new CombatCommandService();
-        private readonly CombatResultBuilder resultBuilder = new CombatResultBuilder();
         private ICombatResolutionRandomSource combatRandomSource = new SystemCombatResolutionRandomSource();
         private CombatLegalActionService legalActions;
         private CombatSession session;
@@ -72,7 +71,7 @@ namespace TianZhang.Features.Adventure
             nextChallenge = new JindanChallengeProgress(segmentIndex, presetId);
         }
 
-        private CombatSessionOutcome CurrentOutcome => Challenge?.Outcome ?? resultBuilder.Build(session).Outcome;
+        private CombatSessionOutcome CurrentOutcome => CombatResultBuilder.GetOutcome(session);
 
         private CharacterRuntimeProfile equipmentOwner;
         private ContentCatalogData equipmentCatalog;
@@ -176,12 +175,12 @@ namespace TianZhang.Features.Adventure
 
         /// <summary>The only window in which a direct <c>Request*</c> command is performed instead of
         /// dropped: the player's turn is active and its advance presentation has finished.</summary>
-        public bool AcceptsPlayerCommand => acceptsPlayerCommand && (Challenge == null || Challenge.Outcome == CombatSessionOutcome.Ongoing) && !IsPresenting && session?.Visibility?.IsPaused != true;
+        public bool AcceptsPlayerCommand => acceptsPlayerCommand && session != null &&
+            CurrentOutcome == CombatSessionOutcome.Ongoing && !IsPresenting && session.Visibility?.IsPaused != true;
 
         public void RefreshVisibilityPresentation()
         {
             if (session == null) return;
-            Challenge?.Observe(session);
             Present(session.Visibility?.IsPaused == true ? "显隐对抗中" :
                 IsPlayerActor(session.CurrentActorId) ? "你的行动" : "敌方行动", AcceptsPlayerCommand);
         }
@@ -192,12 +191,12 @@ namespace TianZhang.Features.Adventure
         {
             reason = "回合切换中";
             if (session == null) return false;
-            if (session.Visibility?.IsPaused == true) { reason = null; return true; }
             if (CurrentOutcome != CombatSessionOutcome.Ongoing)
             {
                 reason = "胜负已定，等待结算";
                 return false;
             }
+            if (session.Visibility?.IsPaused == true) { reason = null; return true; }
             if (IsPresenting)
             {
                 // A command can finish its rules turn before its movement presentation ends.
@@ -359,7 +358,7 @@ namespace TianZhang.Features.Adventure
                 ? this : null;
             enemyPolicies = values.Enemies.ToDictionary(value => value.Id, value => Challenge == null ? (ICombatActionPolicy)new LegalActionAI() : new JindanChallengeEnemyPolicy(Challenge));
             playerDisplayName = ActorName(values.Player.Id);
-            presentation.ClearLog(); presentation.AppendLog("金丹演武开始：" + string.Join("、", values.RehearsalNames.Values));
+            presentation.ClearLog(); presentation.AppendLog((Challenge == null ? "金丹演武开始：" : "阶地战斗开始：") + string.Join("、", values.RehearsalNames.Values));
             combatRoutine = StartCoroutine(RunCombat());
             reason = null; return true;
         }
@@ -612,14 +611,14 @@ namespace TianZhang.Features.Adventure
                 var flightBefore = SnapshotFlightStates();
                 CombatTurnAdvance advance = commandService.AdvanceUntilAction(session, out var advanceSteps);
                 ProjectFlightStates(flightBefore);
-                Challenge?.Observe(session);
                 surfaceRoutine = StartCoroutine(surfacePlayback.Play(session, unitPresentation, presentation.AppendLog, SurfaceSettled));
                 Present("回合推进", false, advanceSteps);
                 while (IsPresenting) yield return null;
-                if (!advance.HasActor || CurrentOutcome != CombatSessionOutcome.Ongoing)
+                if (CurrentOutcome != CombatSessionOutcome.Ongoing) break;
+                if (!advance.HasActor)
                 {
-                    Complete(CurrentOutcome);
-                    yield break;
+                    yield return null;
+                    continue;
                 }
 
                 if (IsPlayerActor(advance.ActorId))
@@ -759,9 +758,7 @@ namespace TianZhang.Features.Adventure
                 if (command.Kind == CombatCommandKind.JindanAbility && JindanCastCommitted != null)
                     ProjectJindanCast(command);
                 string gravityTarget = command.Jindan?.EarthMode == CombatEarthMode.Heavy ? command.Jindan.EarthTargetId : null;
-                int previousTargetAltitude = gravityTarget != null && flightBefore != null &&
-                    flightBefore.TryGetValue(gravityTarget, out var gravityBefore) ? gravityBefore.Pose.AltitudeBand : 0;
-                Challenge?.Observe(session, command, result, previousTargetAltitude);
+                Challenge?.Observe(session, command);
                 bool loweringSelf = gravityTarget == command.ActorId && flightBefore != null &&
                     flightBefore.TryGetValue(command.ActorId, out var previous) && previous.Pose.AltitudeBand > actorBefore.AltitudeBand;
                 if (command.Kind != CombatCommandKind.EndTurn && command.Jindan?.TideAction == null && !loweringSelf)

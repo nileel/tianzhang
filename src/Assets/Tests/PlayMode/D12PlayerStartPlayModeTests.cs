@@ -154,7 +154,7 @@ namespace TianZhang.Tests.PlayMode
                     Assert.IsFalse(view.GetButton("flight_tab").gameObject.activeInHierarchy);
                     Assert.IsFalse(Find<CombatActionBarView>().DivineButton.gameObject.activeInHierarchy);
                     Assert.IsFalse(Find<CombatActionBarView>().SecondArtButton.gameObject.activeInHierarchy);
-                    StringAssert.Contains("守阵 · 接近阵心", Find<CombatBountyTrackerView>().Summary);
+                    StringAssert.Contains("全歼敌方", Find<CombatBountyTrackerView>().Summary);
                     yield return CastFlyingStarAtEmptyCell(encounter, actor, entry == 0 ? "新建" : "读档");
                     if (entry == 0)
                     {
@@ -205,7 +205,7 @@ namespace TianZhang.Tests.PlayMode
                         yield return CommandReady(encounter);
                         yield return Click(Find<CombatActionBarView>().BasicAttackButton);
                         StringAssert.Contains("中心 600/600", view.PersistentStatus);
-                        StringAssert.Contains("护住阵心", Find<CombatBountyTrackerView>().Summary);
+                        StringAssert.Contains("全歼敌方", Find<CombatBountyTrackerView>().Summary);
                         StringAssert.Contains("200 MP", view.PersistentStatus);
                         StringAssert.Contains("本回合不维护", view.PersistentStatus);
                         Assert.AreEqual(Find<CombatActionBarView>().BasicAttackButton, Find<CombatActionBarView>().SelectedButton);

@@ -15,7 +15,7 @@ namespace TianZhang.Tests.PlayMode
     public sealed partial class D12ChallengeRoutesPlayModeTests
     {
         [UnityTest, Timeout(300000)]
-        public IEnumerator BasicPracticeWithdrawRetryReloadAndWin([ValueSource(nameof(Widths))] int width)
+        public IEnumerator BasicPracticeWithdrawRetryReloadAndContinue([ValueSource(nameof(Widths))] int width)
         {
             yield return StartChallenge(width, Water, "basic");
             var bootstrap = GameBootstrap.RequireInstance();
@@ -23,13 +23,13 @@ namespace TianZhang.Tests.PlayMode
             string initial = EntranceState();
             yield return Move(new HexCoord(4, 1));
             yield return Attack(Star, new HexCoord(5, 1));
-            Assert.IsFalse(ResultOpen, "还须主动结束本人回合");
+            Assert.IsFalse(ResultOpen, "施法后应继续交战");
             yield return Named("ReturnButton");
             yield return Named("ConfirmWithdrawalButton");
             yield return Ready();
             Assert.IsTrue(ResultOpen);
             StringAssert.Contains("已撤离", Panel);
-            Assert.AreEqual("关中阶地 · 演武结果", Heading());
+            Assert.AreEqual("关中阶地 · 战斗结算", Heading());
             yield return Capture("01-withdrawn");
             yield return Press("retry");
             yield return Entered();
@@ -39,8 +39,8 @@ namespace TianZhang.Tests.PlayMode
             yield return Ready();
             yield return Press("choose_challenge");
             yield return Press("stage2");
-            Assert.That(Panel, Does.Contain("同伴").And.Contain("由你操控").And.Contain("突破方")
-                .And.Contain("先做").And.Contain("获胜").And.Contain("失败"));
+            Assert.That(Panel, Does.Contain("同伴").And.Contain("由你操控")
+                .And.Contain("提示").And.Contain("敌方全灭").And.Contain("我方全灭"));
             Assert.That(Panel, Does.Not.Contain("_seat"));
             yield return Press("prep_details");
             Assert.That(Panel, Does.Contain("金丹源位 · 渊蓄池").And.Contain("演武·蓄澜")
@@ -55,7 +55,7 @@ namespace TianZhang.Tests.PlayMode
             yield return Scene(GameplaySceneNames.Adventure);
             view = Find<JindanDemoView>();
             Assert.IsTrue(view.GetButton("enter").gameObject.activeInHierarchy);
-            Assert.AreEqual("关中阶地 · 演武准备", Heading());
+            Assert.AreEqual("关中阶地 · 战前准备", Heading());
             Assert.IsFalse(Find<TianZhang.Features.Adventure.EncounterCoordinator>().IsRunning);
             Assert.AreEqual(savedPlayer, JsonUtility.ToJson(GameBootstrap.RequireRuntime().CaptureSave().player));
             yield return Press("basic");
@@ -66,8 +66,11 @@ namespace TianZhang.Tests.PlayMode
             yield return Attack(Star, new HexCoord(5, 1));
             yield return Capture("03-basic-action");
             yield return End();
-            yield return Victory();
-            Assert.AreEqual("关中阶地 · 演武准备", Heading());
+            AssertBattleContinues();
+            StringAssert.Contains("操作练习已完成", Find<CombatBountyTrackerView>().Summary);
+            yield return Capture("04-practice-complete-battle-continues");
+            yield return End();
+            AssertBattleContinues();
         }
 
         private static string Heading() => GameObject.Find("JindanPreparationDialog/Heading")
@@ -83,8 +86,9 @@ namespace TianZhang.Tests.PlayMode
             yield return Use("fire_tab", "fire_preview", Jindan("FIRE_MANIFEST"));
             yield return Capture("01-fire-unguarded");
             for (int turn = 0; turn < 20 && !ResultOpen; turn++) yield return End();
-            Assert.IsTrue(ResultOpen, "防守方不保护阵心时，真实对手应能造成失败");
-            StringAssert.Contains("挑战失败", Panel);
+            Assert.IsTrue(ResultOpen, "持续结束行动后，敌方应能歼灭守方");
+            Assert.IsFalse(session.Combatants.HasLivingMembers(CombatTeam.Player));
+            StringAssert.Contains("战斗失败", Panel);
             yield return Capture("02-defeat");
             yield return Press("retry");
             yield return Entered();

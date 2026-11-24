@@ -249,8 +249,8 @@ namespace TianZhang.Features.CombatPresentation
         public void PresentPreparation(string details, bool trial, bool result, bool showDetails)
         {
             BindButtons();
-            preparationHeading.text = result ? "关中阶地 · 演武结果"
-                : showDetails ? "关中阶地 · 出战角色" : "关中阶地 · 演武准备";
+            preparationHeading.text = result ? "关中阶地 · 战斗结算"
+                : showDetails ? "关中阶地 · 出战角色" : trial ? "关中阶地 · 战前准备" : "关中阶地 · 演武准备";
             if (preparationDetails.text != details)
                 preparationDetails.GetComponentInParent<ScrollRect>(true).verticalNormalizedPosition = 1;
             preparationDetails.text = details ?? string.Empty;
@@ -266,6 +266,7 @@ namespace TianZhang.Features.CombatPresentation
             GetButton("enter").GetComponentInChildren<Text>(true).text = trial ? "进入此遭遇" : "进入演武";
             GetButton("retry").gameObject.SetActive(result);
             GetButton("choose_challenge").gameObject.SetActive(result);
+            if (result) GetButton("choose_challenge").GetComponentInChildren<Text>(true).text = "另选遭遇";
             preparationRoot.SetActive(true);
             preparationRoot.transform.SetAsLastSibling();
             combatRoot.SetActive(false);

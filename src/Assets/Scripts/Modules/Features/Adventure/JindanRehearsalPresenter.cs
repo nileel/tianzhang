@@ -214,7 +214,7 @@ namespace TianZhang.Features.Adventure
                         enter(segmentIndex, earthEffect);
                         PreparationOpen = false;
                         ClearTargeting();
-                        message = "进入演武；能力均先预演再确认。";
+                        message = IsPlayerChallenge ? "阶地战斗开始。选定目标后确认行动。" : "进入演武；能力均先预演再确认。";
                         break;
                 }
                 Refresh();
@@ -649,9 +649,10 @@ namespace TianZhang.Features.Adventure
                 result.AppendLine("同伴  " + (allies.Length == 0 ? "独自行动" : allies + " · 由你操控，各自计费"));
                 result.AppendLine("对手  " + Fighters(1) + " · 自主行动");
                 result.AppendLine();
-                result.AppendLine("先做  " + JindanChallengeProgress.FirstAction(segmentIndex, trialPresetId));
-                result.AppendLine("获胜  " + JindanChallengeProgress.DescribeGoal(segmentIndex, trialPresetId));
-                result.AppendLine("失败  " + JindanChallengeProgress.DescribeFailure(segmentIndex, trialPresetId));
+                result.AppendLine("获胜  " + JindanChallengeProgress.VictoryCondition);
+                result.AppendLine("失败  " + JindanChallengeProgress.DefeatCondition);
+                if (segmentIndex < 0) result.AppendLine("基础演练可跳过，直接选择其他遭遇。");
+                result.AppendLine("提示  " + JindanChallengeProgress.FirstAction(segmentIndex, trialPresetId));
                 if (message.Length > 0) result.AppendLine(message);
                 if (!showDetails) return result.ToString();
                 result.Clear();

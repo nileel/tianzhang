@@ -432,14 +432,18 @@ namespace TianZhang.Bootstrap
         private static string SaveChallenge()
         {
             var result = GameBootstrap.RequireInstance().SaveActiveSlot();
-            return result.Succeeded ? "角色已保存，读档回到演武准备。" : "保存失败：" + result.FailureReason;
+            return result.Succeeded ? "角色已保存，读档回到战前准备。" : "保存失败：" + result.FailureReason;
         }
 
-        private void OnPlayerChallengeEnded(TianZhang.Combat.CombatSessionOutcome? outcome)
+        private void OnPlayerChallengeEnded(CombatSessionOutcome? outcome)
         {
             jindanDemoView.CloseCombatSelection();
-            jindan.ShowResult(!outcome.HasValue ? "已撤离" : outcome == TianZhang.Combat.CombatSessionOutcome.Victory ? "挑战达成" : "挑战失败",
-                outcome.HasValue ? encounterCoordinator.Challenge.ResultText : SaveChallenge());
+            if (outcome == CombatSessionOutcome.Victory)
+                jindan.ShowResult("战斗胜利", "敌方已全灭。");
+            else if (outcome == CombatSessionOutcome.Defeat)
+                jindan.ShowResult("战斗失败", "我方已全灭。");
+            else if (!outcome.HasValue)
+                jindan.ShowResult("已撤离", SaveChallenge());
         }
 
         private string ResolveAttackProfileName(string profileId)

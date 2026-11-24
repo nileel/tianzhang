@@ -26,7 +26,7 @@ namespace TianZhang.Features.CombatPresentation
             if (root == null || summary == null) return;
             root.SetActive(visible);
             if (!visible) { summary.text = string.Empty; return; }
-            if (!string.IsNullOrEmpty(objective)) { summary.text = "关中阶地 · 演武\n<size=16><color=#e2cc9b>" + objective + "</color></size>"; return; }
+            if (!string.IsNullOrEmpty(objective)) { summary.text = "关中阶地\n<size=16><color=#e2cc9b>" + objective + "</color></size>"; return; }
             IReadOnlyList<CombatBountyTrackerSnapshot> items = read();
             summary.text = items.Count == 0 ? "悬赏追踪\n暂无已接悬赏" : string.Join("\n", items.Select(item =>
                 item.Title + "  " + item.Progress + "/" + item.Required + (item.Completed ? " · 可回城交付" : string.Empty)));

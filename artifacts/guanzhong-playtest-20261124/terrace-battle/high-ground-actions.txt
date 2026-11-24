@@ -1,0 +1,79 @@
+准备 出战角色  行舟 · 金丹初结 · 长明演武者
+遭遇  高台坡阶 · 一：登高与飞行／压落 · 突破方
+同伴  石衡（厚载演武者） · 由你操控，各自计费
+对手  江汐（蓄澜演武者） · 自主行动
+
+获胜  敌方全灭，我方有人存活。
+失败  我方全灭，包括双方同归于尽。
+提示  对手会御风登台。可沿坡接近，再选择对空攻击或压低对手。
+
+入场 player/Player (3, 0, -3), demo_20261024_earth/Player (4, 0, -4), demo_20261024_water/Enemy (7, 3, -10)
+结束前 tick10 player(3, 0, -3) 高0 HP3474 AP0 / demo_20261024_earth(4, 0, -4) 高0 HP3474 AP1000 / demo_20261024_water(7, 3, -10) 高0 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主False 余0
+结束后 tick10 player(3, 0, -3) 高0 HP3474 AP1000 / demo_20261024_earth(4, 0, -4) 高0 HP3474 AP0 / demo_20261024_water(7, 12, -19) 高1 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主False 余0
+结束前 tick10 player(3, 0, -3) 高0 HP3474 AP1000 / demo_20261024_earth(4, 0, -4) 高0 HP3474 AP0 / demo_20261024_water(7, 12, -19) 高1 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主False 余0
+结束后 tick20 player(3, 0, -3) 高0 HP3474 AP0 / demo_20261024_earth(4, 0, -4) 高0 HP3474 AP1000 / demo_20261024_water(7, 12, -19) 高1 HP3474 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主False 余0
+demo_20261024_earth 登上高台 报价 406.247 AP/0 MP, AP 1000→593.753, MP 6000→6000, 格 (8, 12, -20)
+demo_20261024_earth basic_body_human_jindan (7, 12, -19), AP 593.753→343.753, MP 6000→6000
+demo_20261024_earth basic_body_human_jindan (7, 12, -19), AP 343.753→93.753, MP 6000→6000
+demo_20261024_earth 普攻后，demo_20261024_water HP 3341→3208
+结束前 tick20 player(3, 0, -3) 高0 HP3474 AP0 / demo_20261024_earth(8, 12, -20) 高0 HP3474 AP93.753 / demo_20261024_water(7, 12, -19) 高1 HP3208 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主False 余0
+结束后 tick20 player(3, 0, -3) 高0 HP3474 AP1000 / demo_20261024_earth(8, 12, -20) 高0 HP2919 AP0 / demo_20261024_water(7, 12, -19) 高1 HP3208 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主False 余0
+player 移动 (7, 11, -18) 报价 416.664 AP/0 MP, AP 1000→583.336, MP 6000→6000, 格 (7, 11, -18)
+player basic_body_human_jindan (7, 12, -19), AP 583.336→333.336, MP 6000→6000
+player 普攻后，demo_20261024_water HP 3208→3055
+player basic_body_human_jindan (7, 12, -19), AP 333.336→83.336, MP 6000→6000
+player 普攻后，demo_20261024_water HP 3055→2902
+结束前 tick20 player(7, 11, -18) 高0 HP3474 AP83.336 / demo_20261024_earth(8, 12, -20) 高0 HP2919 AP0 / demo_20261024_water(7, 12, -19) 高1 HP2902 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主False 余0
+结束后 tick30 player(7, 11, -18) 高0 HP3474 AP0 / demo_20261024_earth(8, 12, -20) 高0 HP2919 AP1000 / demo_20261024_water(7, 12, -19) 高1 HP2902 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主False 余0
+demo_20261024_earth basic_body_human_jindan (7, 12, -19), AP 1000→750, MP 6000→6000
+demo_20261024_earth 普攻后，demo_20261024_water HP 2902→2769
+demo_20261024_earth basic_body_human_jindan (7, 12, -19), AP 750→500, MP 6000→6000
+demo_20261024_earth 普攻后，demo_20261024_water HP 2769→2636
+demo_20261024_earth basic_body_human_jindan (7, 12, -19), AP 500→187.5, MP 6000→6000
+demo_20261024_earth 普攻后，demo_20261024_water HP 2636→2503
+结束前 tick30 player(7, 11, -18) 高0 HP3474 AP0 / demo_20261024_earth(8, 12, -20) 高0 HP2919 AP187.5 / demo_20261024_water(7, 12, -19) 高1 HP2503 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主False 余0
+结束后 tick30 player(7, 11, -18) 高0 HP2919 AP1000 / demo_20261024_earth(8, 12, -20) 高0 HP2919 AP0 / demo_20261024_water(7, 12, -19) 高1 HP2503 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主False 余0
+player basic_body_human_jindan (7, 12, -19), AP 1000→750, MP 6000→6000
+player 普攻后，demo_20261024_water HP 2503→2350
+player basic_body_human_jindan (7, 12, -19), AP 750→500, MP 6000→6000
+player 普攻后，demo_20261024_water HP 2350→2197
+player basic_body_human_jindan (7, 12, -19), AP 500→187.5, MP 6000→6000
+player 普攻后，demo_20261024_water HP 2197→2044
+结束前 tick30 player(7, 11, -18) 高0 HP2919 AP187.5 / demo_20261024_earth(8, 12, -20) 高0 HP2919 AP0 / demo_20261024_water(7, 12, -19) 高1 HP2044 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主False 余0
+结束后 tick40 player(7, 11, -18) 高0 HP2919 AP0 / demo_20261024_earth(8, 12, -20) 高0 HP2919 AP1000 / demo_20261024_water(7, 12, -19) 高1 HP2044 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主False 余0
+demo_20261024_earth basic_body_human_jindan (7, 12, -19), AP 1000→750, MP 6000→6000
+demo_20261024_earth 普攻后，demo_20261024_water HP 2044→1911
+demo_20261024_earth basic_body_human_jindan (7, 12, -19), AP 750→500, MP 6000→6000
+demo_20261024_earth 普攻后，demo_20261024_water HP 1911→1778
+demo_20261024_earth basic_body_human_jindan (7, 12, -19), AP 500→187.5, MP 6000→6000
+demo_20261024_earth 普攻后，demo_20261024_water HP 1778→1645
+结束前 tick40 player(7, 11, -18) 高0 HP2919 AP0 / demo_20261024_earth(8, 12, -20) 高0 HP2919 AP187.5 / demo_20261024_water(7, 12, -19) 高1 HP1645 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主False 余0
+结束后 tick40 player(7, 11, -18) 高0 HP2364 AP1000 / demo_20261024_earth(8, 12, -20) 高0 HP2919 AP0 / demo_20261024_water(7, 12, -19) 高0 HP1297 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主False 余0
+player basic_body_human_jindan (7, 12, -19), AP 1000→750, MP 6000→6000
+player 普攻后，demo_20261024_water HP 1297→1144
+player basic_body_human_jindan (7, 12, -19), AP 750→500, MP 6000→6000
+player 普攻后，demo_20261024_water HP 1144→991
+player basic_body_human_jindan (7, 12, -19), AP 500→187.5, MP 6000→6000
+player 普攻后，demo_20261024_water HP 991→838
+结束前 tick40 player(7, 11, -18) 高0 HP2364 AP187.5 / demo_20261024_earth(8, 12, -20) 高0 HP2919 AP0 / demo_20261024_water(7, 12, -19) 高0 HP838 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主False 余0
+结束后 tick50 player(7, 11, -18) 高0 HP2364 AP0 / demo_20261024_earth(8, 12, -20) 高0 HP2919 AP1000 / demo_20261024_water(7, 12, -19) 高0 HP838 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主False 余0
+demo_20261024_earth basic_body_human_jindan (7, 12, -19), AP 1000→750, MP 6000→6000
+demo_20261024_earth 普攻后，demo_20261024_water HP 838→705
+demo_20261024_earth basic_body_human_jindan (7, 12, -19), AP 750→500, MP 6000→6000
+demo_20261024_earth 普攻后，demo_20261024_water HP 705→572
+demo_20261024_earth basic_body_human_jindan (7, 12, -19), AP 500→187.5, MP 6000→6000
+demo_20261024_earth 普攻后，demo_20261024_water HP 572→439
+结束前 tick50 player(7, 11, -18) 高0 HP2364 AP0 / demo_20261024_earth(8, 12, -20) 高0 HP2919 AP187.5 / demo_20261024_water(7, 12, -19) 高0 HP439 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主False 余0
+结束后 tick50 player(7, 11, -18) 高0 HP1994 AP1000 / demo_20261024_earth(8, 12, -20) 高0 HP2919 AP0 / demo_20261024_water(7, 12, -19) 高1 HP439 AP0 | EARTH_GRAVITY 维护0 / WATER_TIDE 维护0 / FIRE_MANIFEST 维护0 心600 主False 余0
+player basic_body_human_jindan (7, 12, -19), AP 1000→750, MP 6000→6000
+player 普攻后，demo_20261024_water HP 439→286
+player basic_body_human_jindan (7, 12, -19), AP 750→500, MP 6000→6000
+player 普攻后，demo_20261024_water HP 286→133
+player basic_body_human_jindan (7, 12, -19), AP 500→0, MP 6000→6000
+player 普攻后，demo_20261024_water HP 133→0
+正式结局 战斗胜利
+一：登高与飞行／压落
+
+敌方已全灭。
+
+配置 v2 · 种子 20261120

@@ -5,18 +5,19 @@ namespace TianZhang.Combat
 {
     public sealed class CombatResultBuilder
     {
-        public CombatSessionResult Build(CombatSession session)
+        public static CombatSessionOutcome GetOutcome(CombatSession session)
         {
             if (session == null)
                 throw new ArgumentNullException(nameof(session));
 
-            bool playersAlive = session.Combatants.HasLivingMembers(CombatTeam.Player);
-            bool enemiesAlive = session.Combatants.HasLivingMembers(CombatTeam.Enemy);
-            CombatSessionOutcome outcome = !playersAlive
-                ? CombatSessionOutcome.Defeat
-                : enemiesAlive
-                    ? CombatSessionOutcome.Ongoing
-                    : CombatSessionOutcome.Victory;
+            if (!session.Combatants.HasLivingMembers(CombatTeam.Player)) return CombatSessionOutcome.Defeat;
+            return session.Combatants.HasLivingMembers(CombatTeam.Enemy)
+                ? CombatSessionOutcome.Ongoing : CombatSessionOutcome.Victory;
+        }
+
+        public CombatSessionResult Build(CombatSession session)
+        {
+            CombatSessionOutcome outcome = GetOutcome(session);
             var defeated = new List<string>();
             foreach (CombatantSnapshot combatant in session.Combatants.All)
             {

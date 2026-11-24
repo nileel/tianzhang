@@ -54,7 +54,7 @@ namespace TianZhang.Tests.PlayMode
         private static CombatUnitPresentationHex Hex(HexCoord c) => new CombatUnitPresentationHex(c.Q, c.R);
         private string Panel => GameObject.Find("PreparationDetails")?.GetComponent<Text>().text ?? string.Empty;
 
-        private IEnumerator StartChallenge(int width, string preset, string stage)
+        private IEnumerator StartChallenge(int width, string preset, string stage, bool acceptBounty = false)
         {
             output = Path.GetFullPath(Path.Combine("Logs/d12-challenges", TestContext.CurrentContext.Test.MethodName + "-" + width));
             Directory.CreateDirectory(output);
@@ -89,6 +89,13 @@ namespace TianZhang.Tests.PlayMode
             Assert.IsTrue(Find<WorldMapController>().SelectNode("guanzhong_hub"));
             Find<WorldMapController>().EnterSelectedLocation();
             yield return Scene(GameplaySceneNames.Settlement);
+            if (acceptBounty)
+            {
+                // Model an existing accepted order in a trial save, before entering the terrace.
+                var catalog = UnityEngine.Resources.FindObjectsOfTypeAll<TianZhang.Content.ContentCatalogData>()
+                    .Single(c => c.TryGetBounty("bounty_guanzhong_shijiahou", out _));
+                Assert.IsTrue(runtime.Bounties.Accept(catalog, "bounty_guanzhong_shijiahou", "guanzhong_city").Succeeded);
+            }
             Assert.IsTrue(bootstrap.SaveActiveSlot().Succeeded);
             savedPlayer = JsonUtility.ToJson(runtime.CaptureSave().player);
             savedCultivation = JsonUtility.ToJson(runtime.CaptureSave().cultivation);
@@ -103,6 +110,8 @@ namespace TianZhang.Tests.PlayMode
             StringAssert.Contains("出战角色  行舟 · " + runtime.Player.Progression.RealmStage, Panel);
             StringAssert.Contains("遭遇  ", Panel);
             StringAssert.Contains("对手  ", Panel);
+            StringAssert.Contains("敌方全灭", Panel);
+            StringAssert.Contains("我方全灭", Panel);
             foreach (string key in new[] { "earth_toggle", "preset_next", "fire_side" })
                 Assert.IsFalse(view.GetButton(key).gameObject.activeInHierarchy, key);
             Record("准备 " + Panel);
@@ -118,6 +127,7 @@ namespace TianZhang.Tests.PlayMode
             encounter = Find<EncounterCoordinator>();
             session = encounter.CurrentSession;
             Assert.NotNull(session);
+            Assert.AreEqual(CombatSessionOutcome.Ongoing, Find<AdventureController>().LastEncounterOutcome);
             Assert.AreEqual("行舟", GameBootstrap.RequireRuntime().Player.Identity.DisplayName);
             Assert.AreEqual(Player, Actor(Player).Id);
             surface = Find<CombatBattlefieldSurface>();
@@ -307,18 +317,32 @@ namespace TianZhang.Tests.PlayMode
             Record($"{actor.Id} {profile} {target}, AP {ap / 1000f}→{actor.ActionPointsRemainingUnits / 1000f}, MP {mp}→{actor.CurrentSpirit}");
             if (!ResultOpen && session.TurnSequence == turn)
             {
-                Assert.AreEqual(ap - preview.ActionPointCostUnits, actor.ActionPointsRemainingUnits);
+                int expectedAp = CombatResultBuilder.GetOutcome(session) == CombatSessionOutcome.Ongoing
+                    ? ap - preview.ActionPointCostUnits : 0;
+                Assert.AreEqual(expectedAp, actor.ActionPointsRemainingUnits);
                 Assert.AreEqual(mp - preview.SpiritCost, actor.CurrentSpirit);
             }
             yield return Ready();
         }
 
+        private void AssertBattleContinues()
+        {
+            Assert.That(session.Combatants.HasLivingMembers(CombatTeam.Enemy), Is.True);
+            Assert.That(session.Combatants.HasLivingMembers(CombatTeam.Player), Is.True);
+            Assert.IsFalse(ResultOpen, Panel);
+            Assert.AreSame(session, encounter.CurrentSession);
+            Assert.IsTrue(encounter.AcceptsPlayerCommand, "应能继续操作我方角色");
+            StringAssert.Contains("全歼敌方", Find<CombatBountyTrackerView>().Summary);
+        }
+
         private IEnumerator Victory()
         {
             for (int i = 0; i < 120 && !ResultOpen; i++) yield return null;
-            Assert.IsTrue(ResultOpen, "行动已执行，未达成挑战；" + Find<CombatBountyTrackerView>()?.Summary);
-            StringAssert.Contains("挑战达成", Panel);
-            Assert.AreEqual("关中阶地 · 演武结果", Heading());
+            Assert.IsTrue(ResultOpen, "最后一个敌人已倒下，应显示胜利");
+            Assert.IsFalse(session.Combatants.HasLivingMembers(CombatTeam.Enemy));
+            Assert.AreEqual(CombatSessionOutcome.Victory, Find<AdventureController>().LastEncounterOutcome);
+            StringAssert.Contains("战斗胜利", Panel);
+            Assert.AreEqual("关中阶地 · 战斗结算", Heading());
             Assert.IsTrue(view.GetButton("retry").IsInteractable());
             Assert.IsTrue(view.GetButton("choose_challenge").IsInteractable());
             Record("正式结局 " + Panel);

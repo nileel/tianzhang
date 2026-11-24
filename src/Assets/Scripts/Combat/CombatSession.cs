@@ -243,8 +243,7 @@ namespace TianZhang.Combat
             Visibility = new CombatVisibility(this);
             SpatialQuery = new CombatGravitySpatialQuery(this, SpatialQuery);
         }
-        internal bool IsFinished => !Combatants.HasLivingMembers(CombatTeam.Player) ||
-            !Combatants.HasLivingMembers(CombatTeam.Enemy);
+        internal bool IsFinished => CombatResultBuilder.GetOutcome(this) != CombatSessionOutcome.Ongoing;
 
         /// <summary>Updates long-term inputs without touching the budget already issued for this turn.</summary>
         public bool RefreshActionEconomy(string actorId, int maximum, int movement,

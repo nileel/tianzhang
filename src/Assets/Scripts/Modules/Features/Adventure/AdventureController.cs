@@ -65,7 +65,9 @@ namespace TianZhang.Features.Adventure
                 environment.battlefieldCells.Select(cell => new TianZhang.Spatial.HexCoord(cell.q, cell.r)).ToArray(), out reason)) return false;
             IsTerrainRehearsal = true;
             CurrentState = AdventureSceneState.Combat;
-            hud.PresentTerrainRehearsalLocation("金丹演武 · " + (segmentIndex < 0 ? "基础演练" : text(demo.segments[segmentIndex].displayNameKey)));
+            LastEncounterOutcome = CombatSessionOutcome.Ongoing;
+            hud.PresentTerrainRehearsalLocation((usePlayer ? "关中阶地 · " : "金丹演武 · ") +
+                (segmentIndex < 0 ? "基础演练" : text(demo.segments[segmentIndex].displayNameKey)));
             return true;
         }
 
